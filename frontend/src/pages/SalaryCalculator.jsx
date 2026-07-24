@@ -251,15 +251,15 @@ export default function SalaryCalculator() {
   // --- PDF GENERATION LOGIC ---
   const generateSlipHtml = (emp, payroll) => {
     let pdfHtml = `
-      <div style="border: 1px solid #ccc; border-radius: 8px; padding: 12px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; font-family: Arial, sans-serif; background-color: #fff; color: #202124;">
+      <div style="border: 1px solid #000; border-radius: 8px; padding: 12px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; font-family: Arial, sans-serif; background-color: #fff; color: #000;">
         <div>
-          <div style="font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 10px; font-size: 1rem; text-align: center;">
+          <div style="font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 8px; margin-bottom: 10px; font-size: 1rem; text-align: center; color: #000;">
             ${emp.name} - Detailed Breakdown
           </div>
-          <table style="width: 100%; border: none; margin: 0; padding: 0; font-size: 0.85rem; border-collapse: collapse;">
+          <table style="width: 100%; border: none; margin: 0; padding: 0; font-size: 0.85rem; border-collapse: collapse; color: #000;">
             <tr>
-              <td style="border: none; text-align: left; padding: 3px 0; font-weight: bold;">Base Salary</td>
-              <td style="border: none; text-align: right; padding: 3px 0; font-weight: bold;">₹${payroll.baseSalary.toFixed(2)}</td>
+              <td style="border: none; text-align: left; padding: 3px 0; font-weight: bold; color: #000;">Base Salary</td>
+              <td style="border: none; text-align: right; padding: 3px 0; font-weight: bold; color: #000;">₹${payroll.baseSalary.toFixed(2)}</td>
             </tr>
             <tr><td colspan="2" style="border: none; height: 5px;"></td></tr>
     `;
