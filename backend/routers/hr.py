@@ -41,25 +41,39 @@ def upload_employees(
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="Only CSV files are supported. Please upload a CSV sheet.")
     
-    contents = file.file.read().decode('utf-8')
+    try:
+        contents = file.file.read().decode('utf-8-sig') # utf-8-sig automatically removes BOM if present
+    except UnicodeDecodeError:
+        contents = file.file.read().decode('latin-1')
+        
     csv_reader = csv.DictReader(StringIO(contents))
     
     # Remove all existing data from HR
     db.query(Employee).delete()
     
     for row in csv_reader:
-        # Expected headers: Name, Email, Department, Role, Salary
-        name = row.get('Name', '').strip()
-        email = row.get('Email', '').strip()
+        # Normalize headers to lowercase to be extremely forgiving
+        norm_row = {str(k).strip().lower(): str(v).strip() for k, v in row.items() if k}
+        
+        name = norm_row.get('name', '')
         if not name:
             continue
+            
+        email = norm_row.get('email', '')
+        
+        # Clean up salary string (remove $, ₹, commas)
+        salary_str = norm_row.get('salary', '0').replace(',', '').replace('$', '').replace('₹', '')
+        try:
+            salary_val = float(salary_str)
+        except ValueError:
+            salary_val = 0.0
             
         emp = Employee(
             name=name,
             email=email or f"{name.lower().replace(' ', '.')}@example.com",
-            department=row.get('Department', 'General').strip(),
-            role=row.get('Role', 'Employee').strip(),
-            salary=float(row.get('Salary', 0.0) or 0.0),
+            department=norm_row.get('department', 'General'),
+            role=norm_row.get('role', norm_row.get('designation', 'Employee')),
+            salary=salary_val,
             join_date=datetime.utcnow(),
             is_active=True
         )
