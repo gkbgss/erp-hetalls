@@ -142,13 +142,60 @@ export default function Dashboard() {
   const [showRevDrop,  setShowRevDrop]  = useState(false)
   const cubeRef = useRef(null)
   const angleRef = useRef(0)
-  const rotateNext = (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-    angleRef.current -= 90;
+  const timeoutRef = useRef(null)
+  const animationRef = useRef(null)
+  const holdStartTimeRef = useRef(0)
+
+  const startSpin = (e) => {
+    if (animationRef.current || timeoutRef.current) return;
+    
+    holdStartTimeRef.current = Date.now();
+    
+    const spinLoop = () => {
+      const heldTime = Date.now() - holdStartTimeRef.current;
+      let speed = 2; // base speed
+      if (heldTime > 5000) {
+        speed += (heldTime - 5000) * 0.01; // gradually increase speed after 5s
+        if (speed > 50) speed = 50; // max speed limit
+      }
+      
+      angleRef.current -= speed;
+      if (cubeRef.current) {
+        cubeRef.current.style.transition = 'none';
+        cubeRef.current.style.transform = `translateZ(-140px) rotateY(${angleRef.current}deg)`;
+      }
+      animationRef.current = requestAnimationFrame(spinLoop);
+    };
+    
+    timeoutRef.current = setTimeout(() => {
+      animationRef.current = requestAnimationFrame(spinLoop);
+    }, 150);
+  };
+
+  const stopSpin = (e) => {
+    if (holdStartTimeRef.current === 0) return;
+    const heldTime = Date.now() - holdStartTimeRef.current;
+    
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+
+    if (heldTime < 150) {
+      angleRef.current -= 90;
+    }
+    // Snap to nearest 90 degree boundary
+    angleRef.current = Math.round(angleRef.current / 90) * 90;
+    
     if (cubeRef.current) {
       cubeRef.current.style.transition = 'transform 0.4s ease-out';
       cubeRef.current.style.transform = `translateZ(-140px) rotateY(${angleRef.current}deg)`;
     }
+    holdStartTimeRef.current = 0;
   };
 
   const [showBreakdown, setShowBreakdown] = useState(false)
@@ -286,7 +333,11 @@ export default function Dashboard() {
         {/* The 4-Sided Horizontal 3D Prism */}
         <div 
           className="cube-container" 
-          onClick={rotateNext}
+          onMouseDown={startSpin}
+          onMouseUp={stopSpin}
+          onMouseLeave={stopSpin}
+          onTouchStart={startSpin}
+          onTouchEnd={stopSpin}
           onDragStart={(e) => e.preventDefault()}
           style={{ cursor: 'pointer', userSelect: 'none' }}
         >
@@ -300,7 +351,7 @@ export default function Dashboard() {
           >
             {/* Face 1: Today */}
             <div className="cube-face">
-              <div style={{ width: '100%', height: '100%' }}><KPICard icon={AlertCircle} label="Orders Today" value={kpis?.today_orders} sub="Click to rotate" colorClass="danger" /></div>
+              <div style={{ width: '100%', height: '100%' }}><KPICard icon={AlertCircle} label="Orders Today" value={kpis?.today_orders} sub="Hold to spin or Click" colorClass="danger" /></div>
             </div>
             {/* Face 2: Total */}
             <div className="cube-face">
