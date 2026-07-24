@@ -6,7 +6,7 @@ import {
   TrendingUp, Users, FileText, AlertCircle, Layers, X, Calendar, Clock, List
 } from 'lucide-react'
 import {
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts'
 
@@ -245,7 +245,7 @@ export default function Dashboard() {
         </div>
 
         {/* Active Employees */}
-        <KPICard icon={Users} label="Active Employees" value={kpis?.total_employees || 42} sub="Across all departments" colorClass="green" />
+        <KPICard icon={Users} label="Active Employees" value={kpis?.total_employees ?? 0} sub="Across all departments" colorClass="green" />
 
         {/* Detailed Breakdown */}
         <div onClick={openBreakdown} style={{ cursor: 'pointer' }}>
@@ -369,6 +369,33 @@ export default function Dashboard() {
               <Bar dataKey="EBAY-RUGSFOREVER" name="Ebay-Rugsforever" fill="#8b5cf6" stackId="a" />
               <Bar dataKey="JAYPOR" name="Jaypor" fill="#ec4899" stackId="a" />
             </BarChart>
+          </ResponsiveContainer>
+        </div>
+        {/* Portal Progress Line Chart */}
+        <div className="card" style={{ marginTop: '24px' }}>
+          <div className="card-header">
+            <div>
+              <div className="card-title">Portal Growth Progress</div>
+              <div className="card-subtitle">Monthly revenue progression per portal</div>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={320}>
+            <LineChart data={revenueChart} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+              <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+              <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v/1000}k`} />
+              <Tooltip content={<ChartTooltip />} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              
+              <Line type="monotone" dataKey="ETSY-CASAVANI" name="Etsy-Casavani" stroke="#f87171" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+              <Line type="monotone" dataKey="AMAZON" name="Amazon" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+              <Line type="monotone" dataKey="ETSY-RUGSFOREVER" name="Etsy-Rugsforever" stroke="#fb923c" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+              <Line type="monotone" dataKey="WALMART" name="Walmart" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+              <Line type="monotone" dataKey="PEPPERFRY" name="Pepperfry" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+              <Line type="monotone" dataKey="CASAVANI WEBSITE" name="Casavani Website" stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+              <Line type="monotone" dataKey="EBAY-RUGSFOREVER" name="Ebay-Rugsforever" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+              <Line type="monotone" dataKey="JAYPOR" name="Jaypor" stroke="#ec4899" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+            </LineChart>
           </ResponsiveContainer>
         </div>
       </div>

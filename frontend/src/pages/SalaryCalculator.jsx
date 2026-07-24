@@ -3,7 +3,7 @@ import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
-  BarChart, Bar, PieChart, Pie, Cell,
+  BarChart, Bar, PieChart, Pie, Cell, LabelList,
   XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer
 } from 'recharts'
@@ -432,9 +432,10 @@ export default function SalaryCalculator() {
                   <BarChart data={summary?.dept_breakdown} layout="vertical" margin={{ top: 0, right: 16, left: 16, bottom: 0 }}>
                     <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" horizontal={false} />
                     <XAxis type="number" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${v / 1000}k`} />
-                    <YAxis type="category" dataKey="department" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} axisLine={false} tickLine={false} width={85} />
+                    <YAxis type="category" dataKey="department" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} axisLine={false} tickLine={false} width={120} />
                     <Tooltip content={<ChartTooltip />} />
                     <Bar dataKey="total" name="Gross Pay" radius={[0, 4, 4, 0]}>
+                      <LabelList dataKey="department" position="insideLeft" fill="#fff" fontSize={12} fontWeight={600} style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }} />
                       {summary?.dept_breakdown?.map((_, i) => <Cell key={i} fill={DEPT_COLORS[i % DEPT_COLORS.length]} />)}
                     </Bar>
                   </BarChart>

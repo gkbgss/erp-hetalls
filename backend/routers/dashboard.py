@@ -84,14 +84,23 @@ def parse_date(date_str):
 # O (14): Status
 # AK (36): Price
 
+from database import get_db, Employee
+from sqlalchemy.orm import Session
+
 @router.get("/kpis")
-def get_kpis(current_user=Depends(get_current_user)):
+def get_kpis(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     orders_data = fetch_sheet_csv("ORDERS")
     total_revenue = 0.0
     total_orders = 0
     this_year = 0
     this_month = 0
     today = 0
+    
+    # Fetch actual active employee count from DB
+    try:
+        total_employees = db.query(Employee).filter(Employee.is_active == True).count()
+    except Exception:
+        total_employees = 0
     
     now = datetime.utcnow()
     current_year = now.year
@@ -131,6 +140,7 @@ def get_kpis(current_user=Depends(get_current_user)):
         "this_year_orders":  this_year,
         "this_month_orders": this_month,
         "today_orders":      today,
+        "total_employees":   total_employees
     }
 
 @router.get("/companies-revenue")
