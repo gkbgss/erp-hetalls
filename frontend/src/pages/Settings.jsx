@@ -53,9 +53,7 @@ export default function Settings() {
           setShowHistory(true)
           if (commits.length === 0) {
             setLoadingHistory(true)
-            axios.get(`${API}/api/audit`, {
-              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            })
+            axios.get(`${API}/api/audit`)
               .then(res => setCommits(res.data))
               .catch(console.error)
               .finally(() => setLoadingHistory(false))
