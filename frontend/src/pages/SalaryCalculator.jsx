@@ -304,7 +304,7 @@ export default function SalaryCalculator() {
       if (i % 6 === 0) {
         currentPage = document.createElement('div')
         currentPage.style.width = '210mm'
-        currentPage.style.height = '297mm' 
+        currentPage.style.height = '295mm' 
         currentPage.style.boxSizing = 'border-box'
         currentPage.style.display = 'flex'
         currentPage.style.flexWrap = 'wrap'
@@ -312,6 +312,7 @@ export default function SalaryCalculator() {
         currentPage.style.alignContent = 'center'
         currentPage.style.gap = '6mm'
         currentPage.style.backgroundColor = '#ffffff'
+        currentPage.style.overflow = 'hidden'
         if (i > 0) currentPage.style.pageBreakBefore = 'always'
         container.appendChild(currentPage)
       }
