@@ -372,7 +372,7 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
         {/* Portal Progress Line Chart */}
-        <div className="card" style={{ marginTop: '24px' }}>
+        <div className="card" style={{ marginTop: '0px' }}>
           <div className="card-header">
             <div>
               <div className="card-title">Portal Growth Progress</div>
