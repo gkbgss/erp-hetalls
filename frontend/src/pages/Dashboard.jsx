@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import {
   DollarSign, ShoppingCart, Package, AlertTriangle,
-  TrendingUp, Users, FileText, AlertCircle, Layers, X, Calendar, Clock, List
+  TrendingUp, TrendingDown, Users, FileText, AlertCircle, Layers, X, Calendar, Clock, List
 } from 'lucide-react'
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
@@ -49,6 +49,70 @@ function KPICard({ icon: Icon, label, value, sub, colorClass, prefix = '', forma
     </div>
   )
 }
+
+const PortalGrowthCard = ({ revenueChart }) => {
+  const [spinCount, setSpinCount] = useState(0);
+  
+  const portals = useMemo(() => {
+    if (!revenueChart || revenueChart.length < 2) return [];
+    const latest = revenueChart[revenueChart.length - 1];
+    const prev = revenueChart[revenueChart.length - 2];
+    const keys = ["AMAZON", "CASAVANI WEBSITE", "EBAY-RUGSFOREVER", "ETSY-CASAVANI", "ETSY-RUGSFOREVER", "JAYPOR", "PEPPERFRY", "WALMART"];
+    
+    return keys.map(key => {
+      const currentVal = latest[key] || 0;
+      const prevVal = prev[key] || 0;
+      let growth = 0;
+      if (prevVal > 0) growth = ((currentVal - prevVal) / prevVal) * 100;
+      else if (currentVal > 0) growth = 100;
+      return { name: key.replace('-', ' '), growth };
+    }).sort((a, b) => b.growth - a.growth);
+  }, [revenueChart]);
+
+  if (!portals || portals.length === 0) return (
+    <KPICard icon={TrendingUp} label="Portal Growth" value="N/A" sub="Not enough data" colorClass="success" />
+  );
+
+  const getPortalForFace = (i) => {
+    let k = spinCount - (spinCount % 4) + i;
+    if (k < spinCount - 1) k += 4;
+    return portals[k % portals.length];
+  };
+
+  return (
+    <div 
+      className="cube-container" 
+      onClick={(e) => { if (e && e.preventDefault) e.preventDefault(); setSpinCount(c => c + 1); }}
+      style={{ cursor: 'pointer', userSelect: 'none' }}
+    >
+      <div 
+        className="cube" 
+        style={{ 
+          transform: `translateZ(-140px) rotateY(${spinCount * -90}deg)`, 
+          transition: 'transform 0.4s ease-out' 
+        }}
+      >
+        {[0, 1, 2, 3].map(i => {
+          const p = getPortalForFace(i);
+          const isUp = p.growth >= 0;
+          return (
+            <div key={i} className="cube-face">
+              <div style={{ width: '100%', height: '100%' }}>
+                <KPICard 
+                  icon={isUp ? TrendingUp : TrendingDown} 
+                  label={p.name} 
+                  value={`${isUp ? '+' : ''}${p.growth.toFixed(1)}%`} 
+                  sub="Growth vs Last Month" 
+                  colorClass={isUp ? "success" : "danger"} 
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 // ── Status Badge ──────────────────────────────────────────────────────
 function StatusBadge({ status }) {
@@ -251,6 +315,9 @@ export default function Dashboard() {
         <div onClick={openBreakdown} style={{ cursor: 'pointer' }}>
           <KPICard icon={Layers} label="Detailed Breakdown" value="Breakdown" sub="Daily Sale Brands & Portal" colorClass="blue" format="text" />
         </div>
+
+        {/* 5th Card: Portal Growth Progress */}
+        <PortalGrowthCard revenueChart={revenueChart} />
       </div>
 
       {/* Breakdown Modal */}

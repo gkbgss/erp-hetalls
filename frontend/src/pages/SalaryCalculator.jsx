@@ -428,8 +428,8 @@ export default function SalaryCalculator() {
                     <div className="card-subtitle">Monthly gross spend per department</div>
                   </div>
                 </div>
-                <div style={{ height: '360px', overflowY: 'auto', overflowX: 'hidden' }}>
-                  <ResponsiveContainer width="100%" height={summary?.dept_breakdown ? Math.max(360, summary.dept_breakdown.length * 28) : 360}>
+                <div style={{ height: '360px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={summary?.dept_breakdown} layout="vertical" margin={{ top: 0, right: 16, left: 16, bottom: 0 }}>
                       <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" horizontal={false} />
                       <XAxis type="number" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${v / 1000}k`} />
