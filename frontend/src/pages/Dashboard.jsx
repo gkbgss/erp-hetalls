@@ -60,11 +60,15 @@ const PortalGrowthCard = ({ revenueChart }) => {
     const keys = ["AMAZON", "CASAVANI WEBSITE", "EBAY-RUGSFOREVER", "ETSY-CASAVANI", "ETSY-RUGSFOREVER", "JAYPOR", "PEPPERFRY", "WALMART"];
     
     return keys.map(key => {
-      const currentVal = latest[key] || 0;
-      const prevVal = prev[key] || 0;
+      const currentVal = Number(latest[key]) || 0;
+      const prevVal = Number(prev[key]) || 0;
       let growth = 0;
-      if (prevVal > 0) growth = ((currentVal - prevVal) / prevVal) * 100;
-      else if (currentVal > 0) growth = 100;
+      if (prevVal > 0) {
+        growth = ((currentVal - prevVal) / prevVal) * 100;
+      } else if (currentVal > 0) {
+        growth = 100;
+      }
+      if (isNaN(growth) || !isFinite(growth)) growth = 0;
       return { name: key.replace('-', ' '), growth };
     }).sort((a, b) => b.growth - a.growth);
   }, [revenueChart]);
