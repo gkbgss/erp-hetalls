@@ -55,14 +55,24 @@ def upload_employees(
         # Normalize headers to lowercase to be extremely forgiving
         norm_row = {str(k).strip().lower(): str(v).strip() for k, v in row.items() if k}
         
-        name = norm_row.get('name', '')
+        # Fuzzy matching for column names
+        name_key = next((k for k in norm_row.keys() if 'name' in k and 'com' not in k and 'company' not in k), None)
+        salary_key = next((k for k in norm_row.keys() if 'salary' in k or 'pay' in k or 'amount' in k), None)
+        dept_key = next((k for k in norm_row.keys() if 'dept' in k or 'department' in k), None)
+        email_key = next((k for k in norm_row.keys() if 'email' in k or 'mail' in k), None)
+        role_key = next((k for k in norm_row.keys() if 'role' in k or 'designation' in k), None)
+        company_key = next((k for k in norm_row.keys() if 'com' in k or 'company' in k), None)
+        
+        name = norm_row.get(name_key, '') if name_key else ''
         if not name:
             continue
             
-        email = norm_row.get('email', '')
+        email = norm_row.get(email_key, '') if email_key else ''
+        company = norm_row.get(company_key, 'Hetalls Global') if company_key else 'Hetalls Global'
         
         # Clean up salary string (remove $, ₹, commas)
-        salary_str = norm_row.get('salary', '0').replace(',', '').replace('$', '').replace('₹', '')
+        raw_salary = norm_row.get(salary_key, '0') if salary_key else '0'
+        salary_str = raw_salary.replace(',', '').replace('$', '').replace('₹', '')
         try:
             salary_val = float(salary_str)
         except ValueError:
@@ -70,9 +80,10 @@ def upload_employees(
             
         emp = Employee(
             name=name,
+            company=company,
             email=email or f"{name.lower().replace(' ', '.')}@example.com",
-            department=norm_row.get('department', 'General'),
-            role=norm_row.get('role', norm_row.get('designation', 'Employee')),
+            department=norm_row.get(dept_key, 'General') if dept_key else 'General',
+            role=norm_row.get(role_key, 'Employee') if role_key else 'Employee',
             salary=salary_val,
             join_date=datetime.utcnow(),
             is_active=True
