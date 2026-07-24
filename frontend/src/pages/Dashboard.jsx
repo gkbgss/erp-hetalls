@@ -69,52 +69,14 @@ export default function Dashboard() {
   const [showRevDrop,  setShowRevDrop]  = useState(false)
   const cubeRef = useRef(null)
   const angleRef = useRef(0)
-  const velocityRef = useRef(0)
-  const spinInterval = useRef(null)
-
-  const startSpinning = (e) => {
+  const rotateNext = (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    if (spinInterval.current) return;
-    
-    velocityRef.current = 1.0;
-    if (cubeRef.current) cubeRef.current.style.transition = 'none';
-    
-    spinInterval.current = setInterval(() => {
-      angleRef.current -= velocityRef.current;
-      velocityRef.current += 0.4; 
-      if (velocityRef.current > 35) velocityRef.current = 35; 
-      
-      if (cubeRef.current) {
-        cubeRef.current.style.transform = `translateZ(-140px) rotateY(${angleRef.current}deg)`;
-      }
-    }, 16);
-
-    window.addEventListener('mouseup', stopSpinning);
-    window.addEventListener('touchend', stopSpinning);
-  };
-
-  const stopSpinning = () => {
-    if (spinInterval.current) {
-      clearInterval(spinInterval.current);
-      spinInterval.current = null;
-    }
-    
-    angleRef.current = Math.round(angleRef.current / -90) * -90;
-    
+    angleRef.current -= 90;
     if (cubeRef.current) {
-      cubeRef.current.style.transition = 'transform 0.5s ease-out';
+      cubeRef.current.style.transition = 'transform 0.4s ease-out';
       cubeRef.current.style.transform = `translateZ(-140px) rotateY(${angleRef.current}deg)`;
     }
-
-    window.removeEventListener('mouseup', stopSpinning);
-    window.removeEventListener('touchend', stopSpinning);
   };
-
-  useEffect(() => {
-    return () => {
-      if (spinInterval.current) clearInterval(spinInterval.current);
-    };
-  }, []);
 
   const [showBreakdown, setShowBreakdown] = useState(false)
   const [bdTab,        setBdTab]        = useState('all')
@@ -251,8 +213,7 @@ export default function Dashboard() {
         {/* The 4-Sided Horizontal 3D Prism */}
         <div 
           className="cube-container" 
-          onMouseDown={startSpinning}
-          onTouchStart={startSpinning}
+          onClick={rotateNext}
           onDragStart={(e) => e.preventDefault()}
           style={{ cursor: 'pointer', userSelect: 'none' }}
         >
@@ -266,7 +227,7 @@ export default function Dashboard() {
           >
             {/* Face 1: Today */}
             <div className="cube-face">
-              <div style={{ width: '100%', height: '100%' }}><KPICard icon={AlertCircle} label="Orders Today" value={kpis?.today_orders} sub="Hold to spin" colorClass="danger" /></div>
+              <div style={{ width: '100%', height: '100%' }}><KPICard icon={AlertCircle} label="Orders Today" value={kpis?.today_orders} sub="Click to rotate" colorClass="danger" /></div>
             </div>
             {/* Face 2: Total */}
             <div className="cube-face">
