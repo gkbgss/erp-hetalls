@@ -212,7 +212,8 @@ export default function SalaryCalculator() {
     const hourlyWage = dailyWage / 8; 
     
     let addedPaidLeave = 0;
-    if (emp.department.toUpperCase() === 'IT' && absent < 5) {
+    const excludedDepts = ['guard', 'store', 'helper', 'field', 'feild', 'carpet production', 'packing', 'production'];
+    if (!excludedDepts.includes(emp.department.toLowerCase())) {
       addedPaidLeave = dailyWage;
     }
     let addedExtraPresent = extraPresent * dailyWage;

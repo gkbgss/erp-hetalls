@@ -30,7 +30,8 @@ def calc_inr_deductions(gross: float, year_month: str, absent: float = 0,
     hourly_wage = daily_wage / 8
     
     # Calculate Additions
-    added_paid_leave = daily_wage if department.upper() == 'IT' and absent < 5 else 0
+    excluded_depts = {'guard', 'store', 'helper', 'field', 'feild', 'carpet production', 'packing', 'production'}
+    added_paid_leave = daily_wage if department.lower() not in excluded_depts else 0
     added_extra_present = extra_present * daily_wage
     added_extra_hour = extra_hour * hourly_wage
     added_pay = added_paid_leave + added_extra_present + added_extra_hour
