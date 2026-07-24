@@ -5,28 +5,26 @@ import csv
 from io import StringIO
 from datetime import datetime
 from auth import get_current_user
+import time
+import threading
 
 router = APIRouter(prefix="/api/breakdown", tags=["breakdown"])
 
-import time
-import threading
-import urllib.request
-import urllib.parse
-import csv
-from io import StringIO
+# NOTE: The sheet MUST be "Anyone with the link can view" for this to work!
+SHEET_URL_TEMPLATE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTkTIObrXy88vQVg2_bAI2T8vPa1tXT5IWZw8tdvF9BW7aYj9qqTA6WeZjpJHlBlw4dpTj_o7dYhtzW/pub?gid=978055065&single=true&output=csv"
 
 _CACHE = {}
 _CACHE_LOCK = threading.Lock()
 _FETCHING = set()
 CACHE_TTL = 10 # 10 seconds for near-live data
 
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1SVvZnv8yphJNJp_qNKZdkB-WByslByjeRPM0_0oLQuE/export?format=csv&gid=1569773873"
-
 def _fetch_from_google(sheet_name):
+    if "{}" in SHEET_URL_TEMPLATE:
+        url = SHEET_URL_TEMPLATE.format(urllib.parse.quote(sheet_name))
+    else:
+        url = SHEET_URL_TEMPLATE
     try:
-        # cachebuster
-        url_with_cb = f"{SHEET_URL}&cb={int(time.time())}"
-        req = urllib.request.Request(url_with_cb)
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req) as response:
             content = response.read().decode('utf-8')
             data = list(csv.reader(StringIO(content)))
@@ -62,97 +60,104 @@ def fetch_sheet_csv(sheet_name):
     data = _fetch_from_google(sheet_name)
     return data or []
 
+def parse_price(val_str):
+    try:
+        if not val_str: return 0.0
+        return float(val_str.replace(',', '').replace('$', '').strip())
+    except ValueError:
+        return 0.0
+
+def parse_date(date_str):
+    try:
+        if not date_str: return None
+        return datetime.strptime(date_str.strip(), "%d-%b-%Y")
+    except ValueError:
+        return None
+
 @router.get("/daily-sales")
 def daily_sales(date: str = Query(default="today"), current_user=Depends(get_current_user)):
-    """
-    Fetch daily sales data from 'DAILY SALE BRANDS N PORTAL' sheet.
-    date param: 'today', 'all', or 'YYYY-MM-DD' for a specific date.
-    """
-    data = fetch_sheet_csv("DAILY SALE BRANDS N PORTAL")
+    data = fetch_sheet_csv("ORDERS")
     
-    if not data or len(data) < 3:
-        return {"headers": [], "sub_headers": [], "rows": []}
-    
-    # Row 0 = headers (merged cells / main headings)
-    # Row 1 = sub-headers (individual column names)
-    # Row 2+ = data rows
-    raw_headers = data[0] if len(data) > 0 else []
-    sub_headers = data[1] if len(data) > 1 else []
-    
-    # Fill forward headers (merged cells appear as empty in CSV)
-    headers = []
-    last_header = ""
-    for h in raw_headers:
-        if h.strip():
-            last_header = h.strip()
-        headers.append(last_header)
-    
-    # Determine target date for filtering
-    now = datetime.utcnow()
-    target_date = None
-    filter_all = False
-    
-    if date == "all":
-        filter_all = True
-    elif date == "today":
-        target_date = now.strftime("%d-%b-%Y")  # e.g. "23-Jul-2026"
-    else:
-        # Expect YYYY-MM-DD format, convert to sheet format
-        try:
-            dt = datetime.strptime(date, "%Y-%m-%d")
-            target_date = dt.strftime("%-d-%b-%Y")  # e.g. "1-Nov-2025"
-        except ValueError:
-            # Try Windows-compatible format
-            try:
-                dt = datetime.strptime(date, "%Y-%m-%d")
-                target_date = f"{dt.day}-{dt.strftime('%b')}-{dt.year}"
-            except ValueError:
-                target_date = date
-    
-    rows = []
-    for row in data[2:]:  # Skip header rows
-        if not row or not any(cell.strip() for cell in row):
-            continue
+    if not data or len(data) < 2:
+        return {"headers": [], "sub_headers": [], "rows": [], "total_rows": 0}
         
-        # Column A (index 0) is the date column
-        row_date = row[0].strip() if len(row) > 0 else ""
-        if not row_date:
-            continue
-            
-        if not filter_all:
+    now = datetime.utcnow()
+    
+    # Store aggregated data: { date_obj: { "total": sum, (portal, material): sum } }
+    aggregated = {}
+    unique_combinations = set()
+    
+    for row in data[1:]: # Skip header
+        if len(row) < 37: continue
+        status = row[14].strip().lower() if len(row) > 14 else ""
+        if status == "returned": continue
+        
+        row_dt = parse_date(row[8])
+        if not row_dt: continue
+        
+        # Filtering logic
+        row_date_obj = row_dt.date()
+        
+        if date == "today":
+            if row_date_obj != now.date(): continue
+        elif date == "all":
+            pass
+        elif date.startswith("month|"):
+            parts = date.split("|")[1].split("-")
+            if row_date_obj.year != int(parts[0]) or row_date_obj.month != int(parts[1]):
+                continue
+        else:
             try:
-                row_dt = datetime.strptime(row_date, "%d-%b-%Y").date()
-                if date == "today":
-                    if row_dt != now.date():
-                        continue
-                elif date.startswith("month|"):
-                    parts = date.split("|")[1].split("-")
-                    if row_dt.year != int(parts[0]) or row_dt.month != int(parts[1]):
-                        continue
-                else:
-                    parts = date.split("|")
-                    start_dt = datetime.strptime(parts[0], "%Y-%m-%d").date()
-                    end_dt = datetime.strptime(parts[1], "%Y-%m-%d").date() if len(parts) > 1 else start_dt
-                    
-                    if row_dt < start_dt or row_dt > end_dt:
-                        continue
+                parts = date.split("|")
+                start_dt = datetime.strptime(parts[0], "%Y-%m-%d").date()
+                end_dt = datetime.strptime(parts[1], "%Y-%m-%d").date() if len(parts) > 1 else start_dt
+                if row_date_obj < start_dt or row_date_obj > end_dt:
+                    continue
             except ValueError:
                 continue
+                
+        portal = row[4].strip() or "Unknown Portal"
+        material = row[10].strip() or "Unknown Material"
+        price = parse_price(row[36])
         
-        rows.append(row)
+        if price <= 0: continue
         
-    # Sort descending by date (newest first)
-    def get_date(r):
-        try:
-            return datetime.strptime(r[0].strip(), "%d-%b-%Y").date()
-        except:
-            return datetime.min.date()
+        unique_combinations.add((portal, material))
+        
+        if row_date_obj not in aggregated:
+            aggregated[row_date_obj] = {"total": 0.0}
             
-    rows.sort(key=get_date, reverse=True)
+        aggregated[row_date_obj]["total"] += price
+        aggregated[row_date_obj][(portal, material)] = aggregated[row_date_obj].get((portal, material), 0.0) + price
+
+    # Build dynamic headers based on sorted unique combinations
+    # Group by portal first, then material
+    sorted_combos = sorted(list(unique_combinations), key=lambda x: (x[0], x[1]))
     
+    headers = ["", "HG TOTAL"]
+    sub_headers = ["", ""]
+    
+    for combo in sorted_combos:
+        headers.append(combo[0])      # Portal
+        sub_headers.append(combo[1])  # Material
+        
+    # Build rows
+    sorted_dates = sorted(aggregated.keys(), reverse=True)
+    rows = []
+    
+    for d in sorted_dates:
+        date_str = d.strftime("%d-%b-%Y")
+        row_data = [date_str, str(round(aggregated[d]["total"], 2))]
+        
+        for combo in sorted_combos:
+            val = aggregated[d].get(combo, 0.0)
+            row_data.append(str(round(val, 2)) if val > 0 else "0")
+            
+        rows.append(row_data)
+        
     return {
         "headers": headers,
-        "sub_headers": [s.strip() for s in sub_headers],
+        "sub_headers": sub_headers,
         "rows": rows,
-        "total_rows": len(rows),
+        "total_rows": len(rows)
     }
