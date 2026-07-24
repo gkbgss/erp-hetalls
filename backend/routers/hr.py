@@ -44,6 +44,7 @@ def upload_employees(
     try:
         contents = file.file.read().decode('utf-8-sig') # utf-8-sig automatically removes BOM if present
     except UnicodeDecodeError:
+        file.file.seek(0)
         contents = file.file.read().decode('latin-1')
         
     csv_reader = csv.DictReader(StringIO(contents))
