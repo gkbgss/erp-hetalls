@@ -118,23 +118,24 @@ from sqlalchemy.orm import Session
 def receive_before_flush(session, flush_context, instances):
     user_email = audit_user_var.get()
     
+    audit_entries = []
+    
     for obj in session.new:
         if type(obj).__name__ == "AuditLog": continue
-        audit = AuditLog(
-            user_email=user_email,
-            action="INSERT",
-            table_name=obj.__tablename__,
-            record_id=str(getattr(obj, "id", "new")),
-            changes={"inserted": True}
-        )
-        session.add(audit)
+        audit_entries.append({
+            "user_email": user_email,
+            "action": "INSERT",
+            "table_name": getattr(obj, "__tablename__", type(obj).__name__),
+            "record_id": str(getattr(obj, "id", "new")),
+            "changes": {"inserted": True},
+            "timestamp": datetime.utcnow()
+        })
         
     for obj in session.dirty:
         if type(obj).__name__ == "AuditLog": continue
         if session.is_modified(obj):
             changes = {}
             for attr in obj.__mapper__.columns.keys():
-                # Avoid tracking password hashes
                 if attr == "hashed_password": continue
                 
                 hist = get_history(obj, attr)
@@ -144,25 +145,28 @@ def receive_before_flush(session, flush_context, instances):
                     changes[attr] = {"old": old_val, "new": new_val}
             
             if changes:
-                audit = AuditLog(
-                    user_email=user_email,
-                    action="UPDATE",
-                    table_name=obj.__tablename__,
-                    record_id=str(getattr(obj, "id", "")),
-                    changes=changes
-                )
-                session.add(audit)
+                audit_entries.append({
+                    "user_email": user_email,
+                    "action": "UPDATE",
+                    "table_name": getattr(obj, "__tablename__", type(obj).__name__),
+                    "record_id": str(getattr(obj, "id", "")),
+                    "changes": changes,
+                    "timestamp": datetime.utcnow()
+                })
                 
     for obj in session.deleted:
         if type(obj).__name__ == "AuditLog": continue
-        audit = AuditLog(
-            user_email=user_email,
-            action="DELETE",
-            table_name=obj.__tablename__,
-            record_id=str(getattr(obj, "id", "")),
-            changes={"deleted": True}
-        )
-        session.add(audit)
+        audit_entries.append({
+            "user_email": user_email,
+            "action": "DELETE",
+            "table_name": getattr(obj, "__tablename__", type(obj).__name__),
+            "record_id": str(getattr(obj, "id", "")),
+            "changes": {"deleted": True},
+            "timestamp": datetime.utcnow()
+        })
+
+    if audit_entries:
+        session.execute(AuditLog.__table__.insert(), audit_entries)
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
