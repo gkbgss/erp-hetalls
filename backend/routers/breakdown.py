@@ -116,8 +116,8 @@ def daily_sales(date: str = Query(default="today"), current_user=Depends(get_cur
             except ValueError:
                 continue
                 
-        portal = row[4].strip() or "Unknown Portal"
-        material = row[10].strip() or "Unknown Material"
+        portal = (row[4].strip() or "Unknown Portal").upper()
+        material = (row[10].strip() or "Unknown Material").upper()
         price = parse_price(row[36])
         
         if price <= 0: continue
