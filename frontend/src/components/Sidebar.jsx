@@ -26,9 +26,11 @@ export default function Sidebar() {
   const navigate = useNavigate()
 
   const canSee = (item) => {
-    if (user?.role === 'admin') return true
-    if (item.role && user?.role === item.role) return true
-    if (item.permission && user?.permissions?.includes(item.permission)) return true
+    const uRole = (user?.role || '').toLowerCase()
+    const uPerms = (user?.permissions || []).map(p => p.toLowerCase())
+    if (uRole === 'admin') return true
+    if (item.role && uRole === item.role.toLowerCase()) return true
+    if (item.permission && uPerms.includes(item.permission.toLowerCase())) return true
     return false
   }
 

@@ -45,10 +45,13 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
 def require_roles(*roles_or_perms):
     def checker(current_user: User = Depends(get_current_user)):
-        if current_user.role == "admin":
+        user_role = (current_user.role or "").lower()
+        user_perms = [p.lower() for p in (current_user.permissions or [])]
+        
+        if user_role == "admin":
             return current_user
             
-        if current_user.role in roles_or_perms:
+        if user_role in roles_or_perms:
             return current_user
             
         # Fallback to check if they have the specific granular permissions
@@ -59,7 +62,7 @@ def require_roles(*roles_or_perms):
         }
         for rp in roles_or_perms:
             perm_to_check = mapping.get(rp, rp)
-            if perm_to_check in current_user.permissions:
+            if perm_to_check in user_perms:
                 return current_user
                 
         raise HTTPException(status_code=403, detail="Insufficient permissions")
