@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
-import { Shield, User, Building2, Plus, Trash2, Edit2, Check, X } from 'lucide-react'
+import { Shield, User, Building2, Plus, Trash2, Edit2, Check, X, GitCommit } from 'lucide-react'
 
 const ROLES = ['admin', 'accountant', 'ecommerce', 'warehouse', 'hr', 'analyst', 'viewer']
 const DEPARTMENTS = ['IT', 'Accounts', 'E-Commerce', 'HR', 'Inventory', 'Marketing', 'General']
@@ -32,6 +32,27 @@ export default function Settings() {
       .then(r => setUsers(r.data))
       .catch(console.error)
       .finally(() => setLoading(false))
+  }
+  
+  // Easter Egg State
+  const [clicks, setClicks] = useState([])
+  const [showHistory, setShowHistory] = useState(false)
+  const [commits, setCommits] = useState([])
+
+  const handleSecretClick = (value) => {
+    const newClicks = [...clicks, value].slice(-6)
+    setClicks(newClicks)
+    
+    const target = ['Hetalls Inc.', 'Hetalls Inc.', 'Hetalls Inc.', 'Hetalls Inc.', 'USD ($)', 'Python FastAPI']
+    if (JSON.stringify(newClicks) === JSON.stringify(target)) {
+      setShowHistory(true)
+      setClicks([])
+      if (commits.length === 0) {
+        axios.get('https://api.github.com/repos/aryankool1574-prog/hetalls-erp/commits')
+          .then(res => setCommits(res.data))
+          .catch(console.error)
+      }
+    }
   }
   useEffect(() => { fetchUsers() }, [API])
 
@@ -96,13 +117,53 @@ export default function Settings() {
             { label: 'Database',       value: 'SQLite (Dev)' },
             { label: 'Backend',        value: 'Python FastAPI' },
           ].map(item => (
-            <div key={item.label} style={{ background: 'var(--bg-surface)', borderRadius: 8, padding: '12px 16px' }}>
+            <div 
+              key={item.label} 
+              onClick={() => handleSecretClick(item.value)}
+              style={{ background: 'var(--bg-surface)', borderRadius: 8, padding: '12px 16px', cursor: 'pointer', userSelect: 'none' }}
+            >
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>{item.label}</div>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{item.value}</div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* History / Changes Popup */}
+      {showHistory && (
+        <div className="breakdown-overlay" onClick={() => setShowHistory(false)}>
+          <div className="breakdown-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 700, padding: 24 }}>
+            <div className="breakdown-modal-header" style={{ marginBottom: 20 }}>
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <GitCommit size={20} color="var(--gold)" /> ERP System Changelog
+                </h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Recent codebase edits and updates</p>
+              </div>
+              <button onClick={() => setShowHistory(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: 10 }}>
+              {commits.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Loading history...</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {commits.map((c, i) => (
+                    <div key={i} style={{ background: 'var(--bg-surface)', padding: 16, borderRadius: 8, border: '1px solid var(--border)' }}>
+                      <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 6 }}>{c.commit.message}</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-muted)' }}>
+                        <span>{c.commit.author.name}</span>
+                        <span>{new Date(c.commit.author.date).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Flash Message */}
       {msg && (
