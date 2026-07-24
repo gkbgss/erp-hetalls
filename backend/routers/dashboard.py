@@ -145,8 +145,7 @@ def companies_revenue(current_user=Depends(get_current_user)):
         status = row[14].strip().lower() if len(row) > 14 else ""
         if status == "returned": continue
         
-        portal = row[4].strip()
-        if not portal: continue
+        portal = (row[4].strip() or "UNKNOWN").upper()
         
         price = parse_price(row[36])
         if price > 0:
@@ -173,10 +172,10 @@ def revenue_chart(current_user=Depends(get_current_user)):
         if status == "returned": continue
         
         dt = parse_date(row[8])
-        portal = row[4].strip()
+        portal = (row[4].strip() or "UNKNOWN").upper()
         price = parse_price(row[36])
         
-        if dt and portal and price > 0:
+        if dt and price > 0:
             month_label = dt.strftime("%b %Y")
             if month_label not in monthly_data:
                 monthly_data[month_label] = {"month": month_label, "_dt": dt.replace(day=1)}
@@ -212,7 +211,7 @@ def recent_orders(current_user=Depends(get_current_user)):
         valid_orders.append({
             "id": i,
             "order_id": row[5].strip() if len(row) > 5 else f"ORD-{i}",
-            "platform": row[4].strip() if len(row) > 4 else "Unknown",
+            "platform": (row[4].strip() or "UNKNOWN").upper() if len(row) > 4 else "UNKNOWN",
             "customer_name": row[6].strip() if len(row) > 6 else "Unknown",
             "product_name": f"{material} {size}".strip(),
             "amount": parse_price(row[36]),
