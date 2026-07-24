@@ -47,12 +47,27 @@ def upload_employees(
         file.file.seek(0)
         contents = file.file.read().decode('latin-1')
         
-    csv_reader = csv.DictReader(StringIO(contents))
+    if not contents.strip():
+        raise HTTPException(status_code=400, detail="The uploaded file is completely empty.")
+        
+    # Auto-detect delimiter (comma, semicolon, tab, etc)
+    try:
+        dialect = csv.Sniffer().sniff(contents[:2048])
+        csv_reader = csv.DictReader(StringIO(contents), dialect=dialect)
+    except csv.Error:
+        # Fallback to standard comma if sniffer fails
+        csv_reader = csv.DictReader(StringIO(contents))
     
     # Remove all existing data from HR
     db.query(Employee).delete()
     
+    processed = 0
+    headers_found = []
+    
     for row in csv_reader:
+        if not headers_found:
+            headers_found = list(row.keys())
+            
         # Normalize headers to lowercase to be extremely forgiving
         norm_row = {str(k).strip().lower(): str(v).strip() for k, v in row.items() if k}
         
@@ -90,6 +105,11 @@ def upload_employees(
             is_active=True
         )
         db.add(emp)
+        processed += 1
         
     db.commit()
-    return {"message": "Employees uploaded successfully"}
+    
+    if processed == 0:
+        raise HTTPException(status_code=400, detail=f"No candidates found! The file had these headers: {headers_found}. Make sure the sheet isn't empty.")
+        
+    return {"message": f"Success! Extracted {processed} candidates."}
