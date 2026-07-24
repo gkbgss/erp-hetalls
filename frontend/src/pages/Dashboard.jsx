@@ -222,7 +222,7 @@ export default function Dashboard() {
             ref={cubeRef}
             style={{ 
               transform: `translateZ(-140px) rotateY(${angleRef.current}deg)`, 
-              transition: spinInterval.current ? 'none' : 'transform 0.4s ease-out' 
+              transition: 'transform 0.4s ease-out' 
             }}
           >
             {/* Face 1: Today */}
