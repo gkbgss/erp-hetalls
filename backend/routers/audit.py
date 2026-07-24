@@ -22,6 +22,6 @@ def get_audit_logs(
             "table": log.table_name,
             "record_id": log.record_id,
             "changes": log.changes,
-            "timestamp": log.timestamp.isoformat()
+            "timestamp": log.timestamp.isoformat() + "Z"
         })
     return results

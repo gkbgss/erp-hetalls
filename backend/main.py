@@ -12,6 +12,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from fastapi import Request
+from auth import SECRET_KEY, ALGORITHM
+from jose import jwt
+from database import audit_user_var
+
+@app.middleware("http")
+async def audit_user_middleware(request: Request, call_next):
+    audit_user_var.set("System") # Reset per request
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            email = payload.get("sub")
+            if email:
+                audit_user_var.set(email)
+        except Exception:
+            pass
+    response = await call_next(request)
+    return response
+
 # Create DB tables on startup
 create_tables()
 
