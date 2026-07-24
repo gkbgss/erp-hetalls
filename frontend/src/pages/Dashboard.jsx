@@ -70,39 +70,39 @@ export default function Dashboard() {
   const cubeRef = useRef(null)
   const angleRef = useRef(0)
   const velocityRef = useRef(0)
-  const spinReqRef = useRef(null)
+  const spinInterval = useRef(null)
 
   const startSpinning = (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    if (spinReqRef.current) return;
-    velocityRef.current = 0.5;
+    if (spinInterval.current) return;
+    
+    velocityRef.current = 1.0;
     if (cubeRef.current) cubeRef.current.style.transition = 'none';
     
-    const animate = () => {
+    spinInterval.current = setInterval(() => {
       angleRef.current -= velocityRef.current;
-      velocityRef.current += 0.2; 
-      if (velocityRef.current > 30) velocityRef.current = 30; 
+      velocityRef.current += 0.4; 
+      if (velocityRef.current > 35) velocityRef.current = 35; 
       
       if (cubeRef.current) {
         cubeRef.current.style.transform = `translateZ(-140px) rotateY(${angleRef.current}deg)`;
       }
-      spinReqRef.current = requestAnimationFrame(animate);
-    };
-    spinReqRef.current = requestAnimationFrame(animate);
+    }, 16);
 
     window.addEventListener('mouseup', stopSpinning);
     window.addEventListener('touchend', stopSpinning);
   };
 
   const stopSpinning = () => {
-    if (spinReqRef.current) {
-      cancelAnimationFrame(spinReqRef.current);
-      spinReqRef.current = null;
+    if (spinInterval.current) {
+      clearInterval(spinInterval.current);
+      spinInterval.current = null;
     }
+    
     angleRef.current = Math.round(angleRef.current / -90) * -90;
     
     if (cubeRef.current) {
-      cubeRef.current.style.transition = 'transform 0.4s ease-out';
+      cubeRef.current.style.transition = 'transform 0.5s ease-out';
       cubeRef.current.style.transform = `translateZ(-140px) rotateY(${angleRef.current}deg)`;
     }
 
@@ -112,7 +112,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     return () => {
-      if (spinReqRef.current) cancelAnimationFrame(spinReqRef.current);
+      if (spinInterval.current) clearInterval(spinInterval.current);
     };
   }, []);
 
@@ -253,6 +253,7 @@ export default function Dashboard() {
           className="cube-container" 
           onMouseDown={startSpinning}
           onTouchStart={startSpinning}
+          onDragStart={(e) => e.preventDefault()}
           style={{ cursor: 'pointer', userSelect: 'none' }}
         >
           <div 
@@ -260,7 +261,7 @@ export default function Dashboard() {
             ref={cubeRef}
             style={{ 
               transform: `translateZ(-140px) rotateY(${angleRef.current}deg)`, 
-              transition: spinReqRef.current ? 'none' : 'transform 0.4s ease-out' 
+              transition: spinInterval.current ? 'none' : 'transform 0.4s ease-out' 
             }}
           >
             {/* Face 1: Today */}
