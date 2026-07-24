@@ -112,7 +112,9 @@ class AuditLog(Base):
     changes       = Column(JSON, default=dict)
     timestamp     = Column(DateTime, default=datetime.utcnow)
 
-@event.listens_for(SessionLocal, "before_flush")
+from sqlalchemy.orm import Session
+
+@event.listens_for(Session, "before_flush")
 def receive_before_flush(session, flush_context, instances):
     user_email = audit_user_var.get()
     
@@ -137,8 +139,8 @@ def receive_before_flush(session, flush_context, instances):
                 
                 hist = get_history(obj, attr)
                 if hist.has_changes():
-                    old_val = hist.deleted[0] if hist.deleted else None
-                    new_val = hist.added[0] if hist.added else None
+                    old_val = str(hist.deleted[0]) if hist.deleted else None
+                    new_val = str(hist.added[0]) if hist.added else None
                     changes[attr] = {"old": old_val, "new": new_val}
             
             if changes:

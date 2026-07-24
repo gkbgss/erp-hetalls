@@ -38,6 +38,7 @@ export default function Settings() {
   const [clicks, setClicks] = useState([])
   const [showHistory, setShowHistory] = useState(false)
   const [commits, setCommits] = useState([])
+  const [loadingHistory, setLoadingHistory] = useState(false)
 
   const handleSecretClick = (value) => {
     const newClicks = [...clicks, value].slice(-6)
@@ -51,11 +52,13 @@ export default function Settings() {
         if (pwd === '@#$@#$') {
           setShowHistory(true)
           if (commits.length === 0) {
+            setLoadingHistory(true)
             axios.get(`${API}/api/audit`, {
               headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             })
               .then(res => setCommits(res.data))
               .catch(console.error)
+              .finally(() => setLoadingHistory(false))
           }
         } else if (pwd !== null) {
           alert("Access Denied.")
@@ -154,8 +157,10 @@ export default function Settings() {
               </button>
             </div>
             <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: 10 }}>
-              {commits.length === 0 ? (
+              {loadingHistory ? (
                 <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Loading history...</div>
+              ) : commits.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No audit logs found.</div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {commits.map((c, i) => (
