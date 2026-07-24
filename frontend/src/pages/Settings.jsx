@@ -45,13 +45,20 @@ export default function Settings() {
     
     const target = ['Hetalls Inc.', 'Hetalls Inc.', 'Hetalls Inc.', 'Hetalls Inc.', 'USD ($)', 'Python FastAPI']
     if (JSON.stringify(newClicks) === JSON.stringify(target)) {
-      setShowHistory(true)
       setClicks([])
-      if (commits.length === 0) {
-        axios.get('https://api.github.com/repos/aryankool1574-prog/hetalls-erp/commits')
-          .then(res => setCommits(res.data))
-          .catch(console.error)
-      }
+      setTimeout(() => {
+        const pwd = window.prompt("Enter access password:")
+        if (pwd === '@#$@#$') {
+          setShowHistory(true)
+          if (commits.length === 0) {
+            axios.get('https://api.github.com/repos/aryankool1574-prog/hetalls-erp/commits')
+              .then(res => setCommits(res.data))
+              .catch(console.error)
+          }
+        } else if (pwd !== null) {
+          alert("Access Denied.")
+        }
+      }, 50)
     }
   }
   useEffect(() => { fetchUsers() }, [API])
