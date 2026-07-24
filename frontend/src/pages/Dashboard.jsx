@@ -72,7 +72,8 @@ export default function Dashboard() {
   const velocityRef = useRef(0)
   const spinReqRef = useRef(null)
 
-  const startSpinning = () => {
+  const startSpinning = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (spinReqRef.current) return;
     velocityRef.current = 0.5;
     if (cubeRef.current) cubeRef.current.style.transition = 'none';
@@ -88,6 +89,9 @@ export default function Dashboard() {
       spinReqRef.current = requestAnimationFrame(animate);
     };
     spinReqRef.current = requestAnimationFrame(animate);
+
+    window.addEventListener('mouseup', stopSpinning);
+    window.addEventListener('touchend', stopSpinning);
   };
 
   const stopSpinning = () => {
@@ -101,6 +105,9 @@ export default function Dashboard() {
       cubeRef.current.style.transition = 'transform 0.4s ease-out';
       cubeRef.current.style.transform = `translateZ(-140px) rotateY(${angleRef.current}deg)`;
     }
+
+    window.removeEventListener('mouseup', stopSpinning);
+    window.removeEventListener('touchend', stopSpinning);
   };
 
   useEffect(() => {
@@ -245,10 +252,7 @@ export default function Dashboard() {
         <div 
           className="cube-container" 
           onMouseDown={startSpinning}
-          onMouseUp={stopSpinning}
-          onMouseLeave={stopSpinning}
           onTouchStart={startSpinning}
-          onTouchEnd={stopSpinning}
           style={{ cursor: 'pointer', userSelect: 'none' }}
         >
           <div 
