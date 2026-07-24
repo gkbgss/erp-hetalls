@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
@@ -9,6 +9,32 @@ export default function HR() {
   const navigate = useNavigate()
   const [employees, setEmployees] = useState([])
   const [loading, setLoading] = useState(true)
+  const fileInputRef = useRef(null)
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    try {
+      setLoading(true)
+      await axios.post(`${API}/api/hr/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      // Refresh list
+      const res = await axios.get(`${API}/api/hr/employees`)
+      setEmployees(res.data)
+      alert("Employees uploaded successfully! Old data removed.")
+    } catch (err) {
+      console.error(err)
+      alert(err.response?.data?.detail || "Failed to upload employees. Make sure it's a valid CSV.")
+    } finally {
+      setLoading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   useEffect(() => {
     axios.get(`${API}/api/hr/employees`)
@@ -34,19 +60,40 @@ export default function HR() {
             <div className="card-title">Employee Directory</div>
             <div className="card-subtitle">{employees.length} active team members</div>
           </div>
-          <button
-            onClick={() => navigate('/hr/salary-calculator')}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              background: 'linear-gradient(135deg, var(--gold), var(--gold-dark))',
-              color: '#000', padding: '9px 18px', borderRadius: 9,
-              fontSize: 13, fontWeight: 700, cursor: 'pointer',
-              boxShadow: '0 4px 14px rgba(245,158,11,0.3)',
-              transition: 'all 0.2s',
-            }}
-          >
-            <Calculator size={16} /> Salary Calculator
-          </button>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <input 
+              type="file" 
+              accept=".csv" 
+              ref={fileInputRef} 
+              style={{ display: 'none' }} 
+              onChange={handleFileUpload} 
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                background: 'var(--bg-surface)', border: '1px solid var(--border)',
+                color: 'var(--text-primary)', padding: '9px 18px', borderRadius: 9,
+                fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              Upload CSV
+            </button>
+            <button
+              onClick={() => navigate('/hr/salary-calculator')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                background: 'linear-gradient(135deg, var(--gold), var(--gold-dark))',
+                color: '#000', padding: '9px 18px', borderRadius: 9,
+                fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(245,158,11,0.3)',
+                transition: 'all 0.2s',
+              }}
+            >
+              <Calculator size={16} /> Salary Calculator
+            </button>
+          </div>
         </div>
         
         <div className="table-wrapper">
