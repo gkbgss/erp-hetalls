@@ -9,18 +9,58 @@ from auth import get_current_user
 router = APIRouter(prefix="/api/breakdown", tags=["breakdown"])
 
 import time
+import threading
+import urllib.request
+import urllib.parse
+import csv
+from io import StringIO
+
+_CACHE = {}
+_CACHE_LOCK = threading.Lock()
+_FETCHING = set()
+CACHE_TTL = 10 # 10 seconds for near-live data
+
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1SVvZnv8yphJNJp_qNKZdkB-WByslByjeRPM0_0oLQuE/export?format=csv&gid=1569773873"
 
-def fetch_sheet_csv(sheet_name):
+def _fetch_from_google(sheet_name):
     try:
+        # cachebuster
         url_with_cb = f"{SHEET_URL}&cb={int(time.time())}"
         req = urllib.request.Request(url_with_cb)
         with urllib.request.urlopen(req) as response:
             content = response.read().decode('utf-8')
-            return list(csv.reader(StringIO(content)))
+            data = list(csv.reader(StringIO(content)))
+            with _CACHE_LOCK:
+                _CACHE[sheet_name] = (time.time(), data)
+            return data
     except Exception as e:
         print(f"Error fetching sheet {sheet_name}: {e}")
-        return []
+        return None
+    finally:
+        with _CACHE_LOCK:
+            if sheet_name in _FETCHING:
+                _FETCHING.remove(sheet_name)
+
+def _bg_fetch(sheet_name):
+    with _CACHE_LOCK:
+        if sheet_name in _FETCHING:
+            return
+        _FETCHING.add(sheet_name)
+    _fetch_from_google(sheet_name)
+
+def fetch_sheet_csv(sheet_name):
+    now = time.time()
+    with _CACHE_LOCK:
+        if sheet_name in _CACHE:
+            cached_time, data = _CACHE[sheet_name]
+            if now - cached_time > CACHE_TTL:
+                threading.Thread(target=_bg_fetch, args=(sheet_name,)).start()
+            return data
+
+    with _CACHE_LOCK:
+        _FETCHING.add(sheet_name)
+    data = _fetch_from_google(sheet_name)
+    return data or []
 
 @router.get("/daily-sales")
 def daily_sales(date: str = Query(default="today"), current_user=Depends(get_current_user)):

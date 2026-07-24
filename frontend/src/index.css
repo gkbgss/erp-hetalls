@@ -560,9 +560,9 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   text-align: left;
 }
 .breakdown-table th.main-header {
-  color: #f59e0b;
+  color: var(--text-primary);
   text-align: center;
-  background: var(--bg-surface);
+  background: rgba(245,158,11,0.08);
   font-weight: 700;
 }
 .breakdown-table tbody tr:hover td {
