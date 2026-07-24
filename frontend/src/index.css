@@ -258,11 +258,20 @@ input, select, textarea { font-family: inherit; outline: none; }
 
 .chart-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
   gap: 16px;
   margin-bottom: 24px;
 }
-@media (max-width: 1100px) { .chart-grid { grid-template-columns: 1fr; } }
+.chart-grid.side-by-side {
+  grid-template-columns: 1fr 1fr;
+}
+.chart-grid.stacked {
+  grid-template-columns: 1fr;
+}
+@media (max-width: 1100px) { 
+  .chart-grid.side-by-side, .chart-grid.stacked { 
+    grid-template-columns: 1fr; 
+  } 
+}
 
 /* ─── Table ─────────────────────────────────────────────────────────── */
 .table-wrapper { overflow-x: auto; }

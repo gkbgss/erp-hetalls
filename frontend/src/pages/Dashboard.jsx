@@ -343,7 +343,7 @@ export default function Dashboard() {
       )}
 
       {/* Charts */}
-      <div className="chart-grid" style={{ gridTemplateColumns: '1fr' }}>
+      <div className={`chart-grid ${revenueChart.length >= 7 ? 'stacked' : 'side-by-side'}`}>
         {/* Revenue Area Chart */}
         <div className="card">
           <div className="card-header">
