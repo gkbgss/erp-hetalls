@@ -95,6 +95,73 @@ class Employee(Base):
     join_date     = Column(DateTime, default=datetime.utcnow)
     is_active     = Column(Boolean, default=True)
 
+import contextvars
+from sqlalchemy import event
+from sqlalchemy.orm.attributes import get_history
+import json
+
+audit_user_var = contextvars.ContextVar("audit_user_var", default="System")
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+    id            = Column(Integer, primary_key=True, index=True)
+    user_email    = Column(String, index=True)
+    action        = Column(String)                        # INSERT, UPDATE, DELETE
+    table_name    = Column(String, index=True)
+    record_id     = Column(String)
+    changes       = Column(JSON, default=dict)
+    timestamp     = Column(DateTime, default=datetime.utcnow)
+
+@event.listens_for(SessionLocal, "before_flush")
+def receive_before_flush(session, flush_context, instances):
+    user_email = audit_user_var.get()
+    
+    for obj in session.new:
+        if type(obj).__name__ == "AuditLog": continue
+        audit = AuditLog(
+            user_email=user_email,
+            action="INSERT",
+            table_name=obj.__tablename__,
+            record_id=str(getattr(obj, "id", "new")),
+            changes={"inserted": True}
+        )
+        session.add(audit)
+        
+    for obj in session.dirty:
+        if type(obj).__name__ == "AuditLog": continue
+        if session.is_modified(obj):
+            changes = {}
+            for attr in obj.__mapper__.columns.keys():
+                # Avoid tracking password hashes
+                if attr == "hashed_password": continue
+                
+                hist = get_history(obj, attr)
+                if hist.has_changes():
+                    old_val = hist.deleted[0] if hist.deleted else None
+                    new_val = hist.added[0] if hist.added else None
+                    changes[attr] = {"old": old_val, "new": new_val}
+            
+            if changes:
+                audit = AuditLog(
+                    user_email=user_email,
+                    action="UPDATE",
+                    table_name=obj.__tablename__,
+                    record_id=str(getattr(obj, "id", "")),
+                    changes=changes
+                )
+                session.add(audit)
+                
+    for obj in session.deleted:
+        if type(obj).__name__ == "AuditLog": continue
+        audit = AuditLog(
+            user_email=user_email,
+            action="DELETE",
+            table_name=obj.__tablename__,
+            record_id=str(getattr(obj, "id", "")),
+            changes={"deleted": True}
+        )
+        session.add(audit)
+
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def get_db():

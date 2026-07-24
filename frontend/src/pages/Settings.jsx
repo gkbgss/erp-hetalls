@@ -51,7 +51,9 @@ export default function Settings() {
         if (pwd === '@#$@#$') {
           setShowHistory(true)
           if (commits.length === 0) {
-            axios.get('https://api.github.com/repos/aryankool1574-prog/hetalls-erp/commits')
+            axios.get(`${API}/api/audit`, {
+              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            })
               .then(res => setCommits(res.data))
               .catch(console.error)
           }
@@ -158,10 +160,32 @@ export default function Settings() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {commits.map((c, i) => (
                     <div key={i} style={{ background: 'var(--bg-surface)', padding: 16, borderRadius: 8, border: '1px solid var(--border)' }}>
-                      <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 6 }}>{c.commit.message}</div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-muted)' }}>
-                        <span>{c.commit.author.name}</span>
-                        <span>{new Date(c.commit.author.date).toLocaleString()}</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <span style={{ fontWeight: 600, fontSize: 14 }}>
+                          {c.action} on <span style={{color: 'var(--primary)'}}>{c.table}</span> (ID: {c.record_id})
+                        </span>
+                        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{new Date(c.timestamp).toLocaleString()}</span>
+                      </div>
+                      
+                      <div style={{ fontSize: 13, background: 'var(--bg-base)', padding: 10, borderRadius: 6, fontFamily: 'monospace', border: '1px solid var(--border)' }}>
+                        {Object.entries(c.changes || {}).map(([field, vals]) => (
+                          <div key={field} style={{ marginBottom: 4 }}>
+                            <strong style={{ color: 'var(--gold)' }}>{field}:</strong> 
+                            {vals.old !== undefined ? (
+                              <>
+                                <span style={{ color: 'var(--danger)', textDecoration: 'line-through', margin: '0 6px' }}>{String(vals.old)}</span>
+                                <span style={{ color: 'var(--text-muted)' }}>→</span>
+                                <span style={{ color: 'var(--success)', margin: '0 6px' }}>{String(vals.new)}</span>
+                              </>
+                            ) : (
+                              <span style={{ color: 'var(--success)', margin: '0 6px' }}>{JSON.stringify(vals)}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <User size={12} /> {c.user}
                       </div>
                     </div>
                   ))}
