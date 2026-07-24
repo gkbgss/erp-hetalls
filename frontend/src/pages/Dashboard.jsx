@@ -354,11 +354,11 @@ export default function Dashboard() {
           </div>
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={revenueChart} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-              <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+              <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v/1000}k`} />
               <Tooltip content={<ChartTooltip />} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Legend align="center" wrapperStyle={{ fontSize: 12 }} />
               
               <Bar dataKey="ETSY-CASAVANI" name="Etsy-Casavani" fill="#f87171" stackId="a" />
               <Bar dataKey="AMAZON" name="Amazon" fill="#f59e0b" stackId="a" />
@@ -385,7 +385,7 @@ export default function Dashboard() {
               <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v/1000}k`} />
               <Tooltip content={<ChartTooltip />} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Legend align="center" wrapperStyle={{ fontSize: 12 }} />
               
               <Line type="monotone" dataKey="ETSY-CASAVANI" name="Etsy-Casavani" stroke="#f87171" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
               <Line type="monotone" dataKey="AMAZON" name="Amazon" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
