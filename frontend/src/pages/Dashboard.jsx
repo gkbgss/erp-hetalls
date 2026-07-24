@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import {
@@ -67,7 +67,48 @@ export default function Dashboard() {
   const [companiesRev, setCompaniesRev] = useState([])
   const [loading,      setLoading]      = useState(true)
   const [showRevDrop,  setShowRevDrop]  = useState(false)
-  const [cubeSide,     setCubeSide]     = useState(0)
+  const cubeRef = useRef(null)
+  const angleRef = useRef(0)
+  const velocityRef = useRef(0)
+  const spinReqRef = useRef(null)
+
+  const startSpinning = () => {
+    if (spinReqRef.current) return;
+    velocityRef.current = 0.5;
+    if (cubeRef.current) cubeRef.current.style.transition = 'none';
+    
+    const animate = () => {
+      angleRef.current -= velocityRef.current;
+      velocityRef.current += 0.2; 
+      if (velocityRef.current > 30) velocityRef.current = 30; 
+      
+      if (cubeRef.current) {
+        cubeRef.current.style.transform = `translateZ(-140px) rotateY(${angleRef.current}deg)`;
+      }
+      spinReqRef.current = requestAnimationFrame(animate);
+    };
+    spinReqRef.current = requestAnimationFrame(animate);
+  };
+
+  const stopSpinning = () => {
+    if (spinReqRef.current) {
+      cancelAnimationFrame(spinReqRef.current);
+      spinReqRef.current = null;
+    }
+    angleRef.current = Math.round(angleRef.current / -90) * -90;
+    
+    if (cubeRef.current) {
+      cubeRef.current.style.transition = 'transform 0.4s ease-out';
+      cubeRef.current.style.transform = `translateZ(-140px) rotateY(${angleRef.current}deg)`;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (spinReqRef.current) cancelAnimationFrame(spinReqRef.current);
+    };
+  }, []);
+
   const [showBreakdown, setShowBreakdown] = useState(false)
   const [bdTab,        setBdTab]        = useState('all')
   const [bdCustomDate, setBdCustomDate] = useState('')
@@ -201,11 +242,26 @@ export default function Dashboard() {
         </div>
         
         {/* The 4-Sided Horizontal 3D Prism */}
-        <div className="cube-container" onClick={() => setCubeSide(s => s + 1)} style={{ cursor: 'pointer' }}>
-          <div className="cube" style={{ transform: `translateZ(-140px) rotateY(${cubeSide * -90}deg)` }}>
+        <div 
+          className="cube-container" 
+          onMouseDown={startSpinning}
+          onMouseUp={stopSpinning}
+          onMouseLeave={stopSpinning}
+          onTouchStart={startSpinning}
+          onTouchEnd={stopSpinning}
+          style={{ cursor: 'pointer', userSelect: 'none' }}
+        >
+          <div 
+            className="cube" 
+            ref={cubeRef}
+            style={{ 
+              transform: `translateZ(-140px) rotateY(${angleRef.current}deg)`, 
+              transition: spinReqRef.current ? 'none' : 'transform 0.4s ease-out' 
+            }}
+          >
             {/* Face 1: Today */}
             <div className="cube-face">
-              <div style={{ width: '100%', height: '100%' }}><KPICard icon={AlertCircle} label="Orders Today" value={kpis?.today_orders} sub="Click to spin" colorClass="danger" /></div>
+              <div style={{ width: '100%', height: '100%' }}><KPICard icon={AlertCircle} label="Orders Today" value={kpis?.today_orders} sub="Hold to spin" colorClass="danger" /></div>
             </div>
             {/* Face 2: Total */}
             <div className="cube-face">
