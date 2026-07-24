@@ -419,7 +419,7 @@ export default function SalaryCalculator() {
               ))}
             </div>
 
-            <div className="chart-grid" style={{ marginBottom: 24 }}>
+            <div className="chart-grid side-by-side" style={{ marginBottom: 24 }}>
               {/* Department Chart */}
               <div className="card">
                 <div className="card-header">
@@ -428,17 +428,19 @@ export default function SalaryCalculator() {
                     <div className="card-subtitle">Monthly gross spend per department</div>
                   </div>
                 </div>
-                <ResponsiveContainer width="100%" height={summary?.dept_breakdown ? Math.max(240, summary.dept_breakdown.length * 35) : 240}>
-                  <BarChart data={summary?.dept_breakdown} layout="vertical" margin={{ top: 0, right: 16, left: 16, bottom: 0 }}>
-                    <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" horizontal={false} />
-                    <XAxis type="number" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${v / 1000}k`} />
-                    <YAxis type="category" dataKey="department" tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} interval={0} axisLine={false} tickLine={false} width={140} />
-                    <Tooltip content={<ChartTooltip />} />
-                    <Bar dataKey="total" name="Gross Pay" radius={[0, 4, 4, 0]}>
-                      {summary?.dept_breakdown?.map((_, i) => <Cell key={i} fill={DEPT_COLORS[i % DEPT_COLORS.length]} />)}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                <div style={{ height: '360px', overflowY: 'auto', overflowX: 'hidden' }}>
+                  <ResponsiveContainer width="100%" height={summary?.dept_breakdown ? Math.max(360, summary.dept_breakdown.length * 28) : 360}>
+                    <BarChart data={summary?.dept_breakdown} layout="vertical" margin={{ top: 0, right: 16, left: 16, bottom: 0 }}>
+                      <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" horizontal={false} />
+                      <XAxis type="number" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${v / 1000}k`} />
+                      <YAxis type="category" dataKey="department" tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} interval={0} axisLine={false} tickLine={false} width={140} />
+                      <Tooltip content={<ChartTooltip />} />
+                      <Bar dataKey="total" name="Gross Pay" radius={[0, 4, 4, 0]} barSize={12}>
+                        {summary?.dept_breakdown?.map((_, i) => <Cell key={i} fill={DEPT_COLORS[i % DEPT_COLORS.length]} />)}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
 
               {/* Live Calculator */}
