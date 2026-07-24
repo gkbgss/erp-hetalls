@@ -428,14 +428,13 @@ export default function SalaryCalculator() {
                     <div className="card-subtitle">Monthly gross spend per department</div>
                   </div>
                 </div>
-                <ResponsiveContainer width="100%" height={240}>
+                <ResponsiveContainer width="100%" height={summary?.dept_breakdown ? Math.max(240, summary.dept_breakdown.length * 35) : 240}>
                   <BarChart data={summary?.dept_breakdown} layout="vertical" margin={{ top: 0, right: 16, left: 16, bottom: 0 }}>
                     <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" horizontal={false} />
                     <XAxis type="number" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${v / 1000}k`} />
-                    <YAxis type="category" dataKey="department" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} axisLine={false} tickLine={false} width={120} />
+                    <YAxis type="category" dataKey="department" tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} interval={0} axisLine={false} tickLine={false} width={140} />
                     <Tooltip content={<ChartTooltip />} />
                     <Bar dataKey="total" name="Gross Pay" radius={[0, 4, 4, 0]}>
-                      <LabelList dataKey="department" position="insideLeft" fill="#fff" fontSize={12} fontWeight={600} style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }} />
                       {summary?.dept_breakdown?.map((_, i) => <Cell key={i} fill={DEPT_COLORS[i % DEPT_COLORS.length]} />)}
                     </Bar>
                   </BarChart>
