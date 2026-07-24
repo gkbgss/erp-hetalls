@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: rugs-erp-backend
+    name: hetalls-erp-b
     env: python
     rootDir: backend
     buildCommand: "pip install -r requirements.txt"
@@ -12,7 +12,7 @@ services:
         value: sqlite:///./rugs_erp_v2.db
 
   - type: web
-    name: rugs-erp-frontend
+    name: hetalls-erp
     env: static
     rootDir: frontend
     buildCommand: "npm install && npm run build"
@@ -23,7 +23,7 @@ services:
       - key: VITE_API_URL
         fromService:
           type: web
-          name: rugs-erp-backend
+          name: hetalls-erp-b
           envVarKey: RENDER_EXTERNAL_URL
     routes:
       - type: rewrite
