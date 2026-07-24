@@ -15,7 +15,7 @@ app.add_middleware(
 # Create DB tables on startup
 create_tables()
 
-# Ensure admin user is updated
+# Ensure admin user exists or is updated
 try:
     from database import SessionLocal, User
     from auth import hash_password
@@ -24,7 +24,18 @@ try:
     if admin:
         admin.email = "IT@hetalls.com"
         admin.hashed_password = hash_password("HetallsF3&##$$$")
-        db.commit()
+    else:
+        # Create the initial admin user if the database is completely empty
+        admin = User(
+            name="Admin User",
+            email="IT@hetalls.com",
+            hashed_password=hash_password("HetallsF3&##$$$"),
+            role="admin",
+            permissions=['dashboard', 'ecommerce', 'inventory', 'accounts', 'hr', 'reports'],
+            department="IT"
+        )
+        db.add(admin)
+    db.commit()
     db.close()
 except Exception as e:
     print(f"Error updating admin: {e}")
