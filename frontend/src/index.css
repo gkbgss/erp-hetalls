@@ -544,9 +544,12 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
 }
 .breakdown-table thead tr:nth-child(1) th {
   top: 0;
+  height: 41px;
+  box-sizing: border-box;
 }
 .breakdown-table thead tr:nth-child(2) th {
   top: 41px;
+  box-sizing: border-box;
 }
 .breakdown-table td:first-child {
   text-align: left;
