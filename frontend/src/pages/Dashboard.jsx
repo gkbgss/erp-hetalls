@@ -62,15 +62,19 @@ const PortalGrowthCard = ({ revenueChart }) => {
     return keys.map(key => {
       const currentVal = Number(latest[key]) || 0;
       const prevVal = Number(prev[key]) || 0;
+      
+      if (currentVal === 0 && prevVal === 0) return null;
+
       let growth = 0;
       if (prevVal > 0) {
         growth = ((currentVal - prevVal) / prevVal) * 100;
-      } else if (currentVal > 0) {
+      } else if (currentVal > 0 && prevVal === 0) {
         growth = 100;
       }
+      
       if (isNaN(growth) || !isFinite(growth)) growth = 0;
       return { name: key.replace('-', ' '), growth };
-    }).sort((a, b) => b.growth - a.growth);
+    }).filter(Boolean).sort((a, b) => b.growth - a.growth);
   }, [revenueChart]);
 
   if (!portals || portals.length === 0) return (
