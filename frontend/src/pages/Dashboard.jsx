@@ -33,13 +33,13 @@ const ChartTooltip = ({ active, payload, label }) => {
 }
 
 // ── KPI Card ──────────────────────────────────────────────────────────
-function KPICard({ icon: Icon, label, value, sub, colorClass, prefix = '', format = 'number' }) {
+function KPICard({ icon: Icon, label, value, sub, colorClass, prefix = '', format = 'number', className = '' }) {
   let display = value
   if (format === 'currency') display = `$${Number(value).toLocaleString('en-US', { minimumFractionDigits: 0 })}`
   else if (format === 'number') display = Number(value).toLocaleString()
   
   return (
-    <div className="kpi-card">
+    <div className={`kpi-card ${className}`}>
       <div className="kpi-header">
         <span className="kpi-label">{label}</span>
         <div className={`kpi-icon ${colorClass}`}><Icon size={18} /></div>
@@ -50,7 +50,7 @@ function KPICard({ icon: Icon, label, value, sub, colorClass, prefix = '', forma
   )
 }
 
-const PortalGrowthCard = ({ revenueChart }) => {
+const PortalGrowthCard = ({ revenueChart, partyMode }) => {
   const [spinCount, setSpinCount] = useState(0);
   
   const portals = useMemo(() => {
@@ -78,7 +78,7 @@ const PortalGrowthCard = ({ revenueChart }) => {
   }, [revenueChart]);
 
   if (!portals || portals.length === 0) return (
-    <KPICard icon={TrendingUp} label="Portal Growth" value="N/A" sub="Not enough data" colorClass="success" />
+    <KPICard icon={TrendingUp} label="Portal Growth" value="N/A" sub="Not enough data" colorClass="success" className={partyMode ? 'party-mode' : ''} />
   );
 
   const getPortalForFace = (i) => {
@@ -89,7 +89,7 @@ const PortalGrowthCard = ({ revenueChart }) => {
 
   return (
     <div 
-      className="cube-container" 
+      className={`cube-container ${partyMode ? 'party-mode' : ''}`} 
       onClick={(e) => { if (e && e.preventDefault) e.preventDefault(); setSpinCount(c => c + 1); }}
       style={{ cursor: 'pointer', userSelect: 'none' }}
     >
@@ -123,8 +123,9 @@ const PortalGrowthCard = ({ revenueChart }) => {
   );
 };
 
-const RevenueSpinningCard = ({ kpis, companiesRev }) => {
+const RevenueSpinningCard = ({ kpis, companiesRev, onParty, partyMode }) => {
   const [spinCount, setSpinCount] = useState(0);
+  const [clickCount, setClickCount] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   
   const faces = [
@@ -145,12 +146,21 @@ const RevenueSpinningCard = ({ kpis, companiesRev }) => {
   return (
     <div 
       style={{ position: 'relative' }}
+      className={partyMode ? 'party-mode' : ''}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <div 
         className="cube-container" 
-        onClick={(e) => { if (e && e.preventDefault) e.preventDefault(); setSpinCount(c => c + 1); }}
+        onClick={(e) => { 
+          if (e && e.preventDefault) e.preventDefault(); 
+          setSpinCount(c => c + 1); 
+          setClickCount(c => {
+            const nc = c + 1;
+            if (nc === 7 && onParty) onParty();
+            return nc;
+          });
+        }}
         style={{ cursor: 'pointer', userSelect: 'none' }}
       >
         <div 
@@ -218,6 +228,7 @@ export default function Dashboard() {
   const [companiesRev, setCompaniesRev] = useState({})
   const [loading,      setLoading]      = useState(true)
   const [showRevDrop,  setShowRevDrop]  = useState(false)
+  const [partyMode,    setPartyMode]    = useState(false)
   const cubeRef = useRef(null)
   const angleRef = useRef(0)
   const timeoutRef = useRef(null)
@@ -387,11 +398,11 @@ export default function Dashboard() {
     <div>
       {/* KPI Grid */}
       <div className="kpi-grid">
-        <RevenueSpinningCard kpis={kpis} companiesRev={companiesRev} />
+        <RevenueSpinningCard kpis={kpis} companiesRev={companiesRev} onParty={() => setPartyMode(true)} partyMode={partyMode} />
         
         {/* The 4-Sided Horizontal 3D Prism */}
         <div 
-          className="cube-container" 
+          className={`cube-container ${partyMode ? 'party-mode' : ''}`}
           onMouseDown={startSpin}
           onMouseUp={stopSpin}
           onMouseLeave={stopSpin}
@@ -428,15 +439,15 @@ export default function Dashboard() {
         </div>
 
         {/* Active Employees */}
-        <KPICard icon={Users} label="Active Employees" value={kpis?.total_employees ?? 0} sub="Across all departments" colorClass="green" />
+        <KPICard icon={Users} label="Active Employees" value={kpis?.total_employees ?? 0} sub="Across all departments" colorClass="green" className={partyMode ? 'party-mode' : ''} />
 
         {/* Detailed Breakdown */}
-        <div onClick={openBreakdown} style={{ cursor: 'pointer' }}>
-          <KPICard icon={Layers} label="Detailed Breakdown" value="Breakdown" sub="Daily Sale Brands & Portal" colorClass="blue" format="text" />
+        <div onClick={openBreakdown} style={{ cursor: 'pointer', height: '100%' }} className={partyMode ? 'party-mode' : ''}>
+          <KPICard icon={Layers} label="Detailed Breakdown" value="Breakdown" sub="Daily Sale Brands & Portal" colorClass="blue" format="text" className="h-full" />
         </div>
 
         {/* 5th Card: Portal Growth Progress */}
-        <PortalGrowthCard revenueChart={revenueChart} />
+        <PortalGrowthCard revenueChart={revenueChart} partyMode={partyMode} />
       </div>
 
       {/* Breakdown Modal */}

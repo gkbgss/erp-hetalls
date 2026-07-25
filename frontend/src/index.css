@@ -214,6 +214,16 @@ input, select, textarea { font-family: inherit; outline: none; }
 .kpi-trend.up   { color: var(--success); }
 .kpi-trend.down { color: var(--danger); }
 
+/* ─── Party Mode (Easter Egg) ───────────────────────────────────────── */
+@keyframes spinSpeedy {
+  0% { transform: rotateY(0deg) rotateZ(0deg) scale(1); box-shadow: 0 0 10px var(--gold); }
+  50% { transform: rotateY(180deg) rotateZ(10deg) scale(1.1); box-shadow: 0 0 40px var(--info); border-color: var(--info); }
+  100% { transform: rotateY(360deg) rotateZ(0deg) scale(1); box-shadow: 0 0 10px var(--gold); }
+}
+.party-mode {
+  animation: spinSpeedy 0.4s infinite linear !important;
+}
+
 /* ─── 3D 4-Sided Prism (Horizontal) ────────────────────────────────────── */
 .cube-container {
   perspective: 1200px;
@@ -435,6 +445,7 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
 .mt-1          { margin-top: 4px; }
 .mb-4          { margin-bottom: 16px; }
 .mb-6          { margin-bottom: 24px; }
+.h-full        { height: 100%; }
 
 /* ─── Breakdown Modal ───────────────────────────────────────────────── */
 .breakdown-overlay {
