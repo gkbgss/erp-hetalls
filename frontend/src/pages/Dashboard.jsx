@@ -219,7 +219,7 @@ const OrdersSpinningCard = ({ kpis, todayOrders = [], style = {} }) => {
   const [isHovered, setIsHovered] = useState(false);
   
   const faces = [
-    { key: 'today', label: "Orders Today", value: kpis?.today_orders || 0, sub: "Hover for details (Click to spin)", icon: AlertCircle, colorClass: 'danger' },
+    { key: 'today', label: "Orders Today", value: kpis?.today_orders || 0, sub: "Hold to spin or Click", icon: AlertCircle, colorClass: 'danger' },
     { key: 'total', label: "Total Orders", value: kpis?.total_orders || 0, sub: "All time", icon: ShoppingCart, colorClass: 'info' },
     { key: 'year', label: "Orders This Year", value: kpis?.this_year_orders || 0, sub: "Year to date", icon: TrendingUp, colorClass: 'success' },
     { key: 'month', label: "Orders This Month", value: kpis?.this_month_orders || 0, sub: "Month to date", icon: TrendingUp, colorClass: 'warning' },
@@ -234,11 +234,7 @@ const OrdersSpinningCard = ({ kpis, todayOrders = [], style = {} }) => {
   const currentFace = faces[spinCount % 4];
 
   return (
-    <div 
-      style={{ position: 'relative', ...style }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div style={{ position: 'relative', ...style }}>
       <div 
         className="cube-container" 
         onClick={(e) => { 
@@ -272,28 +268,6 @@ const OrdersSpinningCard = ({ kpis, todayOrders = [], style = {} }) => {
           })}
         </div>
       </div>
-      
-      {isHovered && currentFace.key === 'today' && todayOrders.length > 0 && (
-        <div style={{
-          position: 'absolute', top: '105%', left: 0, zIndex: 10,
-          background: '#0f172a', border: '1px solid var(--border)', borderRadius: '12px',
-          padding: '12px', boxShadow: 'var(--shadow), var(--glass-shine)',
-          backdropFilter: 'blur(32px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(32px) saturate(200%)',
-          maxHeight: '250px', overflowY: 'auto',
-          minWidth: '200px'
-        }}>
-          <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: 'var(--text)' }}>
-            Today's Orders
-          </div>
-          {todayOrders.map(o => (
-            <div key={o.order_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid var(--border-light)' }}>
-              <PlatformPill platform={o.platform.toLowerCase()} />
-              <span style={{ fontWeight: 'bold', color: 'var(--text)', fontSize: '13px' }}>${o.amount?.toLocaleString()}</span>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 };
