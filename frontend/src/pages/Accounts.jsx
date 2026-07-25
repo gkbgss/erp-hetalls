@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
-import { DollarSign, FileText, TrendingUp, TrendingDown } from 'lucide-react'
+import { DollarSign, FileText, TrendingUp, TrendingDown, X } from 'lucide-react'
 
 export default function Accounts() {
   const { API } = useAuth()
   const [invoices, setInvoices] = useState([])
   const [expenses, setExpenses] = useState([])
   const [billsLinks, setBillsLinks] = useState(null)
-  const [hgAlerts, setHgAlerts] = useState([])
-  const [showHgAlerts, setShowHgAlerts] = useState(true)
+  const [companyAlerts, setCompanyAlerts] = useState([])
+  const [showCompanyAlerts, setShowCompanyAlerts] = useState(true)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -17,12 +17,12 @@ export default function Accounts() {
       axios.get(`${API}/api/accounts/invoices`),
       axios.get(`${API}/api/accounts/expenses`),
       axios.get(`${API}/api/accounts/bills-links`),
-      axios.get(`${API}/api/accounts/hg-alerts`).catch(() => ({ data: [] }))
-    ]).then(([invRes, expRes, billsRes, hgRes]) => {
+      axios.get(`${API}/api/accounts/company-alerts`).catch(() => ({ data: [] }))
+    ]).then(([invRes, expRes, billsRes, alertsRes]) => {
       setInvoices(invRes.data)
       setExpenses(expRes.data)
       setBillsLinks(billsRes.data)
-      setHgAlerts(hgRes.data || [])
+      setCompanyAlerts(alertsRes.data || [])
     }).catch(console.error)
       .finally(() => setLoading(false))
   }, [API])
@@ -79,21 +79,24 @@ export default function Accounts() {
         </div>
       </div>
 
-      {/* HG Alerts Popup */}
-      {hgAlerts.length > 0 && showHgAlerts && (
+      {/* Company Alerts Popup */}
+      {companyAlerts.length > 0 && showCompanyAlerts && (
         <div className="hg-alerts-popup">
           <div className="hg-alerts-header">
             <div>
-              <span className="hg-alerts-title">HG Bill Alerts</span>
+              <span className="hg-alerts-title">Company Bill Alerts</span>
               <span className="hg-alerts-subtitle">3-Star Entries Action Required</span>
             </div>
-            <button className="hg-alerts-close" onClick={() => setShowHgAlerts(false)}>×</button>
+            <button className="hg-alerts-close" onClick={() => setShowCompanyAlerts(false)}><X size={14} /></button>
           </div>
           <div className="hg-alerts-content">
-            {hgAlerts.map(alert => (
+            {companyAlerts.map(alert => (
               <div key={alert.id} className="hg-alert-item">
                 <div className="hg-alert-top">
-                  <span className="hg-alert-party">{alert.party}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 10, background: 'var(--gold-glow)', color: 'var(--gold)', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>{alert.company}</span>
+                    <span className="hg-alert-party">{alert.party}</span>
+                  </div>
                   <span className="hg-alert-amt">₹{alert.bill_amt.toLocaleString()}</span>
                 </div>
                 <div className="hg-alert-bottom">
