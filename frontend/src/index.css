@@ -449,6 +449,11 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   animation-duration: var(--party-duration);
   animation-timing-function: linear;
 }
+::view-transition-group(kpi-rev)    { z-index: var(--z-kpi-rev, 10); }
+::view-transition-group(kpi-orders) { z-index: var(--z-kpi-orders, 10); }
+::view-transition-group(kpi-emp)    { z-index: var(--z-kpi-emp, 10); }
+::view-transition-group(kpi-break)  { z-index: var(--z-kpi-break, 10); }
+::view-transition-group(kpi-portal) { z-index: var(--z-kpi-portal, 10); }
 
 /* ─── Breakdown Modal ───────────────────────────────────────────────── */
 .breakdown-overlay {

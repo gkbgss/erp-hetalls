@@ -222,6 +222,7 @@ export default function Dashboard() {
   const [loading,      setLoading]      = useState(true)
   const [shiftOffset,  setShiftOffset]  = useState(0)
   const isPartyActiveRef = useRef(false)
+  const shiftOffsetRef = useRef(0)
   const cubeRef = useRef(null)
   const angleRef = useRef(0)
   const timeoutRef = useRef(null)
@@ -231,20 +232,35 @@ export default function Dashboard() {
   useEffect(() => {
     const triggerParty = () => {
       isPartyActiveRef.current = !isPartyActiveRef.current;
+      const names = ['kpi-rev', 'kpi-orders', 'kpi-emp', 'kpi-break', 'kpi-portal'];
+      
+      const resetStyles = () => {
+        document.documentElement.style.removeProperty('--party-duration');
+        names.forEach(n => document.documentElement.style.removeProperty(`--z-${n}`));
+      };
+
       if (isPartyActiveRef.current) {
         let currentSpeed = 1000;
         
         const loop = async () => {
           if (!isPartyActiveRef.current) {
-            document.documentElement.style.removeProperty('--party-duration');
+            resetStyles();
             return;
           }
           
           document.documentElement.style.setProperty('--party-duration', `${currentSpeed}ms`);
           
+          // Calculate the exact item that wraps around and push it behind the others
+          const nextShift = (shiftOffsetRef.current + 1) % 5;
+          shiftOffsetRef.current = nextShift;
+          const wrappingName = names[(0 - nextShift + 5) % 5];
+          names.forEach(name => {
+            document.documentElement.style.setProperty(`--z-${name}`, name === wrappingName ? '1' : '10');
+          });
+          
           if (document.startViewTransition) {
             const transition = document.startViewTransition(() => {
-              setShiftOffset(s => (s + 1) % 5);
+              setShiftOffset(nextShift);
             });
             try {
               await transition.finished;
@@ -252,11 +268,10 @@ export default function Dashboard() {
               await new Promise(r => setTimeout(r, currentSpeed));
             }
           } else {
-            setShiftOffset(s => (s + 1) % 5);
+            setShiftOffset(nextShift);
             await new Promise(r => setTimeout(r, currentSpeed));
           }
           
-          // Exponentially decrease duration (increase speed) down to 10ms for extreme unreadable blur!
           currentSpeed = Math.max(10, currentSpeed * 0.90);
           
           if (isPartyActiveRef.current) {
@@ -266,7 +281,7 @@ export default function Dashboard() {
         
         loop();
       } else {
-        document.documentElement.style.removeProperty('--party-duration');
+        resetStyles();
       }
     };
     
