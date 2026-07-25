@@ -214,63 +214,7 @@ function StatusBadge({ status }) {
   return <span className={`badge badge-${status}`}>{status}</span>
 }
 
-const OrdersSpinningCard = ({ kpis, todayOrders = [], style = {} }) => {
-  const [spinCount, setSpinCount] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
-  
-  const faces = [
-    { key: 'today', label: "Orders Today", value: kpis?.today_orders || 0, sub: "Hold to spin or Click", icon: AlertCircle, colorClass: 'danger' },
-    { key: 'total', label: "Total Orders", value: kpis?.total_orders || 0, sub: "All time", icon: ShoppingCart, colorClass: 'info' },
-    { key: 'year', label: "Orders This Year", value: kpis?.this_year_orders || 0, sub: "Year to date", icon: TrendingUp, colorClass: 'success' },
-    { key: 'month', label: "Orders This Month", value: kpis?.this_month_orders || 0, sub: "Month to date", icon: TrendingUp, colorClass: 'warning' },
-  ];
 
-  const getFace = (i) => {
-    let k = spinCount - (spinCount % 4) + i;
-    if (k < spinCount - 1) k += 4;
-    return faces[k % faces.length];
-  };
-
-  const currentFace = faces[spinCount % 4];
-
-  return (
-    <div style={{ position: 'relative', ...style }}>
-      <div 
-        className="cube-container" 
-        onClick={(e) => { 
-          if (e && e.preventDefault) e.preventDefault(); 
-          setSpinCount(c => c + 1); 
-        }}
-        style={{ cursor: 'pointer', userSelect: 'none' }}
-      >
-        <div 
-          className="cube" 
-          style={{ 
-            transform: `translateZ(-140px) rotateY(${spinCount * -90}deg)`, 
-            transition: 'transform 0.4s ease-out' 
-          }}
-        >
-          {[0, 1, 2, 3].map(i => {
-            const f = getFace(i);
-            return (
-              <div key={i} className="cube-face">
-                <div style={{ width: '100%', height: '100%' }}>
-                  <KPICard 
-                    icon={f.icon} 
-                    label={f.label} 
-                    value={f.value} 
-                    sub={f.sub} 
-                    colorClass={f.colorClass} 
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-};
 function PlatformPill({ platform }) {
   return <span className={`platform-pill ${platform}`}>{platform === 'amazon' ? '📦 Amazon' : '🛍 Etsy'}</span>
 }
@@ -516,7 +460,31 @@ export default function Dashboard() {
 
   const kpiElements = [
     <RevenueSpinningCard key="rev" kpis={kpis} companiesRev={companiesRev} style={{ viewTransitionName: 'kpi-rev' }} />,
-    <OrdersSpinningCard key="orders" kpis={kpis} todayOrders={todayOrders} style={{ viewTransitionName: 'kpi-orders' }} />,
+    <div 
+      key="orders"
+      className="cube-container" 
+      onMouseDown={startSpin}
+      onMouseUp={stopSpin}
+      onMouseLeave={stopSpin}
+      onTouchStart={startSpin}
+      onTouchEnd={stopSpin}
+      onDragStart={(e) => e.preventDefault()}
+      style={{ cursor: 'pointer', userSelect: 'none', viewTransitionName: 'kpi-orders' }}
+    >
+      <div 
+        className="cube" 
+        ref={cubeRef}
+        style={{ 
+          transform: `translateZ(-140px) rotateY(${angleRef.current}deg)`, 
+          transition: 'transform 0.4s ease-out' 
+        }}
+      >
+        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={AlertCircle} label="Orders Today" value={kpis?.today_orders} sub="Hold to spin or Click" colorClass="danger" /></div></div>
+        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={ShoppingCart} label="Total Orders" value={kpis?.total_orders} sub="All time" colorClass="info" /></div></div>
+        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={TrendingUp} label="Orders This Year" value={kpis?.this_year_orders} sub="Year to date" colorClass="success" /></div></div>
+        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={TrendingUp} label="Orders This Month" value={kpis?.this_month_orders} sub="Month to date" colorClass="warning" /></div></div>
+      </div>
+    </div>,
     <KPICard key="emp" icon={Users} label="Active Employees" value={kpis?.total_employees ?? 0} sub="Across all departments" colorClass="green" style={{ viewTransitionName: 'kpi-emp' }} />,
 
     <div key="breakdown" onClick={openBreakdown} style={{ cursor: 'pointer', height: '100%', viewTransitionName: 'kpi-break' }}>
