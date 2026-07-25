@@ -28,8 +28,15 @@ export default function Header() {
         <span 
           className="header-badge" 
           style={{ cursor: 'pointer' }}
-          onClick={() => window.dispatchEvent(new Event('trigger-party-mode'))}
-          title="Click me!"
+          onClick={(e) => {
+            const count = (parseInt(e.target.dataset.clicks || '0') + 1);
+            e.target.dataset.clicks = count;
+            if (count === 7) {
+              window.dispatchEvent(new Event('trigger-party-mode'));
+              e.target.dataset.clicks = 0;
+            }
+          }}
+          title="Click 7 times!"
         >
           {user?.department}
         </span>

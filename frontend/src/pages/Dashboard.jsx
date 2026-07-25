@@ -222,6 +222,8 @@ export default function Dashboard() {
   const [loading,      setLoading]      = useState(true)
   const [showRevDrop,  setShowRevDrop]  = useState(false)
   const [shiftOffset,  setShiftOffset]  = useState(0)
+  const [isPartyActive,setIsPartyActive]= useState(false)
+  const partySpeedRef = useRef(1000)
   const cubeRef = useRef(null)
   const angleRef = useRef(0)
   const timeoutRef = useRef(null)
@@ -231,15 +233,33 @@ export default function Dashboard() {
   useEffect(() => {
     const slideTabs = () => {
       if (document.startViewTransition) {
-        document.startViewTransition(() => {
-          setShiftOffset(s => (s + 1) % 5);
-        });
+        document.startViewTransition(() => setShiftOffset(s => (s + 1) % 5));
       } else {
         setShiftOffset(s => (s + 1) % 5);
       }
     };
-    window.addEventListener('trigger-party-mode', slideTabs);
-    return () => window.removeEventListener('trigger-party-mode', slideTabs);
+    
+    let timer;
+    const loop = () => {
+      if (!isPartyActive) return;
+      slideTabs();
+      // Increase speed by reducing delay (down to 280ms)
+      partySpeedRef.current = Math.max(280, partySpeedRef.current - 50);
+      timer = setTimeout(loop, partySpeedRef.current);
+    };
+
+    if (isPartyActive) {
+      partySpeedRef.current = 1000; // start slow
+      timer = setTimeout(loop, partySpeedRef.current);
+    }
+    
+    return () => clearTimeout(timer);
+  }, [isPartyActive]);
+
+  useEffect(() => {
+    const toggleParty = () => setIsPartyActive(p => !p);
+    window.addEventListener('trigger-party-mode', toggleParty);
+    return () => window.removeEventListener('trigger-party-mode', toggleParty);
   }, []);
 
   const startSpin = (e) => {
