@@ -59,8 +59,15 @@ const PortalGrowthCard = ({ revenueChart, style = {} }) => {
   const portals = useMemo(() => {
     if (!revenueChart || revenueChart.length < 2) return [];
     const latest = revenueChart[revenueChart.length - 1];
-    const prev = revenueChart[revenueChart.length - 2];
-    const keys = ["AMAZON", "CASAVANI WEBSITE", "EBAY-RUGSFOREVER", "ETSY-CASAVANI", "ETSY-RUGSFOREVER", "JAYPOR", "PEPPERFRY", "WALMART"];
+    const keySet = new Set(["AMAZON", "CASAVANI WEBSITE", "EBAY-RUGSFOREVER", "ETSY-CASAVANI", "ETSY-RUGSFOREVER", "JAYPOR", "MIRRAW", "PEPPERFRY", "WALMART"]);
+    revenueChart.forEach(item => {
+      if (item && typeof item === 'object') {
+        Object.keys(item).forEach(k => {
+          if (k !== 'month' && k !== 'total' && k !== '_dt') keySet.add(k);
+        });
+      }
+    });
+    const keys = Array.from(keySet);
     
     return keys.map(key => {
       const currentVal = Number(latest[key]) || 0;
@@ -497,6 +504,42 @@ export default function Dashboard() {
     shiftedElements.push(kpiElements[(i - shiftOffset + 5) % 5]);
   }
 
+  const allChartPortals = useMemo(() => {
+    const portalSet = new Set(["AMAZON", "CASAVANI WEBSITE", "EBAY-RUGSFOREVER", "ETSY-CASAVANI", "ETSY-RUGSFOREVER", "JAYPOR", "MIRRAW", "PEPPERFRY", "WALMART"]);
+    if (Array.isArray(revenueChart)) {
+      revenueChart.forEach(item => {
+        if (item && typeof item === 'object') {
+          Object.keys(item).forEach(key => {
+            if (key !== "month" && key !== "total" && key !== "_dt") {
+              portalSet.add(key);
+            }
+          });
+        }
+      });
+    }
+    return Array.from(portalSet).sort();
+  }, [revenueChart]);
+
+  const portalColorsMap = {
+    "AMAZON": "#f59e0b",
+    "CASAVANI WEBSITE": "#10b981",
+    "EBAY-RUGSFOREVER": "#8b5cf6",
+    "ETSY-CASAVANI": "#f87171",
+    "ETSY-RUGSFOREVER": "#fb923c",
+    "JAYPOR": "#ec4899",
+    "MIRRAW": "#06b6d4",
+    "PEPPERFRY": "#ef4444",
+    "WALMART": "#3b82f6"
+  };
+  const fallbackColors = ["#6366f1", "#14b8a6", "#f43f5e", "#84cc16", "#d946ef", "#eab308", "#0ea5e9", "#f97316", "#a855f7"];
+  const getPortalColor = (portal, index) => {
+    return portalColorsMap[portal] || fallbackColors[index % fallbackColors.length];
+  };
+  const formatPortalName = (portal) => {
+    if (!portal) return "";
+    return portal.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ').replace('Ebay-rugsforever', 'Ebay-Rugsforever').replace('Etsy-casavani', 'Etsy-Casavani').replace('Etsy-rugsforever', 'Etsy-Rugsforever');
+  };
+
   return (
     <div>
       {/* KPI Grid */}
@@ -611,14 +654,9 @@ export default function Dashboard() {
               <Tooltip content={<ChartTooltip />} itemSorter={(item) => -Number(item.value || 0)} />
               <Legend align="center" wrapperStyle={{ fontSize: 12 }} />
               
-              <Bar dataKey="ETSY-CASAVANI" name="Etsy-Casavani" fill="#f87171" stackId="a" />
-              <Bar dataKey="AMAZON" name="Amazon" fill="#f59e0b" stackId="a" />
-              <Bar dataKey="ETSY-RUGSFOREVER" name="Etsy-Rugsforever" fill="#fb923c" stackId="a" />
-              <Bar dataKey="WALMART" name="Walmart" fill="#3b82f6" stackId="a" />
-              <Bar dataKey="PEPPERFRY" name="Pepperfry" fill="#ef4444" stackId="a" />
-              <Bar dataKey="CASAVANI WEBSITE" name="Casavani Website" fill="#10b981" stackId="a" />
-              <Bar dataKey="EBAY-RUGSFOREVER" name="Ebay-Rugsforever" fill="#8b5cf6" stackId="a" />
-              <Bar dataKey="JAYPOR" name="Jaypor" fill="#ec4899" stackId="a" />
+              {allChartPortals.map((portal, idx) => (
+                <Bar key={portal} dataKey={portal} name={formatPortalName(portal)} fill={getPortalColor(portal, idx)} stackId="a" />
+              ))}
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -638,14 +676,9 @@ export default function Dashboard() {
               <Tooltip content={<ChartTooltip />} itemSorter={(item) => -Number(item.value || 0)} />
               <Legend align="center" wrapperStyle={{ fontSize: 12 }} />
               
-              <Line type="monotone" dataKey="ETSY-CASAVANI" name="Etsy-Casavani" stroke="#f87171" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-              <Line type="monotone" dataKey="AMAZON" name="Amazon" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-              <Line type="monotone" dataKey="ETSY-RUGSFOREVER" name="Etsy-Rugsforever" stroke="#fb923c" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-              <Line type="monotone" dataKey="WALMART" name="Walmart" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-              <Line type="monotone" dataKey="PEPPERFRY" name="Pepperfry" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-              <Line type="monotone" dataKey="CASAVANI WEBSITE" name="Casavani Website" stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-              <Line type="monotone" dataKey="EBAY-RUGSFOREVER" name="Ebay-Rugsforever" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-              <Line type="monotone" dataKey="JAYPOR" name="Jaypor" stroke="#ec4899" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+              {allChartPortals.map((portal, idx) => (
+                <Line key={portal} type="monotone" dataKey={portal} name={formatPortalName(portal)} stroke={getPortalColor(portal, idx)} strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+              ))}
             </LineChart>
           </ResponsiveContainer>
         </div>
