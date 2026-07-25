@@ -188,7 +188,7 @@ const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
       
       {isHovered && companiesRev && companiesRev[currentFace.key] && (
         <div style={{
-          position: 'absolute', top: '105%', left: 0, width: '100%', zIndex: 10,
+          position: 'absolute', top: '105%', left: 0, width: '100%', zIndex: 999,
           background: '#0f172a', border: '1px solid var(--border)', borderRadius: '12px',
           padding: '12px', boxShadow: 'var(--shadow), var(--glass-shine)',
           backdropFilter: 'blur(32px) saturate(200%)',
