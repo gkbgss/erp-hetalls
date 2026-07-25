@@ -216,12 +216,12 @@ input, select, textarea { font-family: inherit; outline: none; }
 
 /* ─── Party Mode (Easter Egg) ───────────────────────────────────────── */
 @keyframes spinSpeedy {
-  0% { transform: rotateY(0deg) rotateZ(0deg) scale(1); box-shadow: 0 0 10px var(--gold); }
-  50% { transform: rotateY(180deg) rotateZ(10deg) scale(1.1); box-shadow: 0 0 40px var(--info); border-color: var(--info); }
-  100% { transform: rotateY(360deg) rotateZ(0deg) scale(1); box-shadow: 0 0 10px var(--gold); }
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(-360deg); }
 }
 .party-mode {
-  animation: spinSpeedy 0.4s infinite linear !important;
+  animation: spinSpeedy 0.8s infinite linear !important;
+  transform-style: preserve-3d;
 }
 
 /* ─── 3D 4-Sided Prism (Horizontal) ────────────────────────────────────── */

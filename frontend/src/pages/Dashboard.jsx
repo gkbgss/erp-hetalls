@@ -123,9 +123,8 @@ const PortalGrowthCard = ({ revenueChart, partyMode }) => {
   );
 };
 
-const RevenueSpinningCard = ({ kpis, companiesRev, onParty, partyMode }) => {
+const RevenueSpinningCard = ({ kpis, companiesRev, partyMode }) => {
   const [spinCount, setSpinCount] = useState(0);
-  const [clickCount, setClickCount] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   
   const faces = [
@@ -155,11 +154,6 @@ const RevenueSpinningCard = ({ kpis, companiesRev, onParty, partyMode }) => {
         onClick={(e) => { 
           if (e && e.preventDefault) e.preventDefault(); 
           setSpinCount(c => c + 1); 
-          setClickCount(c => {
-            const nc = c + 1;
-            if (nc === 7 && onParty) onParty();
-            return nc;
-          });
         }}
         style={{ cursor: 'pointer', userSelect: 'none' }}
       >
@@ -234,6 +228,12 @@ export default function Dashboard() {
   const timeoutRef = useRef(null)
   const animationRef = useRef(null)
   const holdStartTimeRef = useRef(0)
+
+  useEffect(() => {
+    const toggleParty = () => setPartyMode(p => !p);
+    window.addEventListener('trigger-party-mode', toggleParty);
+    return () => window.removeEventListener('trigger-party-mode', toggleParty);
+  }, []);
 
   const startSpin = (e) => {
     if (animationRef.current || timeoutRef.current) return;
@@ -398,7 +398,7 @@ export default function Dashboard() {
     <div>
       {/* KPI Grid */}
       <div className="kpi-grid">
-        <RevenueSpinningCard kpis={kpis} companiesRev={companiesRev} onParty={() => setPartyMode(true)} partyMode={partyMode} />
+        <RevenueSpinningCard kpis={kpis} companiesRev={companiesRev} partyMode={partyMode} />
         
         {/* The 4-Sided Horizontal 3D Prism */}
         <div 

@@ -25,7 +25,14 @@ export default function Header() {
       </div>
       <div className="header-right">
         <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{now}</span>
-        <span className="header-badge">{user?.department}</span>
+        <span 
+          className="header-badge" 
+          style={{ cursor: 'pointer' }}
+          onClick={() => window.dispatchEvent(new Event('trigger-party-mode'))}
+          title="Click me!"
+        >
+          {user?.department}
+        </span>
       </div>
     </header>
   )
