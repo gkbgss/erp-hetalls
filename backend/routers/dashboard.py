@@ -91,12 +91,15 @@ from sqlalchemy.orm import Session
 def get_kpis(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     orders_data = fetch_sheet_csv("ORDERS")
     total_revenue = 0.0
+    this_year_rev = 0.0
+    this_month_rev = 0.0
+    today_rev = 0.0
+    
     total_orders = 0
     this_year = 0
     this_month = 0
     today = 0
     
-    # Fetch actual active employee count from DB
     try:
         total_employees = db.query(Employee).filter(Employee.is_active == True).count()
     except Exception:
@@ -113,7 +116,7 @@ def get_kpis(current_user=Depends(get_current_user), db: Session = Depends(get_d
         fy_start = datetime(current_year - 1, 4, 1)
         fy_end = datetime(current_year, 3, 31)
 
-    for row in orders_data[1:]: # Skip header
+    for row in orders_data[1:]:
         if len(row) < 37:
             continue
             
@@ -129,13 +132,19 @@ def get_kpis(current_user=Depends(get_current_user), db: Session = Depends(get_d
         if dt:
             if fy_start <= dt <= fy_end:
                 this_year += 1
+                this_year_rev += price
             if dt.year == current_year and dt.month == current_month:
                 this_month += 1
+                this_month_rev += price
             if dt.date() == now.date():
                 today += 1
+                today_rev += price
 
     return {
         "total_revenue":     round(total_revenue, 2),
+        "this_year_revenue": round(this_year_rev, 2),
+        "this_month_revenue":round(this_month_rev, 2),
+        "today_revenue":     round(today_rev, 2),
         "total_orders":      total_orders,
         "this_year_orders":  this_year,
         "this_month_orders": this_month,
@@ -146,30 +155,51 @@ def get_kpis(current_user=Depends(get_current_user), db: Session = Depends(get_d
 @router.get("/companies-revenue")
 def companies_revenue(current_user=Depends(get_current_user)):
     orders_data = fetch_sheet_csv("ORDERS")
-    portals = {}
+    portals = {"total": {}, "today": {}, "month": {}, "year": {}}
     
     colors = ["#f59e0b", "#3b82f6", "#ef4444", "#10b981", "#8b5cf6", "#ec4899", "#f87171", "#fb923c"]
     
+    now = datetime.utcnow()
+    current_year = now.year
+    current_month = now.month
+    
+    if current_month >= 4:
+        fy_start = datetime(current_year, 4, 1)
+        fy_end = datetime(current_year + 1, 3, 31)
+    else:
+        fy_start = datetime(current_year - 1, 4, 1)
+        fy_end = datetime(current_year, 3, 31)
+
     for row in orders_data[1:]:
         if len(row) < 37: continue
         status = row[14].strip().lower() if len(row) > 14 else ""
         if status == "returned": continue
         
         portal = (row[4].strip() or "UNKNOWN").upper()
-        
         price = parse_price(row[36])
         if price > 0:
-            portals[portal] = portals.get(portal, 0) + price
+            portals["total"][portal] = portals["total"].get(portal, 0) + price
             
-    results = []
-    for i, (portal, total) in enumerate(portals.items()):
-        results.append({
-            "name": portal,
-            "value": round(total, 2),
-            "color": colors[i % len(colors)]
-        })
+            dt = parse_date(row[8])
+            if dt:
+                if fy_start <= dt <= fy_end:
+                    portals["year"][portal] = portals["year"].get(portal, 0) + price
+                if dt.year == current_year and dt.month == current_month:
+                    portals["month"][portal] = portals["month"].get(portal, 0) + price
+                if dt.date() == now.date():
+                    portals["today"][portal] = portals["today"].get(portal, 0) + price
+            
+    results = {"total": [], "today": [], "month": [], "year": []}
+    for key in portals:
+        for i, (portal, total) in enumerate(portals[key].items()):
+            results[key].append({
+                "name": portal,
+                "value": round(total, 2),
+                "color": colors[i % len(colors)]
+            })
+        results[key].sort(key=lambda x: x["value"], reverse=True)
         
-    return sorted(results, key=lambda x: x["value"], reverse=True)
+    return results
 
 @router.get("/revenue-chart")
 def revenue_chart(current_user=Depends(get_current_user)):

@@ -123,6 +123,84 @@ const PortalGrowthCard = ({ revenueChart }) => {
   );
 };
 
+const RevenueSpinningCard = ({ kpis, companiesRev }) => {
+  const [spinCount, setSpinCount] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  
+  const faces = [
+    { key: 'month', label: "This Month Revenue", value: kpis?.this_month_revenue, sub: "Month to date", icon: DollarSign, colorClass: 'gold' },
+    { key: 'today', label: "Today's Revenue", value: kpis?.today_revenue, sub: "Today only", icon: DollarSign, colorClass: 'gold' },
+    { key: 'year', label: "This Year Revenue", value: kpis?.this_year_revenue, sub: "Financial year", icon: DollarSign, colorClass: 'gold' },
+    { key: 'total', label: "Total Revenue", value: kpis?.total_revenue, sub: "All time", icon: DollarSign, colorClass: 'gold' },
+  ];
+
+  const getFace = (i) => {
+    let k = spinCount - (spinCount % 4) + i;
+    if (k < spinCount - 1) k += 4;
+    return faces[k % faces.length];
+  };
+
+  const currentFace = faces[spinCount % 4];
+
+  return (
+    <div 
+      style={{ position: 'relative' }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div 
+        className="cube-container" 
+        onClick={(e) => { if (e && e.preventDefault) e.preventDefault(); setSpinCount(c => c + 1); }}
+        style={{ cursor: 'pointer', userSelect: 'none' }}
+      >
+        <div 
+          className="cube" 
+          style={{ 
+            transform: `translateZ(-140px) rotateY(${spinCount * -90}deg)`, 
+            transition: 'transform 0.4s ease-out' 
+          }}
+        >
+          {[0, 1, 2, 3].map(i => {
+            const f = getFace(i);
+            return (
+              <div key={i} className="cube-face">
+                <div style={{ width: '100%', height: '100%' }}>
+                  <KPICard 
+                    icon={f.icon} 
+                    label={f.label + " (Click)"} 
+                    value={f.value} 
+                    sub={f.sub} 
+                    colorClass={f.colorClass} 
+                    format="currency"
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      
+      {isHovered && companiesRev && companiesRev[currentFace.key] && (
+        <div style={{
+          position: 'absolute', top: '105%', left: 0, width: '100%', zIndex: 10,
+          background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px',
+          padding: '10px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+        }}>
+          <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text)' }}>
+            Companies Revenue ({currentFace.key}):
+          </div>
+          {companiesRev[currentFace.key].map(c => (
+            <div key={c.name} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '12px' }}>
+              <span style={{ color: c.color }}>{c.name}</span>
+              <span style={{ fontWeight: 'bold', color: 'var(--text)' }}>${c.value.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ── Status Badge ──────────────────────────────────────────────────────
 function StatusBadge({ status }) {
   return <span className={`badge badge-${status}`}>{status}</span>
@@ -137,7 +215,7 @@ export default function Dashboard() {
   const [kpis,         setKpis]         = useState(null)
   const [revenueChart, setRevenueChart] = useState([])
   const [recentOrders, setRecentOrders] = useState([])
-  const [companiesRev, setCompaniesRev] = useState([])
+  const [companiesRev, setCompaniesRev] = useState({})
   const [loading,      setLoading]      = useState(true)
   const [showRevDrop,  setShowRevDrop]  = useState(false)
   const cubeRef = useRef(null)
@@ -309,26 +387,7 @@ export default function Dashboard() {
     <div>
       {/* KPI Grid */}
       <div className="kpi-grid">
-        <div style={{ position: 'relative' }}>
-          <div onClick={() => setShowRevDrop(!showRevDrop)} style={{ cursor: 'pointer' }}>
-            <KPICard icon={DollarSign} label="Total Revenue (Click Me)" value={kpis?.total_revenue} sub="Monthly Brands, USD" colorClass="gold" format="currency" />
-          </div>
-          {showRevDrop && (
-            <div style={{
-              position: 'absolute', top: '105%', left: 0, width: '100%', zIndex: 10,
-              background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px',
-              padding: '10px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-            }}>
-              <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text)' }}>Companies Revenue:</div>
-              {companiesRev.map(c => (
-                <div key={c.name} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '12px' }}>
-                  <span style={{ color: c.color }}>{c.name}</span>
-                  <span style={{ fontWeight: 'bold', color: 'var(--text)' }}>${c.value.toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <RevenueSpinningCard kpis={kpis} companiesRev={companiesRev} />
         
         {/* The 4-Sided Horizontal 3D Prism */}
         <div 
