@@ -187,12 +187,49 @@ export default function Reports() {
     setShowPrintModal(true)
     setLoadingPrintReports(true)
     axios.get(`${API}/api/reports/google-sheet-links`, { params: { company: compFilter } })
-      .then(res => setPrintReportsList(res.data || []))
+      .then(res => {
+        const list = res.data || []
+        setPrintReportsList(list)
+        if (list.length > 0) {
+          if (window.confirm(`Found ${list.length} live reports for ${title}. Automatically open all tabs and trigger printing once loaded?`)) {
+            list.forEach((report, idx) => {
+              setTimeout(() => {
+                handleAutoPrintReport(report.url)
+              }, idx * 1000)
+            })
+          }
+        }
+      })
       .catch(err => {
         console.error("Error fetching print reports:", err)
         setPrintReportsList([])
       })
       .finally(() => setLoadingPrintReports(false))
+  }
+
+  const handleAutoPrintReport = (url) => {
+    const win = window.open(url, '_blank')
+    if (win) {
+      setTimeout(() => {
+        try {
+          win.focus()
+          win.print()
+        } catch (e) {
+          console.warn("Cross-origin security prevented direct print(), window opened ready for printing:", e)
+        }
+      }, 3500)
+    }
+  }
+
+  const triggerPrintAll = (list) => {
+    if (!list || list.length === 0) return
+    if (window.confirm(`This will open ${list.length} report tabs in your browser and automatically trigger printing once loaded. Please allow pop-ups. Continue?`)) {
+      list.forEach((report, idx) => {
+        setTimeout(() => {
+          handleAutoPrintReport(report.url)
+        }, idx * 1000)
+      })
+    }
   }
 
   const COMPANIES = [
@@ -450,7 +487,7 @@ export default function Reports() {
               <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
               <input
                 type="text"
-                placeholder="🔍 Filter reports by name..."
+                placeholder=""
                 value={reportSearch}
                 onChange={e => setReportSearch(e.target.value)}
                 className="search-input-glow"
@@ -554,10 +591,7 @@ export default function Reports() {
                   className="report-cyber-card"
                   style={{ animationDelay: `${(idx % 12) * 0.04}s`, cursor: 'pointer', border: deleteMode ? '1px dashed #ef4444' : undefined }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-                    <div style={{ padding: 8, borderRadius: 8, background: iconBg, color: iconColor, border: `1px solid ${iconColor}33`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <SpinOnHold><IconComp size={18} /></SpinOnHold>
-                    </div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 6 }}>
                     {deleteMode ? (
                       <button
                         onClick={(e) => {
@@ -579,15 +613,8 @@ export default function Reports() {
                     )}
                   </div>
 
-                  <div style={{ fontWeight: 700, fontSize: 13, color: '#f8fafc', margin: '4px 0 12px 0', lineHeight: 1.3, letterSpacing: '0.2px' }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: '#f8fafc', margin: '2px 0 4px 0', lineHeight: 1.3, letterSpacing: '0.2px' }}>
                     {linkItem.title}
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 10, marginTop: 'auto' }}>
-                    <span style={{ fontSize: 11, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 500 }}>
-                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
-                      Direct Web Feed
-                    </span>
                   </div>
                 </a>
               )
@@ -671,15 +698,7 @@ export default function Reports() {
               <div style={{ display: 'flex', gap: 10 }}>
                 <button
                   disabled={printReportsList.length === 0}
-                  onClick={() => {
-                    if (window.confirm(`This will open ${printReportsList.length} report tabs in your browser for direct printing. Please ensure pop-ups are allowed. Continue?`)) {
-                      printReportsList.forEach((report, idx) => {
-                        setTimeout(() => {
-                          window.open(report.url, '_blank')
-                        }, idx * 350)
-                      })
-                    }
-                  }}
+                  onClick={() => triggerPrintAll(printReportsList)}
                   className="btn"
                   style={{
                     background: 'linear-gradient(135deg, var(--gold) 0%, #b89728 100%)',
@@ -758,7 +777,7 @@ export default function Reports() {
                               </a>
                             </div>
                             <button
-                              onClick={() => window.open(item.url, '_blank')}
+                              onClick={() => handleAutoPrintReport(item.url)}
                               className="btn"
                               style={{
                                 background: 'transparent',
