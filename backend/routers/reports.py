@@ -155,22 +155,28 @@ def get_google_sheet_links(company: str = "", current_user=Depends(get_current_u
     if not rows:
         return []
         
-    comp_map = {
-        "hetalls global": (34, 35),
-        "h.g": (34, 35),
-        "mmc": (36, 37),
-        "hetalls": (38, 39),
-        "h.o": (38, 39),
-        "mkm": (40, 41),
-        "eastern": (42, 43),
-        "cotton cheese": (44, 45),
-        "mmco": (46, 47),
-        "homespun": (48, 49)
-    }
+    display_comp_list = [
+        ("Hetalls Global", (34, 35), ["hetalls global", "h.g", "hg"]),
+        ("MMC", (36, 37), ["mmc"]),
+        ("Hetalls", (38, 39), ["hetalls", "h.o", "ho"]),
+        ("MKM", (40, 41), ["mkm"]),
+        ("Eastern", (42, 43), ["eastern"]),
+        ("Cotton Cheese", (44, 45), ["cotton cheese"]),
+        ("MMCO", (46, 47), ["mmco"]),
+        ("HOMESPUN", (48, 49), ["homespun"])
+    ]
     
     clean_comp = company.strip().lower()
-    cols = comp_map.get(clean_comp)
-    if not cols:
+    
+    target_comps = []
+    if clean_comp in ["", "all", "all companies", "all_companies"]:
+        target_comps = display_comp_list
+    else:
+        for comp_name, cols, aliases in display_comp_list:
+            if clean_comp == comp_name.lower() or clean_comp in aliases:
+                target_comps.append((comp_name, cols, aliases))
+                
+    if not target_comps:
         return []
         
     links = []
@@ -183,12 +189,14 @@ def get_google_sheet_links(company: str = "", current_user=Depends(get_current_u
         if not title or title.lower() == "title" or title == "TITLE ":
             continue
             
-        for idx in cols:
-            if idx < len(row):
-                url = row[idx].strip()
-                if url and ("http" in url.lower() or "script.google" in url.lower()):
-                    if url not in seen_urls:
-                        seen_urls.add(url)
-                        links.append({"title": title, "url": url})
+        for comp_name, cols, _ in target_comps:
+            for idx in cols:
+                if idx < len(row):
+                    url = row[idx].strip()
+                    if url and ("http" in url.lower() or "script.google" in url.lower()):
+                        unique_key = f"{comp_name}|{url}"
+                        if unique_key not in seen_urls:
+                            seen_urls.add(unique_key)
+                            links.append({"company": comp_name, "title": title, "url": url})
                         
     return links

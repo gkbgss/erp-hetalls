@@ -6,7 +6,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts'
-import { TrendingUp, DollarSign, ShoppingCart, Package, Download, Building, ArrowLeft, FileText, ExternalLink } from 'lucide-react'
+import { TrendingUp, DollarSign, ShoppingCart, Package, Download, Building, ArrowLeft, FileText, ExternalLink, Printer } from 'lucide-react'
 
 // ── Custom Tooltip ────────────────────────────────────────────────────
 const ChartTooltip = ({ active, payload, label }) => {
@@ -66,6 +66,24 @@ export default function Reports() {
   const [sheetLinks,  setSheetLinks]  = useState([])
   const [loading,     setLoading]     = useState(false)
 
+  const [showPrintModal, setShowPrintModal] = useState(false)
+  const [printReportsList, setPrintReportsList] = useState([])
+  const [loadingPrintReports, setLoadingPrintReports] = useState(false)
+  const [printModalTitle, setPrintModalTitle] = useState("All Companies")
+
+  const openPrintCenter = (compFilter = "all", title = "All Companies") => {
+    setPrintModalTitle(title)
+    setShowPrintModal(true)
+    setLoadingPrintReports(true)
+    axios.get(`${API}/api/reports/google-sheet-links`, { params: { company: compFilter } })
+      .then(res => setPrintReportsList(res.data || []))
+      .catch(err => {
+        console.error("Error fetching print reports:", err)
+        setPrintReportsList([])
+      })
+      .finally(() => setLoadingPrintReports(false))
+  }
+
   const COMPANIES = [
     { name: "Hetalls Global",  color: "#3b82f6" },
     { name: "MKM",             color: "#f59e0b" },
@@ -108,8 +126,34 @@ export default function Reports() {
   if (!selectedCompany) {
     return (
       <div style={{ maxWidth: 900, margin: '40px auto' }}>
-        <h2 style={{ fontSize: 24, marginBottom: 10, color: 'var(--text)' }}>Select Company</h2>
-        <p style={{ color: 'var(--text-muted)', marginBottom: 30 }}>Choose a company to view its detailed reports and analytics.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30, flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <h2 style={{ fontSize: 24, marginBottom: 6, color: 'var(--text)' }}>Select Company</h2>
+            <p style={{ color: 'var(--text-muted)', margin: 0 }}>Choose a company to view its detailed reports and analytics.</p>
+          </div>
+          <button
+            onClick={() => openPrintCenter("all", "All Companies")}
+            className="btn"
+            style={{
+              background: 'linear-gradient(135deg, var(--gold) 0%, #b89728 100%)',
+              color: '#0f172a',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '10px 20px',
+              borderRadius: 8,
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(212,175,55,0.25)',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+          >
+            <Printer size={18} /> Print All Reports (All Companies)
+          </button>
+        </div>
         
         <div style={{
           display: 'grid', 
@@ -202,7 +246,7 @@ export default function Reports() {
 
       {/* ─── Live Google Reports (SRK...🧑 Sheet) ───────────────── */}
       <div className="card mb-6" style={{ borderLeft: '4px solid var(--gold)', background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(212,175,55,0.04) 100%)' }}>
-        <div className="card-header" style={{ marginBottom: 16 }}>
+        <div className="card-header" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 18 }}>
               <FileText size={20} color="var(--gold)" />
@@ -210,6 +254,25 @@ export default function Reports() {
             </div>
             <div className="card-subtitle">Real-time reports fetched directly from spreadsheet columns for {selectedCompany}</div>
           </div>
+          <button
+            onClick={() => openPrintCenter(selectedCompany, selectedCompany)}
+            className="btn"
+            style={{
+              background: 'var(--gold)',
+              color: '#0f172a',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '8px 14px',
+              borderRadius: 6,
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 13
+            }}
+          >
+            <Printer size={16} /> Print Reports ({selectedCompany})
+          </button>
         </div>
         {sheetLinks.length === 0 ? (
           <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg)', borderRadius: '8px', border: '1px dashed var(--border)' }}>
@@ -405,6 +468,230 @@ export default function Reports() {
           </ResponsiveContainer>
         </div>
       </div>
+
+      {/* ─── Print Center Modal ─────────────────────────────────── */}
+      {showPrintModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: 20
+        }}>
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderRadius: 12,
+            width: '100%',
+            maxWidth: 850,
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: '0 24px 48px rgba(0,0,0,0.4)',
+            overflow: 'hidden'
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              padding: '20px 24px',
+              borderBottom: '1px solid var(--border)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              background: 'var(--bg)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ padding: 10, background: 'rgba(212,175,55,0.1)', borderRadius: 8 }}>
+                  <Printer size={24} color="var(--gold)" />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 18, color: 'var(--text)' }}>
+                    Print Reports Center — {printModalTitle}
+                  </h3>
+                  <p style={{ margin: '4px 0 0 0', fontSize: 13, color: 'var(--text-muted)' }}>
+                    Manage, view, and print live spreadsheet reports across selected companies.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPrintModal(false)}
+                style={{
+                  background: 'none', border: 'none', color: 'var(--text-muted)',
+                  fontSize: 24, cursor: 'pointer', padding: 4
+                }}
+              >×</button>
+            </div>
+
+            {/* Modal Actions Bar */}
+            <div style={{
+              padding: '16px 24px',
+              borderBottom: '1px solid var(--border)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 12,
+              background: 'rgba(212,175,55,0.03)'
+            }}>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                Found <strong>{printReportsList.length}</strong> reports ready for printing.
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  disabled={printReportsList.length === 0}
+                  onClick={() => {
+                    if (window.confirm(`This will open ${printReportsList.length} report tabs in your browser for direct printing. Please ensure pop-ups are allowed. Continue?`)) {
+                      printReportsList.forEach((report, idx) => {
+                        setTimeout(() => {
+                          window.open(report.url, '_blank')
+                        }, idx * 350)
+                      })
+                    }
+                  }}
+                  className="btn"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--gold) 0%, #b89728 100%)',
+                    color: '#0f172a', fontWeight: 700,
+                    display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
+                    borderRadius: 6, border: 'none', cursor: printReportsList.length ? 'pointer' : 'not-allowed', fontSize: 13
+                  }}
+                >
+                  <Printer size={15} /> Open All to Print ({printReportsList.length})
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body / Report List */}
+            <div style={{ padding: 24, overflowY: 'auto', flex: 1 }}>
+              {loadingPrintReports ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 60, gap: 12 }}>
+                  <div className="spinner" style={{ width: 32, height: 32 }} />
+                  <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>Fetching latest live reports from SRK sheet...</span>
+                </div>
+              ) : printReportsList.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+                  No reports found for this selection.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                  {Object.entries(
+                    printReportsList.reduce((acc, r) => {
+                      const coName = r.company || "Other Reports"
+                      if (!acc[coName]) acc[coName] = []
+                      acc[coName].push(r)
+                      return acc
+                    }, {})
+                  ).map(([companyName, items]) => (
+                    <div key={companyName} style={{
+                      background: 'var(--bg)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 8,
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        padding: '10px 16px',
+                        background: 'var(--bg-card)',
+                        borderBottom: '1px solid var(--border)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        fontWeight: 600,
+                        fontSize: 14,
+                        color: 'var(--text)'
+                      }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--gold)' }} />
+                          {companyName}
+                        </span>
+                        <span style={{ fontSize: 12, padding: '2px 8px', background: 'rgba(212,175,55,0.1)', color: 'var(--gold)', borderRadius: 12 }}>
+                          {items.length} {items.length === 1 ? 'Report' : 'Reports'}
+                        </span>
+                      </div>
+                      <div style={{ divideY: '1px solid var(--border)' }}>
+                        {items.map((item, idx) => (
+                          <div key={idx} style={{
+                            padding: '12px 16px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            borderBottom: idx < items.length - 1 ? '1px solid var(--border)' : 'none',
+                            gap: 16
+                          }}>
+                            <div style={{ overflow: 'hidden' }}>
+                              <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)', marginBottom: 2 }}>
+                                {item.title}
+                              </div>
+                              <a href={item.url} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: 'var(--text-muted)', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                                {item.url}
+                              </a>
+                            </div>
+                            <button
+                              onClick={() => window.open(item.url, '_blank')}
+                              className="btn"
+                              style={{
+                                background: 'transparent',
+                                border: '1px solid var(--gold)',
+                                color: 'var(--gold)',
+                                padding: '6px 12px',
+                                borderRadius: 6,
+                                cursor: 'pointer',
+                                fontSize: 12,
+                                fontWeight: 600,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                flexShrink: 0
+                              }}
+                              onMouseEnter={e => {
+                                e.currentTarget.style.background = 'var(--gold)'
+                                e.currentTarget.style.color = '#0f172a'
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.background = 'transparent'
+                                e.currentTarget.style.color = 'var(--gold)'
+                              }}
+                            >
+                              <Printer size={13} /> Print
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{
+              padding: '14px 24px',
+              borderTop: '1px solid var(--border)',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              background: 'var(--bg)'
+            }}>
+              <button
+                onClick={() => setShowPrintModal(false)}
+                className="btn"
+                style={{
+                  padding: '8px 18px',
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  fontSize: 13
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
