@@ -128,8 +128,8 @@ const RevenueSpinningCard = ({ kpis, companiesRev }) => {
   const [isHovered, setIsHovered] = useState(false);
   
   const faces = [
-    { key: 'month', label: "This Month Revenue", value: kpis?.this_month_revenue || 0, sub: "Month to date", icon: DollarSign, colorClass: 'gold' },
     { key: 'today', label: "Today's Revenue", value: kpis?.today_revenue || 0, sub: "Today only", icon: DollarSign, colorClass: 'gold' },
+    { key: 'month', label: "This Month Revenue", value: kpis?.this_month_revenue || 0, sub: "Month to date", icon: DollarSign, colorClass: 'gold' },
     { key: 'year', label: "This Year Revenue", value: kpis?.this_year_revenue || 0, sub: "Financial year", icon: DollarSign, colorClass: 'gold' },
     { key: 'total', label: "Total Revenue", value: kpis?.total_revenue || 0, sub: "All time", icon: DollarSign, colorClass: 'gold' },
   ];
