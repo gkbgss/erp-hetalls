@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
-import { Building, ArrowLeft, FileText, ExternalLink, Printer, Search, Layers, Activity, Filter, Globe, ShoppingCart } from 'lucide-react'
+import { Building, ArrowLeft, FileText, ExternalLink, Printer, Search, Layers, Activity, Filter, Globe, ShoppingCart, Trash2 } from 'lucide-react'
 
 // ── Spin-On-Hold Interactive Helper ───────────────────────────────────
 function SpinOnHold({ children, style, className }) {
@@ -180,6 +180,7 @@ export default function Reports() {
 
   const [reportSearch, setReportSearch] = useState("")
   const [reportCategory, setReportCategory] = useState("ALL")
+  const [deleteMode, setDeleteMode] = useState(false)
 
   const openPrintCenter = (compFilter = "all", title = "All Companies") => {
     setPrintModalTitle(title)
@@ -233,7 +234,7 @@ export default function Reports() {
     <div>
       <style>{REPORTS_CUSTOM_CSS}</style>
       {!selectedCompany ? (
-        <div style={{ maxWidth: 900, margin: '40px auto' }}>
+        <div style={{ maxWidth: 1150, margin: '40px auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30, flexWrap: 'wrap', gap: 16 }}>
           <div>
             <h2 style={{ fontSize: 24, marginBottom: 6, color: 'var(--text)' }}>Select Company</h2>
@@ -265,13 +266,13 @@ export default function Reports() {
         
         <div style={{
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+          gridTemplateColumns: 'repeat(4, 1fr)', 
           gap: 20
         }}>
           {COMPANIES.map(co => (
             <div 
               key={co.name}
-              onClick={() => setSelectedCompany(co.name)}
+              onClick={() => { setSelectedCompany(co.name); setDeleteMode(false); }}
               className="card"
               style={{
                 cursor: 'pointer',
@@ -340,6 +341,28 @@ export default function Reports() {
         </div>
 
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setDeleteMode(!deleteMode)}
+            className="btn"
+            style={{
+              background: deleteMode ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${deleteMode ? '#ef4444' : 'rgba(255,255,255,0.15)'}`,
+              color: deleteMode ? '#ef4444' : 'var(--text)',
+              padding: '10px 18px',
+              borderRadius: 10,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            <Trash2 size={16} color={deleteMode ? '#ef4444' : 'var(--text-muted)'} />
+            {deleteMode ? 'Done Removing' : 'Remove Links'}
+          </button>
+
           <a
             href="https://docs.google.com/spreadsheets/d/1pMyWyI6J2YM7DzlYJ9__M8bZNaGPyrgTVAItoSiYYNg/edit?gid=2023338778#gid=2023338778"
             target="_blank"
@@ -421,21 +444,8 @@ export default function Reports() {
           borderBottom: '1px solid rgba(255,255,255,0.08)',
           paddingBottom: 22
         }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 20, fontWeight: 800, color: '#fff' }}>
-              <FileText size={24} color="var(--gold)" />
-              <span>Live Google Reports & Sheets (SRK...🧑)</span>
-              <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: 'rgba(212,175,55,0.15)', color: 'var(--gold)', border: '1px solid rgba(212,175,55,0.3)' }}>
-                {sheetLinks.length} Active Feeds
-              </span>
-            </div>
-            <p style={{ color: 'var(--text-muted)', margin: '6px 0 0 0', fontSize: 13 }}>
-              Real-time interactive web apps and spreadsheets connected directly to columns AH, AI, AK & more.
-            </p>
-          </div>
-
           {/* Search & Category Pills */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', width: '100%', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', width: '100%', justifyContent: 'space-between' }}>
             <div style={{ position: 'relative', minWidth: 240, flex: '1 1 240px', maxWidth: 320 }}>
               <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
               <input
@@ -507,8 +517,8 @@ export default function Reports() {
         ) : (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: '18px'
+            gridTemplateColumns: 'repeat(6, 1fr)',
+            gap: '14px'
           }}>
             {filteredLinks.map((linkItem, idx) => {
               const t = linkItem.title.toLowerCase()
@@ -532,32 +542,51 @@ export default function Reports() {
               return (
                 <a
                   key={idx}
-                  href={linkItem.url}
-                  target="_blank"
+                  href={deleteMode ? undefined : linkItem.url}
+                  onClick={(e) => {
+                    if (deleteMode) {
+                      e.preventDefault()
+                      setSheetLinks(prev => prev.filter(l => l.url !== linkItem.url))
+                    }
+                  }}
+                  target={deleteMode ? undefined : "_blank"}
                   rel="noopener noreferrer"
                   className="report-cyber-card"
-                  style={{ animationDelay: `${(idx % 12) * 0.04}s` }}
+                  style={{ animationDelay: `${(idx % 12) * 0.04}s`, cursor: 'pointer', border: deleteMode ? '1px dashed #ef4444' : undefined }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                    <div style={{ padding: 10, borderRadius: 10, background: iconBg, color: iconColor, border: `1px solid ${iconColor}33`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <SpinOnHold><IconComp size={20} /></SpinOnHold>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                    <div style={{ padding: 8, borderRadius: 8, background: iconBg, color: iconColor, border: `1px solid ${iconColor}33`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <SpinOnHold><IconComp size={18} /></SpinOnHold>
                     </div>
-                    <span className="card-badge">
-                      #{String(idx + 1).padStart(2, '0')}
-                    </span>
+                    {deleteMode ? (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          setSheetLinks(prev => prev.filter(l => l.url !== linkItem.url))
+                        }}
+                        style={{
+                          background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6,
+                          padding: '3px 8px', fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
+                        }}
+                      >
+                        <Trash2 size={12} /> Remove
+                      </button>
+                    ) : (
+                      <span className="card-badge">
+                        #{String(idx + 1).padStart(2, '0')}
+                      </span>
+                    )}
                   </div>
 
-                  <div style={{ fontWeight: 700, fontSize: 15, color: '#f8fafc', margin: '4px 0 16px 0', lineHeight: 1.4, letterSpacing: '0.2px' }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: '#f8fafc', margin: '4px 0 12px 0', lineHeight: 1.3, letterSpacing: '0.2px' }}>
                     {linkItem.title}
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12, marginTop: 'auto' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 10, marginTop: 'auto' }}>
                     <span style={{ fontSize: 11, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 500 }}>
                       <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
                       Direct Web Feed
-                    </span>
-                    <span className="action-icon" style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--gold)', fontWeight: 700, fontSize: 12 }}>
-                      Launch <ExternalLink size={14} />
                     </span>
                   </div>
                 </a>
