@@ -220,10 +220,8 @@ export default function Dashboard() {
   const [recentOrders, setRecentOrders] = useState([])
   const [companiesRev, setCompaniesRev] = useState({})
   const [loading,      setLoading]      = useState(true)
-  const [showRevDrop,  setShowRevDrop]  = useState(false)
   const [shiftOffset,  setShiftOffset]  = useState(0)
-  const [isPartyActive,setIsPartyActive]= useState(false)
-  const partySpeedRef = useRef(1000)
+  const isPartyActiveRef = useRef(false)
   const cubeRef = useRef(null)
   const angleRef = useRef(0)
   const timeoutRef = useRef(null)
@@ -231,35 +229,49 @@ export default function Dashboard() {
   const holdStartTimeRef = useRef(0)
 
   useEffect(() => {
-    const slideTabs = () => {
-      if (document.startViewTransition) {
-        document.startViewTransition(() => setShiftOffset(s => (s + 1) % 5));
+    const triggerParty = () => {
+      isPartyActiveRef.current = !isPartyActiveRef.current;
+      if (isPartyActiveRef.current) {
+        let currentSpeed = 1000;
+        
+        const loop = async () => {
+          if (!isPartyActiveRef.current) {
+            document.documentElement.style.removeProperty('--party-duration');
+            return;
+          }
+          
+          document.documentElement.style.setProperty('--party-duration', `${currentSpeed}ms`);
+          
+          if (document.startViewTransition) {
+            const transition = document.startViewTransition(() => {
+              setShiftOffset(s => (s + 1) % 5);
+            });
+            try {
+              await transition.finished;
+            } catch (e) {
+              await new Promise(r => setTimeout(r, currentSpeed));
+            }
+          } else {
+            setShiftOffset(s => (s + 1) % 5);
+            await new Promise(r => setTimeout(r, currentSpeed));
+          }
+          
+          // Exponentially decrease duration (increase speed) down to 10ms for extreme unreadable blur!
+          currentSpeed = Math.max(10, currentSpeed * 0.90);
+          
+          if (isPartyActiveRef.current) {
+            requestAnimationFrame(loop);
+          }
+        };
+        
+        loop();
       } else {
-        setShiftOffset(s => (s + 1) % 5);
+        document.documentElement.style.removeProperty('--party-duration');
       }
     };
     
-    let timer;
-    const loop = () => {
-      if (!isPartyActive) return;
-      slideTabs();
-      // Increase speed by reducing delay (down to 280ms)
-      partySpeedRef.current = Math.max(280, partySpeedRef.current - 50);
-      timer = setTimeout(loop, partySpeedRef.current);
-    };
-
-    if (isPartyActive) {
-      partySpeedRef.current = 1000; // start slow
-      timer = setTimeout(loop, partySpeedRef.current);
-    }
-    
-    return () => clearTimeout(timer);
-  }, [isPartyActive]);
-
-  useEffect(() => {
-    const toggleParty = () => setIsPartyActive(p => !p);
-    window.addEventListener('trigger-party-mode', toggleParty);
-    return () => window.removeEventListener('trigger-party-mode', toggleParty);
+    window.addEventListener('trigger-party-mode', triggerParty);
+    return () => window.removeEventListener('trigger-party-mode', triggerParty);
   }, []);
 
   const startSpin = (e) => {

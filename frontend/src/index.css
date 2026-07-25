@@ -438,12 +438,16 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
 .h-full        { height: 100%; }
 
 /* ─── Fast View Transitions ─────────────────────────────────────────── */
+:root {
+  --party-duration: 0.25s;
+}
 ::view-transition-group(kpi-rev),
 ::view-transition-group(kpi-orders),
 ::view-transition-group(kpi-emp),
 ::view-transition-group(kpi-break),
 ::view-transition-group(kpi-portal) {
-  animation-duration: 0.25s;
+  animation-duration: var(--party-duration);
+  animation-timing-function: linear;
 }
 
 /* ─── Breakdown Modal ───────────────────────────────────────────────── */
