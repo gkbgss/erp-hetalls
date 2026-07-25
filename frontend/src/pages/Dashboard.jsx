@@ -275,26 +275,21 @@ const OrdersSpinningCard = ({ kpis, todayOrders = [], style = {} }) => {
       
       {isHovered && currentFace.key === 'today' && todayOrders.length > 0 && (
         <div style={{
-          position: 'absolute', top: '105%', left: 0, width: '100%', zIndex: 10,
+          position: 'absolute', top: '105%', left: 0, zIndex: 10,
           background: '#0f172a', border: '1px solid var(--border)', borderRadius: '12px',
           padding: '12px', boxShadow: 'var(--shadow), var(--glass-shine)',
           backdropFilter: 'blur(32px) saturate(200%)',
           WebkitBackdropFilter: 'blur(32px) saturate(200%)',
-          maxHeight: '300px', overflowY: 'auto'
+          maxHeight: '250px', overflowY: 'auto',
+          minWidth: '200px'
         }}>
-          <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text)' }}>
-            Today's Orders (Latest First):
+          <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: 'var(--text)' }}>
+            Today's Orders
           </div>
           {todayOrders.map(o => (
-            <div key={o.order_id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', paddingBottom: '8px', borderBottom: '1px solid var(--border-light)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <span style={{ fontWeight: 'bold', color: 'var(--text)' }}>{o.order_id}</span>
-                <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{o.product_name || o.platform}</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginLeft: '12px' }}>
-                <span style={{ fontWeight: 'bold', color: 'var(--text)' }}>${o.amount?.toLocaleString()}</span>
-                <StatusBadge status={o.status} />
-              </div>
+            <div key={o.order_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid var(--border-light)' }}>
+              <PlatformPill platform={o.platform.toLowerCase()} />
+              <span style={{ fontWeight: 'bold', color: 'var(--text)', fontSize: '13px' }}>${o.amount?.toLocaleString()}</span>
             </div>
           ))}
         </div>
