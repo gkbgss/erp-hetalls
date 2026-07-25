@@ -2,14 +2,26 @@ import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
-import { Users, Calculator } from 'lucide-react'
+import { Users, Calculator, Search } from 'lucide-react'
 
 export default function HR() {
   const { API } = useAuth()
   const navigate = useNavigate()
   const [employees, setEmployees] = useState([])
   const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
   const fileInputRef = useRef(null)
+
+  const filteredEmployees = employees.filter(emp => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      (emp.name && emp.name.toLowerCase().includes(q)) ||
+      (emp.email && emp.email.toLowerCase().includes(q)) ||
+      (emp.department && emp.department.toLowerCase().includes(q)) ||
+      (emp.role && emp.role.toLowerCase().includes(q))
+    );
+  });
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0]
@@ -95,6 +107,46 @@ export default function HR() {
             </button>
           </div>
         </div>
+
+        <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ position: 'relative', flex: 1, maxWidth: 450 }}>
+            <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
+            <input
+              type="text"
+              placeholder="Search employees by name, email, department or role..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                background: 'rgba(15, 23, 42, 0.6)',
+                border: '1px solid var(--border)',
+                borderRadius: 10,
+                padding: '10px 36px 10px 38px',
+                color: '#fff',
+                fontSize: 13,
+                outline: 'none',
+                transition: 'all 0.2s',
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)'
+              }}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                style={{
+                  position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 16, cursor: 'pointer', padding: 0
+                }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+          {searchQuery && (
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+              Showing {filteredEmployees.length} of {employees.length} employees
+            </span>
+          )}
+        </div>
         
         <div className="table-wrapper">
           {loading ? (
@@ -112,7 +164,7 @@ export default function HR() {
                 </tr>
               </thead>
               <tbody>
-                {employees.map(emp => (
+                {filteredEmployees.map(emp => (
                   <tr key={emp.id}>
                     <td className="font-bold">
                       <div className="flex items-center gap-3">
@@ -136,8 +188,8 @@ export default function HR() {
                     <td>{emp.join_date ? new Date(emp.join_date).toLocaleDateString() : '—'}</td>
                   </tr>
                 ))}
-                {employees.length === 0 && (
-                  <tr><td colSpan="6" style={{ textAlign: 'center', padding: '30px' }}>No employees found.</td></tr>
+                {filteredEmployees.length === 0 && (
+                  <tr><td colSpan="6" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>No employees found matching "{searchQuery}".</td></tr>
                 )}
               </tbody>
             </table>
