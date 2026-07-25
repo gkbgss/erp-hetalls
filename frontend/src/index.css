@@ -657,9 +657,9 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
 .hg-alerts-popup {
   position: fixed;
   bottom: 24px;
-  left: 24px;
+  right: 24px;
   width: 320px;
-  background: var(--bg-surface);
+  background: rgba(30, 41, 59, 0.4) !important;
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--border);
@@ -667,13 +667,13 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   box-shadow: 0 12px 32px rgba(0,0,0,0.4), var(--glass-shine);
   z-index: 1000;
   overflow: hidden;
-  animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
   max-height: 400px;
 }
-@keyframes slideInLeft {
-  from { transform: translateX(-100%); opacity: 0; }
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
 
