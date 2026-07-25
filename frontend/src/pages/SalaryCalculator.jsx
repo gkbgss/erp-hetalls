@@ -16,7 +16,13 @@ import {
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
-    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', fontSize: 13 }}>
+    <div style={{
+      background: 'rgba(15, 23, 42, 0.95)', border: '1px solid var(--border)',
+      borderRadius: '12px', padding: '12px 14px', fontSize: 13,
+      boxShadow: 'var(--shadow), var(--glass-shine)',
+      backdropFilter: 'blur(32px) saturate(200%)',
+      WebkitBackdropFilter: 'blur(32px) saturate(200%)'
+    }}>
       <p style={{ color: 'var(--text-muted)', marginBottom: 6 }}>{label}</p>
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color, fontWeight: 600 }}>

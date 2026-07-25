@@ -639,3 +639,16 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
 .breakdown-table tbody tr:hover td {
   background: rgba(245,158,11,0.04);
 }
+
+/* ─── Recharts Tooltip Override ─────────────────────────────────────── */
+.recharts-default-tooltip {
+  background: rgba(15, 23, 42, 0.95) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow), var(--glass-shine) !important;
+  backdrop-filter: blur(32px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(200%) !important;
+}
+.recharts-tooltip-item {
+  color: var(--text-primary) !important;
+}
