@@ -36,3 +36,16 @@ def get_bills_links(current_user=Depends(require_roles("admin", "accountant", "a
     except Exception as e:
         return {"error": str(e), "HG": "", "MMC": "", "HO": "", "MKM": ""}
 
+@router.get("/hg-alerts")
+def get_hg_alerts(current_user=Depends(require_roles("admin", "accountant", "analyst"))):
+    # TODO: Connect to the actual Google Sheet using its Spreadsheet ID
+    # Currently returning mocked 3-star entries for the UI demonstration
+    return [
+        {"id": 1, "date": "2026-01-29", "bill_reg_no": "991 ***", "party": "ARAMEX", "bill_amt": 134464.66},
+        {"id": 2, "date": "2026-01-29", "bill_reg_no": "993 ***", "party": "ARAMEX", "bill_amt": 32994.59},
+        {"id": 3, "date": "2026-02-02", "bill_reg_no": "1002 ***", "party": "ARAMEX", "bill_amt": 141514.81},
+        {"id": 4, "date": "2026-06-27", "bill_reg_no": "1483 ***", "party": "FEDEX EXPRESS", "bill_amt": 3920.90},
+        {"id": 5, "date": "2026-06-27", "bill_reg_no": "1485 ***", "party": "FEDEX EXPRESS", "bill_amt": 38463.30},
+        {"id": 6, "date": "2026-07-14", "bill_reg_no": "1530 ***", "party": "DHL EXPRESS", "bill_amt": 11997.66},
+        {"id": 7, "date": "2026-07-15", "bill_reg_no": "1532 ***", "party": "MM HDFC CREDIT CARD", "bill_amt": 19347.00},
+    ]

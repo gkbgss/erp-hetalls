@@ -8,17 +8,21 @@ export default function Accounts() {
   const [invoices, setInvoices] = useState([])
   const [expenses, setExpenses] = useState([])
   const [billsLinks, setBillsLinks] = useState(null)
+  const [hgAlerts, setHgAlerts] = useState([])
+  const [showHgAlerts, setShowHgAlerts] = useState(true)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     Promise.all([
       axios.get(`${API}/api/accounts/invoices`),
       axios.get(`${API}/api/accounts/expenses`),
-      axios.get(`${API}/api/accounts/bills-links`)
-    ]).then(([invRes, expRes, billsRes]) => {
+      axios.get(`${API}/api/accounts/bills-links`),
+      axios.get(`${API}/api/accounts/hg-alerts`).catch(() => ({ data: [] }))
+    ]).then(([invRes, expRes, billsRes, hgRes]) => {
       setInvoices(invRes.data)
       setExpenses(expRes.data)
       setBillsLinks(billsRes.data)
+      setHgAlerts(hgRes.data || [])
     }).catch(console.error)
       .finally(() => setLoading(false))
   }, [API])
@@ -73,7 +77,35 @@ export default function Accounts() {
             )}
           </div>
         </div>
+        </div>
       </div>
+
+      {/* HG Alerts Popup */}
+      {hgAlerts.length > 0 && showHgAlerts && (
+        <div className="hg-alerts-popup">
+          <div className="hg-alerts-header">
+            <div>
+              <span className="hg-alerts-title">HG Bill Alerts</span>
+              <span className="hg-alerts-subtitle">3-Star Entries Action Required</span>
+            </div>
+            <button className="hg-alerts-close" onClick={() => setShowHgAlerts(false)}>×</button>
+          </div>
+          <div className="hg-alerts-content">
+            {hgAlerts.map(alert => (
+              <div key={alert.id} className="hg-alert-item">
+                <div className="hg-alert-top">
+                  <span className="hg-alert-party">{alert.party}</span>
+                  <span className="hg-alert-amt">${alert.bill_amt.toLocaleString()}</span>
+                </div>
+                <div className="hg-alert-bottom">
+                  <span className="hg-alert-reg">{alert.bill_reg_no}</span>
+                  <span className="hg-alert-date">{alert.date}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
