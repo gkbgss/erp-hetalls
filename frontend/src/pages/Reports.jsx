@@ -82,20 +82,23 @@ const REPORTS_CUSTOM_CSS = `
 
 .report-cyber-card {
   position: relative;
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.92) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 14px;
-  padding: 18px 20px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
+  height: 100%;
+  width: 100%;
   text-decoration: none;
   color: var(--text);
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   opacity: 0;
-  animation: cardCascade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: cardCascade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .report-cyber-card::before {
@@ -554,8 +557,9 @@ export default function Reports() {
         ) : (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(6, 1fr)',
-            gap: '14px'
+            gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
+            gridAutoRows: '110px',
+            gap: '16px'
           }}>
             {filteredLinks.map((linkItem, idx) => {
               const t = linkItem.title.toLowerCase()
@@ -591,7 +595,8 @@ export default function Reports() {
                   className="report-cyber-card"
                   style={{ animationDelay: `${(idx % 12) * 0.04}s`, cursor: 'pointer', border: deleteMode ? '1px dashed #ef4444' : undefined }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 6 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }} />
                     {deleteMode ? (
                       <button
                         onClick={(e) => {
@@ -613,7 +618,19 @@ export default function Reports() {
                     )}
                   </div>
 
-                  <div style={{ fontWeight: 700, fontSize: 13, color: '#f8fafc', margin: '2px 0 4px 0', lineHeight: 1.3, letterSpacing: '0.2px' }}>
+                  <div style={{ 
+                    fontWeight: 700, 
+                    fontSize: 13, 
+                    color: '#f8fafc', 
+                    margin: '2px 0 0 0', 
+                    lineHeight: 1.35, 
+                    letterSpacing: '0.2px',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}>
                     {linkItem.title}
                   </div>
                 </a>
