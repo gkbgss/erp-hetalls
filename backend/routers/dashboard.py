@@ -267,3 +267,38 @@ def recent_orders(current_user=Depends(get_current_user)):
         del o["_dt"]
         
     return valid_orders[:8]
+
+@router.get("/today-orders")
+def today_orders(current_user=Depends(get_current_user)):
+    orders_data = fetch_sheet_csv("ORDERS")
+    valid_orders = []
+    
+    today = datetime.now().date()
+    
+    for i, row in enumerate(orders_data[1:]):
+        if len(row) < 37: continue
+        
+        dt = parse_date(row[8])
+        if not dt or dt.date() != today: continue
+        
+        material = row[10].strip() if len(row) > 10 else ""
+        size = row[11].strip() if len(row) > 11 else ""
+        
+        valid_orders.append({
+            "id": i,
+            "order_id": row[5].strip() if len(row) > 5 else f"ORD-{i}",
+            "platform": (row[4].strip() or "UNKNOWN").upper() if len(row) > 4 else "UNKNOWN",
+            "customer_name": row[6].strip() if len(row) > 6 else "Unknown",
+            "product_name": f"{material} {size}".strip(),
+            "amount": parse_price(row[36]),
+            "status": row[14].strip() if len(row) > 14 else "Unknown",
+            "order_date": row[8].strip() if len(row) > 8 else "",
+            "_dt": dt
+        })
+        
+    valid_orders.sort(key=lambda x: x["_dt"], reverse=True)
+    
+    for o in valid_orders:
+        del o["_dt"]
+        
+    return valid_orders
