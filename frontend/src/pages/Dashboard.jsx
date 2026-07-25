@@ -607,7 +607,7 @@ export default function Dashboard() {
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v/1000}k`} />
-              <Tooltip content={<ChartTooltip />} />
+              <Tooltip content={<ChartTooltip />} itemSorter={(item) => -Number(item.value || 0)} />
               <Legend align="center" wrapperStyle={{ fontSize: 12 }} />
               
               <Bar dataKey="ETSY-CASAVANI" name="Etsy-Casavani" fill="#f87171" stackId="a" />
@@ -634,7 +634,7 @@ export default function Dashboard() {
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
               <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v/1000}k`} />
-              <Tooltip content={<ChartTooltip />} />
+              <Tooltip content={<ChartTooltip />} itemSorter={(item) => -Number(item.value || 0)} />
               <Legend align="center" wrapperStyle={{ fontSize: 12 }} />
               
               <Line type="monotone" dataKey="ETSY-CASAVANI" name="Etsy-Casavani" stroke="#f87171" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
