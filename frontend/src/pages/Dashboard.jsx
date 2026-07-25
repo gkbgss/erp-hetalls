@@ -134,16 +134,15 @@ const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
     { key: 'today', label: "Today's Revenue", value: kpis?.today_revenue || 0, sub: "Today only", icon: DollarSign, colorClass: 'gold' },
     { key: 'month', label: "This Month Revenue", value: kpis?.this_month_revenue || 0, sub: "Month to date", icon: DollarSign, colorClass: 'gold' },
     { key: 'year', label: "This Year Revenue", value: kpis?.this_year_revenue || 0, sub: "Financial year", icon: DollarSign, colorClass: 'gold' },
-    { key: 'total', label: "Total Revenue", value: kpis?.total_revenue || 0, sub: "All time", icon: DollarSign, colorClass: 'gold' },
   ];
 
   const getFace = (i) => {
-    let k = spinCount - (spinCount % 4) + i;
-    if (k < spinCount - 1) k += 4;
+    let k = spinCount - (spinCount % 3) + i;
+    if (k < spinCount - 1) k += 3;
     return faces[k % faces.length];
   };
 
-  const currentFace = faces[spinCount % 4];
+  const currentFace = faces[spinCount % 3];
 
   return (
     <div 
@@ -162,11 +161,11 @@ const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
         <div 
           className="cube" 
           style={{ 
-            transform: `translateZ(-140px) rotateY(${spinCount * -90}deg)`, 
+            transform: `translateZ(-140px) rotateY(${spinCount * -120}deg)`, 
             transition: 'transform 0.4s ease-out' 
           }}
         >
-          {[0, 1, 2, 3].map(i => {
+          {[0, 1, 2].map(i => {
             const f = getFace(i);
             return (
               <div key={i} className="cube-face">
@@ -337,10 +336,10 @@ export default function Dashboard() {
     }
 
     if (heldTime < 150) {
-      angleRef.current -= 90;
+      angleRef.current -= 120;
     }
-    // Snap to nearest 90 degree boundary
-    angleRef.current = Math.round(angleRef.current / 90) * 90;
+    // Snap to nearest 120 degree boundary
+    angleRef.current = Math.round(angleRef.current / 120) * 120;
     
     if (cubeRef.current) {
       cubeRef.current.style.transition = 'transform 0.4s ease-out';
@@ -480,9 +479,8 @@ export default function Dashboard() {
         }}
       >
         <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={AlertCircle} label="Orders Today" value={kpis?.today_orders} sub="Hold to spin or Click" colorClass="danger" /></div></div>
-        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={ShoppingCart} label="Total Orders" value={kpis?.total_orders} sub="All time" colorClass="info" /></div></div>
-        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={TrendingUp} label="Orders This Year" value={kpis?.this_year_orders} sub="Year to date" colorClass="success" /></div></div>
         <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={TrendingUp} label="Orders This Month" value={kpis?.this_month_orders} sub="Month to date" colorClass="warning" /></div></div>
+        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={TrendingUp} label="Orders This Year" value={kpis?.this_year_orders} sub="Year to date" colorClass="success" /></div></div>
       </div>
     </div>,
     <KPICard key="emp" icon={Users} label="Active Employees" value={kpis?.total_employees ?? 0} sub="Across all departments" colorClass="green" style={{ viewTransitionName: 'kpi-emp' }} />,
