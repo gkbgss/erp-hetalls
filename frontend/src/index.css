@@ -593,7 +593,7 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
 }
 .breakdown-table thead th {
   position: sticky;
-  background: rgba(15, 23, 42, 0.85) !important;
+  background: #0f172a !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   z-index: 20 !important;
@@ -617,7 +617,7 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   text-align: left;
   position: sticky;
   left: 0;
-  background: rgba(15, 23, 42, 0.85);
+  background: #0f172a;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   z-index: 10;
@@ -633,7 +633,7 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
 .breakdown-table th.main-header {
   color: var(--text-primary);
   text-align: center;
-  background: rgba(245,158,11,0.08);
+  background: #1a2235;
   font-weight: 700;
 }
 .breakdown-table tbody tr:hover td {
