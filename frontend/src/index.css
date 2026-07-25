@@ -455,6 +455,17 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
 ::view-transition-group(kpi-break)  { z-index: var(--z-kpi-break, 10); }
 ::view-transition-group(kpi-portal) { z-index: var(--z-kpi-portal, 10); }
 
+@keyframes flyBehind {
+  0%   { transform: scale(1); opacity: 1; filter: brightness(1); }
+  50%  { transform: scale(0.65) translateY(-20px); opacity: 0.6; filter: brightness(0.5); }
+  100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+}
+::view-transition-image-pair(kpi-rev)    { animation: var(--anim-kpi-rev, none); }
+::view-transition-image-pair(kpi-orders) { animation: var(--anim-kpi-orders, none); }
+::view-transition-image-pair(kpi-emp)    { animation: var(--anim-kpi-emp, none); }
+::view-transition-image-pair(kpi-break)  { animation: var(--anim-kpi-break, none); }
+::view-transition-image-pair(kpi-portal) { animation: var(--anim-kpi-portal, none); }
+
 /* ─── Breakdown Modal ───────────────────────────────────────────────── */
 .breakdown-overlay {
   position: fixed;

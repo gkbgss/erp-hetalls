@@ -29,11 +29,19 @@ export default function Header() {
           className="header-badge" 
           style={{ cursor: 'pointer' }}
           onClick={(e) => {
-            const count = (parseInt(e.target.dataset.clicks || '0') + 1);
-            e.target.dataset.clicks = count;
-            if (count === 7) {
+            const target = e.currentTarget;
+            if (target.dataset.partyActive === 'true') {
               window.dispatchEvent(new Event('trigger-party-mode'));
-              e.target.dataset.clicks = 0;
+              target.dataset.partyActive = 'false';
+              target.dataset.clicks = 0;
+            } else {
+              const count = (parseInt(target.dataset.clicks || '0') + 1);
+              target.dataset.clicks = count;
+              if (count === 7) {
+                window.dispatchEvent(new Event('trigger-party-mode'));
+                target.dataset.partyActive = 'true';
+                target.dataset.clicks = 0;
+              }
             }
           }}
           title="Click 7 times!"
