@@ -64,6 +64,7 @@ export default function Sidebar() {
                 <NavLink
                   key={item.to}
                   to={item.to}
+                  end
                   className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
                 >
                   <item.icon size={17} />

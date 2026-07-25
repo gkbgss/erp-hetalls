@@ -66,8 +66,12 @@ export function MessagesProvider({ children }) {
     setMessages(prev => prev.filter(m => m.id !== id));
   };
 
+  const resetMessages = () => {
+    setMessages(initialMessages);
+  };
+
   return (
-    <MessagesContext.Provider value={{ messages, unreadCount, markAsRead, deleteMessage }}>
+    <MessagesContext.Provider value={{ messages, unreadCount, markAsRead, deleteMessage, resetMessages }}>
       {children}
     </MessagesContext.Provider>
   );

@@ -4,7 +4,7 @@ import { Search, Mail, MailOpen, Clock, Trash2, Reply, MoreVertical } from 'luci
 import '../index.css';
 
 export default function Messages() {
-  const { messages, markAsRead, deleteMessage } = useMessages();
+  const { messages, markAsRead, deleteMessage, resetMessages } = useMessages();
   const [selectedId, setSelectedId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -49,7 +49,12 @@ export default function Messages() {
         
         <div className="message-list">
           {filteredMessages.length === 0 ? (
-            <div className="no-messages">No messages found.</div>
+            <div className="no-messages">
+              <p style={{marginBottom: 16}}>No messages found.</p>
+              {searchQuery === '' && messages.length === 0 && (
+                <button onClick={resetMessages} className="btn btn-primary">Restore Dummy Messages</button>
+              )}
+            </div>
           ) : (
             filteredMessages.map(msg => (
               <div 
