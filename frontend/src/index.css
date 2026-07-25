@@ -82,11 +82,11 @@ input, select, textarea { font-family: inherit; outline: none; }
   top: 0; left: 0;
   width: var(--sidebar-width);
   height: 100vh;
-  background: var(--bg-surface);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border-right: 1px solid var(--border);
-  box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+  background: rgba(30, 41, 59, 0.4) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3) !important;
   display: flex;
   flex-direction: column;
   z-index: 100;
@@ -163,11 +163,11 @@ input, select, textarea { font-family: inherit; outline: none; }
 /* ─── Header ────────────────────────────────────────────────────────── */
 .header {
   height: var(--header-height);
-  background: var(--bg-surface);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 4px 30px rgba(0,0,0,0.1);
+  background: rgba(30, 41, 59, 0.4) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3) !important;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 32px;
   position: sticky; top: 0; z-index: 50;

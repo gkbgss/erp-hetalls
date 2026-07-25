@@ -368,7 +368,7 @@ export default function SalaryCalculator() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-base)' }}>
+    <div style={{ minHeight: '100vh' }}>
       {/* ─── Top Bar ──────────────────────────────────────────────── */}
       <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(30, 41, 59, 0.4)', backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', padding: '0 32px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
