@@ -12,14 +12,11 @@ const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
     <div style={{
-      background: '#0f172a', border: '1px solid var(--border)',
-      borderRadius: '12px', padding: '12px 14px', fontSize: 13,
-      boxShadow: 'var(--shadow), var(--glass-shine)',
-      backdropFilter: 'blur(32px) saturate(200%)',
-      WebkitBackdropFilter: 'blur(32px) saturate(200%)'
+      background: 'var(--bg-card)', border: '1px solid var(--border)',
+      borderRadius: 8, padding: '10px 14px', fontSize: 13
     }}>
       <p style={{ color: 'var(--text-muted)', marginBottom: 6 }}>{label}</p>
-      {payload.map((p, i) => (
+      {[...payload].sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0)).map((p, i) => (
         <p key={i} style={{ color: p.color, fontWeight: 600 }}>
           {p.name}: {p.name.toLowerCase().includes('order') ? p.value : `$${p.value?.toLocaleString()}`}
         </p>

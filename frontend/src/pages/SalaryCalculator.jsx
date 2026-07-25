@@ -24,7 +24,7 @@ const ChartTooltip = ({ active, payload, label }) => {
       WebkitBackdropFilter: 'blur(32px) saturate(200%)'
     }}>
       <p style={{ color: 'var(--text-muted)', marginBottom: 6 }}>{label}</p>
-      {payload.map((p, i) => (
+      {[...payload].sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0)).map((p, i) => (
         <p key={i} style={{ color: p.color, fontWeight: 600 }}>
           {p.name}: ₹{p.value?.toLocaleString()}
         </p>
