@@ -5,8 +5,7 @@ import {
   BarChart, Bar, AreaChart, Area, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, PieChart, Pie, Cell
-} from 'recharts'
-import { TrendingUp, DollarSign, ShoppingCart, Package, Download, Building, ArrowLeft } from 'lucide-react'
+import { TrendingUp, DollarSign, ShoppingCart, Package, Download, Building, ArrowLeft, FileText, ExternalLink } from 'lucide-react'
 
 // ── Custom Tooltip ────────────────────────────────────────────────────
 const ChartTooltip = ({ active, payload, label }) => {
@@ -66,6 +65,7 @@ export default function Reports() {
   const [monthly,     setMonthly]     = useState([])
   const [topProducts, setTopProducts] = useState([])
   const [platforms,   setPlatforms]   = useState([])
+  const [sheetLinks,  setSheetLinks]  = useState([])
   const [loading,     setLoading]     = useState(false)
 
   const COMPANIES = [
@@ -73,7 +73,10 @@ export default function Reports() {
     { name: "MKM",             color: "#f59e0b" },
     { name: "Hetalls",         color: "#ef4444" },
     { name: "MMC",             color: "#8b5cf6" },
-    { name: "Eastern",         color: "#10b981" }
+    { name: "Eastern",         color: "#10b981" },
+    { name: "Cotton Cheese",   color: "#06b6d4" },
+    { name: "MMCO",            color: "#ec4899" },
+    { name: "HOMESPUN",        color: "#f97316" }
   ]
 
   useEffect(() => {
@@ -87,12 +90,17 @@ export default function Reports() {
       axios.get(`${API}/api/reports/monthly-breakdown`, { params }),
       axios.get(`${API}/api/reports/top-products`, { params }),
       axios.get(`${API}/api/reports/platform-comparison`, { params }),
-    ]).then(([s, m, t, p]) => {
+      axios.get(`${API}/api/reports/google-sheet-links`, { params }),
+    ]).then(([s, m, t, p, l]) => {
       setSummary(s.data)
       setMonthly(m.data)
       setTopProducts(t.data)
       setPlatforms(p.data)
-    }).catch(console.error)
+      setSheetLinks(l.data || [])
+    }).catch(err => {
+      console.error(err)
+      setSheetLinks([])
+    })
       .finally(() => setLoading(false))
   }, [API, selectedCompany])
 
@@ -192,6 +200,69 @@ export default function Reports() {
         <KPICard icon={ShoppingCart} label="Total Orders"    value={summary?.total_orders}    colorClass="blue"  format="number" />
         <KPICard icon={DollarSign}  label="Total Expenses"   value={summary?.total_expenses}  colorClass="red" />
         <KPICard icon={DollarSign}  label="Net Profit"       value={summary?.net_profit}      colorClass="gold" />
+      </div>
+
+      {/* ─── Live Google Reports (SRK...🧑 Sheet) ───────────────── */}
+      <div className="card mb-6" style={{ borderLeft: '4px solid var(--gold)', background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(212,175,55,0.04) 100%)' }}>
+        <div className="card-header" style={{ marginBottom: 16 }}>
+          <div>
+            <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 18 }}>
+              <FileText size={20} color="var(--gold)" />
+              <span>Live Google Reports & Sheets (SRK...🧑)</span>
+            </div>
+            <div className="card-subtitle">Real-time reports fetched directly from spreadsheet columns for {selectedCompany}</div>
+          </div>
+        </div>
+        {sheetLinks.length === 0 ? (
+          <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg)', borderRadius: '8px', border: '1px dashed var(--border)' }}>
+            No spreadsheet report links found for {selectedCompany} in the SRK sheet.
+          </div>
+        ) : (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+            gap: '12px'
+          }}>
+            {sheetLinks.map((linkItem, idx) => (
+              <a
+                key={idx}
+                href={linkItem.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  background: 'var(--bg)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '8px',
+                  color: 'var(--text)',
+                  textDecoration: 'none',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--gold)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(212,175,55,0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border)';
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+                }}
+              >
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ color: 'var(--gold)' }}>•</span> {linkItem.title}
+                </span>
+                <ExternalLink size={15} color="var(--gold)" style={{ flexShrink: 0 }} />
+              </a>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ─── 12-Month Revenue vs Expenses ──────────────────────── */}

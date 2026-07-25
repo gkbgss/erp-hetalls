@@ -2,8 +2,13 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
 from database import get_db, Order, Product, Invoice, Expense, Employee
-from auth import require_roles
+from auth import require_roles, get_current_user
 from datetime import datetime, timedelta
+import urllib.request
+import csv
+import io
+import time
+import threading
 
 router = APIRouter(prefix="/api/reports", tags=["reports"])
 
@@ -119,3 +124,71 @@ def dept_headcount(company: str = "", db: Session = Depends(get_db), current_use
         q = q.filter(Employee.company == company)
     rows = q.group_by(Employee.department).all()
     return [{"department": r.department, "count": r.count} for r in rows]
+
+_SRK_SHEET_URL = "https://docs.google.com/spreadsheets/d/1pMyWyI6J2YM7DzlYJ9__M8bZNaGPyrgTVAItoSiYYNg/export?format=csv&gid=2023338778"
+_SRK_CACHE = {"time": 0, "data": []}
+_SRK_LOCK = threading.Lock()
+
+def get_srk_sheet_rows():
+    now = time.time()
+    with _SRK_LOCK:
+        if now - _SRK_CACHE["time"] < 30 and _SRK_CACHE["data"]:
+            return _SRK_CACHE["data"]
+            
+    try:
+        req = urllib.request.Request(_SRK_SHEET_URL, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as response:
+            csv_content = response.read().decode('utf-8', errors='ignore')
+            rows = list(csv.reader(io.StringIO(csv_content)))
+            with _SRK_LOCK:
+                _SRK_CACHE["time"] = time.time()
+                _SRK_CACHE["data"] = rows
+            return rows
+    except Exception as e:
+        print(f"Error fetching SRK Google Sheet: {e}")
+        with _SRK_LOCK:
+            return _SRK_CACHE["data"] or []
+
+@router.get("/google-sheet-links")
+def get_google_sheet_links(company: str = "", current_user=Depends(get_current_user)):
+    rows = get_srk_sheet_rows()
+    if not rows:
+        return []
+        
+    comp_map = {
+        "hetalls global": (34, 35),
+        "h.g": (34, 35),
+        "mmc": (36, 37),
+        "hetalls": (38, 39),
+        "h.o": (38, 39),
+        "mkm": (40, 41),
+        "eastern": (42, 43),
+        "cotton cheese": (44, 45),
+        "mmco": (46, 47),
+        "homespun": (48, 49)
+    }
+    
+    clean_comp = company.strip().lower()
+    cols = comp_map.get(clean_comp)
+    if not cols:
+        return []
+        
+    links = []
+    seen_urls = set()
+    
+    for row in rows:
+        if len(row) <= 33:
+            continue
+        title = row[33].strip()
+        if not title or title.lower() == "title" or title == "TITLE ":
+            continue
+            
+        for idx in cols:
+            if idx < len(row):
+                url = row[idx].strip()
+                if url and ("http" in url.lower() or "script.google" in url.lower()):
+                    if url not in seen_urls:
+                        seen_urls.add(url)
+                        links.append({"title": title, "url": url})
+                        
+    return links
