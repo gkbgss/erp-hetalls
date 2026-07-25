@@ -33,13 +33,13 @@ const ChartTooltip = ({ active, payload, label }) => {
 }
 
 // ── KPI Card ──────────────────────────────────────────────────────────
-function KPICard({ icon: Icon, label, value, sub, colorClass, prefix = '', format = 'number', className = '' }) {
+function KPICard({ icon: Icon, label, value, sub, colorClass, prefix = '', format = 'number', className = '', style = {} }) {
   let display = value
   if (format === 'currency') display = `$${Number(value).toLocaleString('en-US', { minimumFractionDigits: 0 })}`
   else if (format === 'number') display = Number(value).toLocaleString()
   
   return (
-    <div className={`kpi-card ${className}`}>
+    <div className={`kpi-card ${className}`} style={style}>
       <div className="kpi-header">
         <span className="kpi-label">{label}</span>
         <div className={`kpi-icon ${colorClass}`}><Icon size={18} /></div>
@@ -50,7 +50,7 @@ function KPICard({ icon: Icon, label, value, sub, colorClass, prefix = '', forma
   )
 }
 
-const PortalGrowthCard = ({ revenueChart, partyMode }) => {
+const PortalGrowthCard = ({ revenueChart, style = {} }) => {
   const [spinCount, setSpinCount] = useState(0);
   
   const portals = useMemo(() => {
@@ -78,7 +78,7 @@ const PortalGrowthCard = ({ revenueChart, partyMode }) => {
   }, [revenueChart]);
 
   if (!portals || portals.length === 0) return (
-    <KPICard icon={TrendingUp} label="Portal Growth" value="N/A" sub="Not enough data" colorClass="success" className={partyMode ? 'party-mode' : ''} />
+    <KPICard icon={TrendingUp} label="Portal Growth" value="N/A" sub="Not enough data" colorClass="success" style={style} />
   );
 
   const getPortalForFace = (i) => {
@@ -89,9 +89,9 @@ const PortalGrowthCard = ({ revenueChart, partyMode }) => {
 
   return (
     <div 
-      className={`cube-container ${partyMode ? 'party-mode' : ''}`} 
+      className="cube-container" 
       onClick={(e) => { if (e && e.preventDefault) e.preventDefault(); setSpinCount(c => c + 1); }}
-      style={{ cursor: 'pointer', userSelect: 'none' }}
+      style={{ cursor: 'pointer', userSelect: 'none', ...style }}
     >
       <div 
         className="cube" 
@@ -123,7 +123,7 @@ const PortalGrowthCard = ({ revenueChart, partyMode }) => {
   );
 };
 
-const RevenueSpinningCard = ({ kpis, companiesRev, partyMode }) => {
+const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
   const [spinCount, setSpinCount] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   
@@ -144,8 +144,7 @@ const RevenueSpinningCard = ({ kpis, companiesRev, partyMode }) => {
 
   return (
     <div 
-      style={{ position: 'relative' }}
-      className={partyMode ? 'party-mode' : ''}
+      style={{ position: 'relative', ...style }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -222,7 +221,7 @@ export default function Dashboard() {
   const [companiesRev, setCompaniesRev] = useState({})
   const [loading,      setLoading]      = useState(true)
   const [showRevDrop,  setShowRevDrop]  = useState(false)
-  const [partyMode,    setPartyMode]    = useState(false)
+  const [shiftOffset,  setShiftOffset]  = useState(0)
   const cubeRef = useRef(null)
   const angleRef = useRef(0)
   const timeoutRef = useRef(null)
@@ -230,9 +229,17 @@ export default function Dashboard() {
   const holdStartTimeRef = useRef(0)
 
   useEffect(() => {
-    const toggleParty = () => setPartyMode(p => !p);
-    window.addEventListener('trigger-party-mode', toggleParty);
-    return () => window.removeEventListener('trigger-party-mode', toggleParty);
+    const slideTabs = () => {
+      if (document.startViewTransition) {
+        document.startViewTransition(() => {
+          setShiftOffset(s => (s + 1) % 5);
+        });
+      } else {
+        setShiftOffset(s => (s + 1) % 5);
+      }
+    };
+    window.addEventListener('trigger-party-mode', slideTabs);
+    return () => window.removeEventListener('trigger-party-mode', slideTabs);
   }, []);
 
   const startSpin = (e) => {
@@ -394,60 +401,54 @@ export default function Dashboard() {
     </div>
   )
 
+  const kpiElements = [
+    <RevenueSpinningCard key="rev" kpis={kpis} companiesRev={companiesRev} style={{ viewTransitionName: 'kpi-rev' }} />,
+    
+    <div 
+      key="orders"
+      className="cube-container" 
+      onMouseDown={startSpin}
+      onMouseUp={stopSpin}
+      onMouseLeave={stopSpin}
+      onTouchStart={startSpin}
+      onTouchEnd={stopSpin}
+      onDragStart={(e) => e.preventDefault()}
+      style={{ cursor: 'pointer', userSelect: 'none', viewTransitionName: 'kpi-orders' }}
+    >
+      <div 
+        className="cube" 
+        ref={cubeRef}
+        style={{ 
+          transform: `translateZ(-140px) rotateY(${angleRef.current}deg)`, 
+          transition: 'transform 0.4s ease-out' 
+        }}
+      >
+        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={AlertCircle} label="Orders Today" value={kpis?.today_orders} sub="Hold to spin or Click" colorClass="danger" /></div></div>
+        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={ShoppingCart} label="Total Orders" value={kpis?.total_orders} sub="All time" colorClass="info" /></div></div>
+        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={TrendingUp} label="Orders This Year" value={kpis?.this_year_orders} sub="Year to date" colorClass="success" /></div></div>
+        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={TrendingUp} label="Orders This Month" value={kpis?.this_month_orders} sub="Month to date" colorClass="warning" /></div></div>
+      </div>
+    </div>,
+
+    <KPICard key="emp" icon={Users} label="Active Employees" value={kpis?.total_employees ?? 0} sub="Across all departments" colorClass="green" style={{ viewTransitionName: 'kpi-emp' }} />,
+
+    <div key="breakdown" onClick={openBreakdown} style={{ cursor: 'pointer', height: '100%', viewTransitionName: 'kpi-break' }}>
+      <KPICard icon={Layers} label="Detailed Breakdown" value="Breakdown" sub="Daily Sale Brands & Portal" colorClass="blue" format="text" className="h-full" />
+    </div>,
+
+    <PortalGrowthCard key="portal" revenueChart={revenueChart} style={{ viewTransitionName: 'kpi-portal' }} />
+  ];
+
+  const shiftedElements = [];
+  for (let i = 0; i < 5; i++) {
+    shiftedElements.push(kpiElements[(i - shiftOffset + 5) % 5]);
+  }
+
   return (
     <div>
       {/* KPI Grid */}
       <div className="kpi-grid">
-        <RevenueSpinningCard kpis={kpis} companiesRev={companiesRev} partyMode={partyMode} />
-        
-        {/* The 4-Sided Horizontal 3D Prism */}
-        <div 
-          className={`cube-container ${partyMode ? 'party-mode' : ''}`}
-          onMouseDown={startSpin}
-          onMouseUp={stopSpin}
-          onMouseLeave={stopSpin}
-          onTouchStart={startSpin}
-          onTouchEnd={stopSpin}
-          onDragStart={(e) => e.preventDefault()}
-          style={{ cursor: 'pointer', userSelect: 'none' }}
-        >
-          <div 
-            className="cube" 
-            ref={cubeRef}
-            style={{ 
-              transform: `translateZ(-140px) rotateY(${angleRef.current}deg)`, 
-              transition: 'transform 0.4s ease-out' 
-            }}
-          >
-            {/* Face 1: Today */}
-            <div className="cube-face">
-              <div style={{ width: '100%', height: '100%' }}><KPICard icon={AlertCircle} label="Orders Today" value={kpis?.today_orders} sub="Hold to spin or Click" colorClass="danger" /></div>
-            </div>
-            {/* Face 2: Total */}
-            <div className="cube-face">
-              <div style={{ width: '100%', height: '100%' }}><KPICard icon={ShoppingCart} label="Total Orders" value={kpis?.total_orders} sub="All time" colorClass="info" /></div>
-            </div>
-            {/* Face 3: This Year */}
-            <div className="cube-face">
-              <div style={{ width: '100%', height: '100%' }}><KPICard icon={TrendingUp} label="Orders This Year" value={kpis?.this_year_orders} sub="Year to date" colorClass="success" /></div>
-            </div>
-            {/* Face 4: This Month */}
-            <div className="cube-face">
-              <div style={{ width: '100%', height: '100%' }}><KPICard icon={TrendingUp} label="Orders This Month" value={kpis?.this_month_orders} sub="Month to date" colorClass="warning" /></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Active Employees */}
-        <KPICard icon={Users} label="Active Employees" value={kpis?.total_employees ?? 0} sub="Across all departments" colorClass="green" className={partyMode ? 'party-mode' : ''} />
-
-        {/* Detailed Breakdown */}
-        <div onClick={openBreakdown} style={{ cursor: 'pointer', height: '100%' }} className={partyMode ? 'party-mode' : ''}>
-          <KPICard icon={Layers} label="Detailed Breakdown" value="Breakdown" sub="Daily Sale Brands & Portal" colorClass="blue" format="text" className="h-full" />
-        </div>
-
-        {/* 5th Card: Portal Growth Progress */}
-        <PortalGrowthCard revenueChart={revenueChart} partyMode={partyMode} />
+        {shiftedElements}
       </div>
 
       {/* Breakdown Modal */}
