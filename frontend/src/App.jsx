@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { MessagesProvider } from './context/MessagesContext'
 import Sidebar from './components/Sidebar'
 import Header  from './components/Header'
 import Login   from './pages/Login'
@@ -12,6 +13,7 @@ import Reports   from './pages/Reports'
 import Settings  from './pages/Settings'
 import DetailedBreakdown from './pages/DetailedBreakdown'
 import SalaryCalculator from './pages/SalaryCalculator'
+import Messages from './pages/Messages'
 import Placeholder from './components/Placeholder'
 import './index.css'
 
@@ -39,6 +41,7 @@ function AppLayout() {
             <Route path="/accounts"  element={<Accounts />} />
             <Route path="/hr"                    element={<HR />} />
             <Route path="/hr/salary-calculator"   element={<SalaryCalculator />} />
+            <Route path="/hr/messages"           element={<Messages />} />
             <Route path="/reports"               element={<Reports />} />
             <Route path="/settings"  element={<Settings />} />
             <Route path="/breakdown" element={<DetailedBreakdown />} />
@@ -54,12 +57,14 @@ function AppLayout() {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginGuard />} />
-          <Route path="/*"     element={<AppLayout />} />
-        </Routes>
-      </BrowserRouter>
+      <MessagesProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginGuard />} />
+            <Route path="/*"     element={<AppLayout />} />
+          </Routes>
+        </BrowserRouter>
+      </MessagesProvider>
     </AuthProvider>
   )
 }

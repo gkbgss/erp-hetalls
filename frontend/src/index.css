@@ -772,3 +772,143 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   font-size: 11px;
   color: var(--text-muted);
 }
+
+/* --- Messages UI ----------------------------------------------------- */
+.messages-layout {
+  display: flex;
+  height: calc(100vh - 120px);
+  gap: 20px;
+}
+
+.messages-sidebar {
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.messages-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.messages-header h2 { margin-top: 0; font-size: 18px; margin-bottom: 16px; }
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  gap: 8px;
+}
+.search-box input {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  outline: none;
+  width: 100%;
+}
+
+.message-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.no-messages {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.message-item {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  gap: 12px;
+  transition: background 0.2s;
+  position: relative;
+}
+.message-item:hover { background: rgba(255,255,255,0.05); }
+.message-item.selected { background: rgba(255,255,255,0.1); }
+.message-item.unread .message-sender-row .sender-name { font-weight: 700; color: #fff; }
+.message-item.unread .message-subject { font-weight: 600; color: #fff; }
+
+.message-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: #2a2a35;
+}
+
+.message-preview { flex: 1; min-width: 0; }
+.message-sender-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.sender-name { font-size: 14px; color: var(--text); }
+.message-time { font-size: 11px; color: var(--text-muted); }
+.message-subject { font-size: 13px; color: var(--text); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.message-snippet { font-size: 12px; color: var(--text-muted); line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.unread-dot {
+  width: 8px; height: 8px;
+  background: var(--danger);
+  border-radius: 50%;
+  position: absolute;
+  top: 22px;
+  right: 20px;
+}
+
+/* Right Pane */
+.message-detail-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.empty-state {
+  margin: auto;
+  text-align: center;
+  color: var(--text-muted);
+}
+.empty-icon { opacity: 0.2; margin-bottom: 16px; }
+
+.message-content-wrapper { padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+.message-detail-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.detail-sender-info { display: flex; gap: 16px; align-items: center; }
+.detail-avatar { width: 48px; height: 48px; border-radius: 50%; background: #2a2a35; }
+.detail-sender-info h3 { margin: 0 0 4px 0; font-size: 16px; }
+.sender-role { font-size: 12px; color: var(--text-muted); }
+
+.message-actions { display: flex; gap: 8px; }
+.icon-btn { 
+  background: transparent; border: none; color: var(--text-muted); 
+  cursor: pointer; padding: 6px; border-radius: 6px; 
+  transition: all 0.2s;
+}
+.icon-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+.message-subject-lg h2 { margin: 0 0 8px 0; font-size: 20px; }
+.detail-time { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; }
+
+.message-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #ddd;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.message-body p { margin-top: 0; margin-bottom: 16px; }
+
+.message-reply-box { display: flex; flex-direction: column; gap: 12px; }
+.message-reply-box textarea {
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--text);
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+}
+.message-reply-box textarea:focus { border-color: rgba(255,255,255,0.2); }
+.reply-actions { display: flex; justify-content: flex-end; }

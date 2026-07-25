@@ -1,8 +1,9 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useMessages } from '../context/MessagesContext'
 import {
   LayoutDashboard, ShoppingCart, Package, DollarSign,
-  Users, BarChart2, Settings, LogOut, Layers
+  Users, BarChart2, Settings, LogOut, Layers, MessageSquare
 } from 'lucide-react'
 
 const NAV = [
@@ -12,6 +13,7 @@ const NAV = [
   { label: 'Finance & People', items: [
     { to: '/accounts',   icon: DollarSign,      label: 'Accounts',    permission: 'accounts' },
     { to: '/hr',         icon: Users,           label: 'HR',          permission: 'hr' },
+    { to: '/hr/messages', icon: MessageSquare,   label: 'Messages',    permission: 'hr' },
   ]},
   { label: 'Intelligence', items: [
     { to: '/reports',    icon: BarChart2,       label: 'Reports',     permission: 'reports' },
@@ -23,6 +25,7 @@ const NAV = [
 
 export default function Sidebar() {
   const { user, logout } = useAuth()
+  const { unreadCount } = useMessages()
   const navigate = useNavigate()
 
   const canSee = (item) => {
@@ -65,6 +68,21 @@ export default function Sidebar() {
                 >
                   <item.icon size={17} />
                   {item.label}
+                  {item.label === 'Messages' && unreadCount > 0 && (
+                    <span style={{
+                      marginLeft: 'auto',
+                      backgroundColor: 'var(--danger)',
+                      color: '#fff',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      borderRadius: '10px',
+                      padding: '2px 6px',
+                      minWidth: '18px',
+                      textAlign: 'center'
+                    }}>
+                      {unreadCount}
+                    </span>
+                  )}
                 </NavLink>
               ))}
             </div>
