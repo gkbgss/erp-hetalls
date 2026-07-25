@@ -642,7 +642,7 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
 
 /* ─── Recharts Tooltip Override ─────────────────────────────────────── */
 .recharts-default-tooltip {
-  background: rgba(15, 23, 42, 0.95) !important;
+  background: #0f172a !important;
   border: 1px solid var(--border) !important;
   border-radius: 12px !important;
   box-shadow: var(--shadow), var(--glass-shine) !important;

@@ -17,7 +17,7 @@ const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
     <div style={{
-      background: 'rgba(15, 23, 42, 0.95)', border: '1px solid var(--border)',
+      background: '#0f172a', border: '1px solid var(--border)',
       borderRadius: '12px', padding: '12px 14px', fontSize: 13,
       boxShadow: 'var(--shadow), var(--glass-shine)',
       backdropFilter: 'blur(32px) saturate(200%)',

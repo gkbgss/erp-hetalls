@@ -16,8 +16,11 @@ const ChartTooltip = ({ active, payload, label }) => {
   const total = payload.reduce((sum, p) => sum + (Number(p.value) || 0), 0)
   return (
     <div style={{
-      background: 'var(--bg-card)', border: '1px solid var(--border)',
-      borderRadius: 8, padding: '10px 14px', fontSize: 13
+      background: '#0f172a', border: '1px solid var(--border)',
+      borderRadius: '12px', padding: '12px 14px', fontSize: 13,
+      boxShadow: 'var(--shadow), var(--glass-shine)',
+      backdropFilter: 'blur(32px) saturate(200%)',
+      WebkitBackdropFilter: 'blur(32px) saturate(200%)'
     }}>
       <p style={{ color: 'var(--text-muted)', marginBottom: 6 }}>{label}</p>
       {payload.map((p, i) => (
@@ -186,7 +189,7 @@ const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
       {isHovered && companiesRev && companiesRev[currentFace.key] && (
         <div style={{
           position: 'absolute', top: '105%', left: 0, width: '100%', zIndex: 10,
-          background: 'rgba(15, 23, 42, 0.95)', border: '1px solid var(--border)', borderRadius: '12px',
+          background: '#0f172a', border: '1px solid var(--border)', borderRadius: '12px',
           padding: '12px', boxShadow: 'var(--shadow), var(--glass-shine)',
           backdropFilter: 'blur(32px) saturate(200%)',
           WebkitBackdropFilter: 'blur(32px) saturate(200%)'
