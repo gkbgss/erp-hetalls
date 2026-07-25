@@ -94,7 +94,7 @@ export default function Accounts() {
               <div key={alert.id} className="hg-alert-item">
                 <div className="hg-alert-top">
                   <span className="hg-alert-party">{alert.party}</span>
-                  <span className="hg-alert-amt">${alert.bill_amt.toLocaleString()}</span>
+                  <span className="hg-alert-amt">₹{alert.bill_amt.toLocaleString()}</span>
                 </div>
                 <div className="hg-alert-bottom">
                   <span className="hg-alert-reg">{alert.bill_reg_no}</span>
