@@ -654,10 +654,18 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
 }
 
 /* ─── HG Alerts Popup ────────────────────────────────────────────────── */
-.hg-alerts-popup {
+.alerts-container {
   position: fixed;
   bottom: 24px;
   right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 1000;
+  max-height: calc(100vh - 48px);
+}
+
+.hg-alerts-popup {
   width: 320px;
   background: rgba(30, 41, 59, 0.4) !important;
   backdrop-filter: blur(24px) saturate(180%);
@@ -665,7 +673,6 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: 0 12px 32px rgba(0,0,0,0.4), var(--glass-shine);
-  z-index: 1000;
   overflow: hidden;
   animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;

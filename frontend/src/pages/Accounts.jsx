@@ -9,7 +9,7 @@ export default function Accounts() {
   const [expenses, setExpenses] = useState([])
   const [billsLinks, setBillsLinks] = useState(null)
   const [companyAlerts, setCompanyAlerts] = useState([])
-  const [showCompanyAlerts, setShowCompanyAlerts] = useState(true)
+  const [closedAlerts, setClosedAlerts] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -79,33 +79,38 @@ export default function Accounts() {
         </div>
       </div>
 
-      {/* Company Alerts Popup */}
-      {companyAlerts.length > 0 && showCompanyAlerts && (
-        <div className="hg-alerts-popup">
-          <div className="hg-alerts-header">
-            <div>
-              <span className="hg-alerts-title">Company Bill Alerts</span>
-              <span className="hg-alerts-subtitle">3-Star Entries Action Required</span>
-            </div>
-            <button className="hg-alerts-close" onClick={() => setShowCompanyAlerts(false)}><X size={14} /></button>
-          </div>
-          <div className="hg-alerts-content">
-            {companyAlerts.map(alert => (
-              <div key={alert.id} className="hg-alert-item">
-                <div className="hg-alert-top">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 10, background: 'var(--gold-glow)', color: 'var(--gold)', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>{alert.company}</span>
-                    <span className="hg-alert-party">{alert.party}</span>
+      {/* Company Alerts Popups */}
+      {companyAlerts.length > 0 && (
+        <div className="alerts-container">
+          {Array.from(new Set(companyAlerts.map(a => a.company))).map(company => {
+            if (closedAlerts.includes(company)) return null;
+            const alerts = companyAlerts.filter(a => a.company === company);
+            return (
+              <div key={company} className="hg-alerts-popup">
+                <div className="hg-alerts-header">
+                  <div>
+                    <span className="hg-alerts-title">{company} Bill Alerts</span>
+                    <span className="hg-alerts-subtitle">3-Star Entries Action Required</span>
                   </div>
-                  <span className="hg-alert-amt">₹{alert.bill_amt.toLocaleString()}</span>
+                  <button className="hg-alerts-close" onClick={() => setClosedAlerts(prev => [...prev, company])}><X size={14} /></button>
                 </div>
-                <div className="hg-alert-bottom">
-                  <span className="hg-alert-reg">{alert.bill_reg_no}</span>
-                  <span className="hg-alert-date">{alert.date}</span>
+                <div className="hg-alerts-content" style={{ maxHeight: '250px' }}>
+                  {alerts.map(alert => (
+                    <div key={alert.id} className="hg-alert-item">
+                      <div className="hg-alert-top">
+                        <span className="hg-alert-party">{alert.party}</span>
+                        <span className="hg-alert-amt">₹{alert.bill_amt.toLocaleString()}</span>
+                      </div>
+                      <div className="hg-alert-bottom">
+                        <span className="hg-alert-reg">{alert.bill_reg_no}</span>
+                        <span className="hg-alert-date">{alert.date}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
+            )
+          })}
         </div>
       )}
     </div>
