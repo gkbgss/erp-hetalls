@@ -85,8 +85,8 @@ const PortalGrowthCard = ({ revenueChart, style = {} }) => {
   );
 
   const getPortalForFace = (i) => {
-    let k = spinCount - (spinCount % 4) + i;
-    if (k < spinCount - 1) k += 4;
+    let k = spinCount - (spinCount % 3) + i;
+    if (k < spinCount - 1) k += 3;
     return portals[k % portals.length];
   };
 
@@ -99,11 +99,11 @@ const PortalGrowthCard = ({ revenueChart, style = {} }) => {
       <div 
         className="cube" 
         style={{ 
-          transform: `translateZ(-140px) rotateY(${spinCount * -90}deg)`, 
+          transform: `translateZ(-140px) rotateY(${spinCount * -120}deg)`, 
           transition: 'transform 0.4s ease-out' 
         }}
       >
-        {[0, 1, 2, 3].map(i => {
+        {[0, 1, 2].map(i => {
           const p = getPortalForFace(i);
           const isUp = p.growth >= 0;
           return (
