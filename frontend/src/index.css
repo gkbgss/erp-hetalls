@@ -215,13 +215,18 @@ input, select, textarea { font-family: inherit; outline: none; }
 .kpi-trend.down { color: var(--danger); }
 
 /* ─── Party Mode (Easter Egg) ───────────────────────────────────────── */
-@keyframes spinSpeedy {
-  from { transform: rotateY(0deg); }
-  to { transform: rotateY(-360deg); }
+@keyframes partyFloat {
+  0%   { transform: translateY(0px) scale(1); box-shadow: 0 5px 25px rgba(245, 158, 11, 0.6); border-color: var(--gold); }
+  50%  { transform: translateY(-8px) scale(1.03); box-shadow: 0 15px 35px rgba(59, 130, 246, 0.6); border-color: var(--info); }
+  100% { transform: translateY(0px) scale(1); box-shadow: 0 5px 25px rgba(245, 158, 11, 0.6); border-color: var(--gold); }
+}
+@keyframes partyHue {
+  0%   { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
 }
 .party-mode {
-  animation: spinSpeedy 0.8s infinite linear !important;
-  transform-style: preserve-3d;
+  animation: partyFloat 1.5s infinite ease-in-out, partyHue 3s infinite linear !important;
+  z-index: 10;
 }
 
 /* ─── 3D 4-Sided Prism (Horizontal) ────────────────────────────────────── */
