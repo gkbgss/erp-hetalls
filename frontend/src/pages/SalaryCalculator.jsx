@@ -10,7 +10,7 @@ import {
 import {
   ArrowLeft, Users, Calendar,
   Calculator, ChevronDown, ChevronUp,
-  Edit2, Check, X, Printer, TrendingDown, IndianRupee, Download
+  Edit2, Check, X, Printer, TrendingDown, IndianRupee, Download, Search
 } from 'lucide-react'
 
 const ChartTooltip = ({ active, payload, label }) => {
@@ -138,6 +138,7 @@ export default function SalaryCalculator() {
   const [employees,   setEmployees]   = useState([])
   const [loading,     setLoading]     = useState(true)
   const [expandedId,  setExpandedId]  = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
   
   // Edit salary state
   const [editId,      setEditId]      = useState(null)
@@ -474,6 +475,20 @@ export default function SalaryCalculator() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ position: 'relative' }}>
+                    <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                    <input 
+                      type="text" 
+                      placeholder="Search employee..." 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      style={{ 
+                        background: 'var(--bg-surface)', border: '1px solid var(--border)', 
+                        color: 'var(--text-primary)', padding: '6px 12px 6px 30px', 
+                        borderRadius: 6, fontSize: 13, outline: 'none', width: 200
+                      }}
+                    />
+                  </div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{employees.length} employees</div>
                   <button onClick={() => setShowModal(true)} style={{ background: 'var(--primary)', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Download size={15} /> Download PDF
@@ -499,7 +514,7 @@ export default function SalaryCalculator() {
                     </tr>
                   </thead>
                   <tbody>
-                    {employees.map(emp => {
+                    {employees.filter(emp => emp.name.toLowerCase().includes(searchQuery.toLowerCase()) || emp.department.toLowerCase().includes(searchQuery.toLowerCase())).map((emp, i) => {
                       const d = calculatePayroll(emp)
                       const input = inputs[emp.id] || {}
                       const tdStyle = { padding: '6px 12px', borderBottom: '1px solid var(--border)', verticalAlign: 'middle' }
