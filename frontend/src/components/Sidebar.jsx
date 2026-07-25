@@ -13,7 +13,7 @@ const NAV = [
   { label: 'Finance & People', items: [
     { to: '/accounts',   icon: DollarSign,      label: 'Accounts',    permission: 'accounts' },
     { to: '/hr',         icon: Users,           label: 'HR',          permission: 'hr' },
-    { to: '/hr/messages', icon: MessageSquare,   label: 'Messages',    permission: 'hr' },
+    { to: '/hr/messages', icon: MessageSquare,   label: 'Messages' },
   ]},
   { label: 'Intelligence', items: [
     { to: '/reports',    icon: BarChart2,       label: 'Reports',     permission: 'reports' },
@@ -29,6 +29,7 @@ export default function Sidebar() {
   const navigate = useNavigate()
 
   const canSee = (item) => {
+    if (!item.role && !item.permission) return true
     const uRole = (user?.role || '').toLowerCase()
     const uPerms = (user?.permissions || []).map(p => p.toLowerCase())
     if (uRole === 'admin') return true

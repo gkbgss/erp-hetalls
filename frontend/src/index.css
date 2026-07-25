@@ -912,3 +912,35 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
 }
 .message-reply-box textarea:focus { border-color: rgba(255,255,255,0.2); }
 .reply-actions { display: flex; justify-content: flex-end; }
+
+/* New Messaging Features */
+.user-directory { flex: 1; overflow-y: auto; padding-top: 8px; }
+.directory-item {
+  display: flex; gap: 12px; padding: 12px 20px; align-items: center;
+  cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.2s;
+}
+.directory-item:hover { background: rgba(255,255,255,0.05); }
+.directory-info { display: flex; flex-direction: column; }
+
+.compose-wrapper { display: flex; flex-direction: column; gap: 16px; flex: 1; }
+.compose-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 8px; }
+.compose-header h3 { margin: 0; font-size: 18px; }
+.compose-field { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+.compose-field label { font-size: 14px; color: var(--text-muted); width: 60px; }
+.compose-field input { flex: 1; background: transparent; border: none; color: var(--text); outline: none; font-size: 15px; }
+.compose-recipient { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 4px 12px 4px 4px; border-radius: 20px; font-size: 14px; }
+.compose-body { flex: 1; display: flex; flex-direction: column; }
+.compose-body textarea { flex: 1; background: transparent; border: none; color: var(--text); outline: none; resize: none; font-family: inherit; font-size: 15px; min-height: 200px; padding: 8px 0; }
+.compose-actions { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid var(--border); }
+.attachment-tools { display: flex; gap: 8px; }
+
+.attachment-preview {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 8px;
+  font-size: 13px; color: #fff; margin-top: 8px; width: fit-content;
+}
+.attachment-name { max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.attachment-size { color: var(--text-muted); }
+.message-attachment { display: flex; align-items: center; gap: 8px; margin-top: 16px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 13px; color: var(--text-muted); }
+

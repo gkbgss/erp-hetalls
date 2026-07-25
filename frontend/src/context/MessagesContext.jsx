@@ -70,8 +70,17 @@ export function MessagesProvider({ children }) {
     setMessages(initialMessages);
   };
 
+  const sendMessage = (message) => {
+    setMessages(prev => [{
+      ...message,
+      id: 'm' + Date.now(),
+      date: new Date().toISOString(),
+      isRead: true // Sent by me, so it's technically read, or we don't track read status for sent items
+    }, ...prev]);
+  };
+
   return (
-    <MessagesContext.Provider value={{ messages, unreadCount, markAsRead, deleteMessage, resetMessages }}>
+    <MessagesContext.Provider value={{ messages, unreadCount, markAsRead, deleteMessage, resetMessages, sendMessage }}>
       {children}
     </MessagesContext.Provider>
   );
