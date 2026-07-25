@@ -1,58 +1,165 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
-import {
-  BarChart, Bar, AreaChart, Area, LineChart, Line,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, PieChart, Pie, Cell
-} from 'recharts'
-import { TrendingUp, DollarSign, ShoppingCart, Package, Download, Building, ArrowLeft, FileText, ExternalLink, Printer } from 'lucide-react'
+import { Building, ArrowLeft, FileText, ExternalLink, Printer, Search, Layers, Activity, Filter, Globe, ShoppingCart } from 'lucide-react'
 
-// ── Custom Tooltip ────────────────────────────────────────────────────
-const ChartTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null
+// ── Spin-On-Hold Interactive Helper ───────────────────────────────────
+function SpinOnHold({ children, style, className }) {
+  const [holding, setHolding] = useState(false)
+  const [speed, setSpeed] = useState(1.2)
+
+  useEffect(() => {
+    let timerId;
+    if (holding) {
+      const startTime = Date.now()
+      timerId = setInterval(() => {
+        const elapsed = (Date.now() - startTime) / 1000
+        if (elapsed > 5) {
+          const extra = elapsed - 5
+          const newDuration = Math.max(0.1, 1 - extra * 0.15)
+          setSpeed(newDuration)
+        } else {
+          setSpeed(1.2 - (elapsed / 5) * 0.4)
+        }
+      }, 100)
+    } else {
+      setSpeed(1.2)
+    }
+    return () => clearInterval(timerId)
+  }, [holding])
+
   return (
-    <div style={{
-      background: 'var(--bg-card)', border: '1px solid var(--border)',
-      borderRadius: 8, padding: '10px 14px', fontSize: 13
-    }}>
-      <p style={{ color: 'var(--text-muted)', marginBottom: 6 }}>{label}</p>
-      {[...payload].sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0)).map((p, i) => (
-        <p key={i} style={{ color: p.color, fontWeight: 600 }}>
-          {p.name}: {p.name.toLowerCase().includes('order') ? p.value : `$${p.value?.toLocaleString()}`}
-        </p>
-      ))}
+    <div
+      onMouseDown={() => setHolding(true)}
+      onMouseUp={() => setHolding(false)}
+      onMouseLeave={() => setHolding(false)}
+      onTouchStart={() => setHolding(true)}
+      onTouchEnd={() => setHolding(false)}
+      className={className}
+      style={{
+        ...style,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'grab',
+        animation: holding ? `spinSpeedup ${speed}s linear infinite` : 'none',
+        transition: 'transform 0.1s ease',
+        userSelect: 'none'
+      }}
+      title="Click & hold to spin (gradually increases speed after 5 seconds!)"
+    >
+      {children}
     </div>
   )
 }
 
-// ── Export CSV Helper ─────────────────────────────────────────────────
-function exportCSV(data, filename) {
-  if (!data?.length) return
-  const headers = Object.keys(data[0]).join(',')
-  const rows    = data.map(r => Object.values(r).join(',')).join('\n')
-  const blob    = new Blob([`${headers}\n${rows}`], { type: 'text/csv' })
-  const url     = URL.createObjectURL(blob)
-  const a       = document.createElement('a')
-  a.href = url; a.download = filename; a.click()
-  URL.revokeObjectURL(url)
+const REPORTS_CUSTOM_CSS = `
+@keyframes spinSpeedup {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-// ── KPI Card ─────────────────────────────────────────────────────────
-function KPICard({ icon: Icon, label, value, colorClass, format = 'currency' }) {
-  const display = format === 'currency'
-    ? `$${Number(value || 0).toLocaleString()}`
-    : Number(value || 0).toLocaleString()
-  return (
-    <div className="kpi-card">
-      <div className="kpi-header">
-        <span className="kpi-label">{label}</span>
-        <div className={`kpi-icon ${colorClass}`}><Icon size={18} /></div>
-      </div>
-      <div className="kpi-value">{display}</div>
-    </div>
-  )
+@keyframes pulseDot {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
+
+@keyframes shimmerSweep {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes cardCascade {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes floatGlow {
+  0%, 100% { box-shadow: 0 4px 20px rgba(0,0,0,0.2), 0 0 0 1px rgba(212,175,55,0.15); }
+  50% { box-shadow: 0 10px 30px rgba(212,175,55,0.25), 0 0 15px rgba(212,175,55,0.2) inset, 0 0 0 1px rgba(212,175,55,0.4); }
+}
+
+.report-cyber-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  opacity: 0;
+  animation: cardCascade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.report-cyber-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.report-cyber-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(212, 175, 55, 0.5);
+  box-shadow: 0 16px 36px rgba(0,0,0,0.4), 0 0 20px rgba(212,175,55,0.15), 0 0 0 1px rgba(212,175,55,0.3);
+  background: linear-gradient(135deg, rgba(35, 48, 68, 0.85) 0%, rgba(20, 30, 50, 0.95) 100%);
+}
+
+.report-cyber-card:hover::before {
+  opacity: 1;
+}
+
+.report-cyber-card .action-icon {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease;
+}
+
+.report-cyber-card:hover .action-icon {
+  transform: translateX(5px) scale(1.1);
+  color: #fff !important;
+}
+
+.report-cyber-card .card-badge {
+  font-family: 'JetBrains Mono', monospace, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(212, 175, 55, 0.7);
+  background: rgba(212, 175, 55, 0.1);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  transition: all 0.3s ease;
+}
+
+.report-cyber-card:hover .card-badge {
+  background: var(--gold);
+  color: #0f172a;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+}
+
+.live-pulse-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #10b981;
+  display: inline-block;
+  animation: pulseDot 2s infinite;
+}
+
+.search-input-glow:focus {
+  outline: none;
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 15px rgba(212,175,55,0.25) !important;
+}
+`;
 
 // ── Reports Page ──────────────────────────────────────────────────────
 export default function Reports() {
@@ -70,6 +177,9 @@ export default function Reports() {
   const [printReportsList, setPrintReportsList] = useState([])
   const [loadingPrintReports, setLoadingPrintReports] = useState(false)
   const [printModalTitle, setPrintModalTitle] = useState("All Companies")
+
+  const [reportSearch, setReportSearch] = useState("")
+  const [reportCategory, setReportCategory] = useState("ALL")
 
   const openPrintCenter = (compFilter = "all", title = "All Companies") => {
     setPrintModalTitle(title)
@@ -99,33 +209,31 @@ export default function Reports() {
     if (!selectedCompany) return
 
     setLoading(true)
-    const params = { company: selectedCompany }
-
-    Promise.all([
-      axios.get(`${API}/api/reports/sales-summary`, { params }),
-      axios.get(`${API}/api/reports/monthly-breakdown`, { params }),
-      axios.get(`${API}/api/reports/top-products`, { params }),
-      axios.get(`${API}/api/reports/platform-comparison`, { params }),
-      axios.get(`${API}/api/reports/google-sheet-links`, { params }),
-    ]).then(([s, m, t, p, l]) => {
-      setSummary(s.data)
-      setMonthly(m.data)
-      setTopProducts(t.data)
-      setPlatforms(p.data)
-      setSheetLinks(l.data || [])
-    }).catch(err => {
-      console.error(err)
-      setSheetLinks([])
-    })
+    axios.get(`${API}/api/reports/google-sheet-links`, { params: { company: selectedCompany } })
+      .then(res => setSheetLinks(res.data || []))
+      .catch(err => {
+        console.error(err)
+        setSheetLinks([])
+      })
       .finally(() => setLoading(false))
   }, [API, selectedCompany])
 
-  const PIE_COLORS = ['#f59e0b', '#f87171']
+  const filteredLinks = sheetLinks.filter(item => {
+    const matchesSearch = !reportSearch || item.title.toLowerCase().includes(reportSearch.toLowerCase())
+    if (!matchesSearch) return false
+    if (reportCategory === 'ALL') return true
+    const t = item.title.toLowerCase()
+    if (reportCategory === 'ORDERS') return t.includes('order') || t.includes('po') || t.includes('sales') || t.includes('whatsapp') || t.includes('amazon') || t.includes('dhurrie')
+    if (reportCategory === 'BILLS') return t.includes('bill') || t.includes('challan') || t.includes('bank') || t.includes('debit') || t.includes('calc') || t.includes('statement')
+    if (reportCategory === 'JOB') return t.includes('job') || t.includes('rcv') || t.includes('production') || t.includes('floor') || t.includes('salary') || t.includes('issue') || t.includes('quantity')
+    return true
+  })
 
-  // ── View 1: Company Selection ──────────────────────────────────────
-  if (!selectedCompany) {
-    return (
-      <div style={{ maxWidth: 900, margin: '40px auto' }}>
+  return (
+    <div>
+      <style>{REPORTS_CUSTOM_CSS}</style>
+      {!selectedCompany ? (
+        <div style={{ maxWidth: 900, margin: '40px auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30, flexWrap: 'wrap', gap: 16 }}>
           <div>
             <h2 style={{ fontSize: 24, marginBottom: 6, color: 'var(--text)' }}>Select Company</h2>
@@ -151,7 +259,7 @@ export default function Reports() {
             onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'none'}
           >
-            <Printer size={18} /> Print All Reports (All Companies)
+            <SpinOnHold><Printer size={18} /></SpinOnHold> Print All Reports (All Companies)
           </button>
         </div>
         
@@ -190,7 +298,7 @@ export default function Reports() {
                 borderRadius: '50%',
                 marginBottom: 16
               }}>
-                <Building size={32} />
+                <SpinOnHold><Building size={32} /></SpinOnHold>
               </div>
               <h3 style={{ fontSize: 18, margin: 0 }}>{co.name}</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 8 }}>View Reports &rarr;</p>
@@ -198,276 +306,268 @@ export default function Reports() {
           ))}
         </div>
       </div>
-    )
-  }
+      ) : (
+        /* ── View 2: Company Reports Dashboard ── */
+        <div>
 
-  // ── View 2: Company Reports Dashboard ──────────────────────────────
-  if (loading) return (
-    <div className="page-loading">
-      <div className="big-spinner" />
-      <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Loading reports for {selectedCompany}…</p>
-    </div>
-  )
-
-  return (
-    <div>
       {/* ── Dashboard Header ── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <button 
-            onClick={() => setSelectedCompany(null)}
+            onClick={() => { setSelectedCompany(null); setReportSearch(""); setReportCategory("ALL"); }}
             style={{
               background: 'var(--bg-card)', border: '1px solid var(--border)',
-              borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: 'var(--text)'
+              borderRadius: '50%', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: 'var(--text)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', transition: 'all 0.2s'
             }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(-3px)'; e.currentTarget.style.borderColor = 'var(--gold)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = 'var(--border)'; }}
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft size={20} />
           </button>
           <div>
-            <h2 style={{ fontSize: 24, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Building size={22} color="var(--gold)" />
-              {selectedCompany} Dashboard
-            </h2>
-            <p style={{ color: 'var(--text-muted)', margin: 0, marginTop: 4 }}>Analytics and financial reports for {selectedCompany}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span className="live-pulse-dot" />
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '1px', color: '#10b981', fontFamily: 'monospace', textTransform: 'uppercase' }}>
+                Live Feed Active • Direct Spreadsheet Sync
+              </span>
+            </div>
+            <h1 style={{ fontSize: 28, fontWeight: 800, margin: '6px 0 4px 0', background: 'linear-gradient(135deg, #fff 0%, var(--gold) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <SpinOnHold><Building size={26} color="var(--gold)" style={{ flexShrink: 0 }} /></SpinOnHold>
+              {selectedCompany} Command Center
+            </h1>
           </div>
         </div>
-      </div>
 
-      {/* ─── Summary KPIs ──────────────────────────────────────── */}
-      <div className="kpi-grid">
-        <KPICard icon={DollarSign}  label="Total Revenue"    value={summary?.total_revenue}   colorClass="gold" />
-        <KPICard icon={TrendingUp}  label="Monthly Revenue"  value={summary?.monthly_revenue} colorClass="green" />
-        <KPICard icon={TrendingUp}  label="Weekly Revenue"   value={summary?.weekly_revenue}  colorClass="blue" />
-        <KPICard icon={ShoppingCart} label="Total Orders"    value={summary?.total_orders}    colorClass="blue"  format="number" />
-        <KPICard icon={DollarSign}  label="Total Expenses"   value={summary?.total_expenses}  colorClass="red" />
-        <KPICard icon={DollarSign}  label="Net Profit"       value={summary?.net_profit}      colorClass="gold" />
-      </div>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <a
+            href="https://docs.google.com/spreadsheets/d/1pMyWyI6J2YM7DzlYJ9__M8bZNaGPyrgTVAItoSiYYNg/edit?gid=2023338778#gid=2023338778"
+            target="_blank"
+            rel="noreferrer"
+            className="btn"
+            style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              color: 'var(--text)',
+              padding: '10px 18px',
+              borderRadius: 10,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontSize: 13,
+              fontWeight: 600,
+              textDecoration: 'none',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.borderColor = 'var(--gold)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; }}
+          >
+            <SpinOnHold><Globe size={16} color="var(--gold)" /></SpinOnHold> Master Google Sheet
+          </a>
 
-      {/* ─── Live Google Reports (SRK...🧑 Sheet) ───────────────── */}
-      <div className="card mb-6" style={{ borderLeft: '4px solid var(--gold)', background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(212,175,55,0.04) 100%)' }}>
-        <div className="card-header" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-          <div>
-            <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 18 }}>
-              <FileText size={20} color="var(--gold)" />
-              <span>Live Google Reports & Sheets (SRK...🧑)</span>
-            </div>
-            <div className="card-subtitle">Real-time reports fetched directly from spreadsheet columns for {selectedCompany}</div>
-          </div>
           <button
             onClick={() => openPrintCenter(selectedCompany, selectedCompany)}
             className="btn"
             style={{
-              background: 'var(--gold)',
+              background: 'linear-gradient(135deg, var(--gold) 0%, #b89728 100%)',
               color: '#0f172a',
-              fontWeight: 600,
+              fontWeight: 700,
               display: 'flex',
               alignItems: 'center',
-              gap: 6,
-              padding: '8px 14px',
-              borderRadius: 6,
+              gap: 8,
+              padding: '10px 20px',
+              borderRadius: 10,
               border: 'none',
               cursor: 'pointer',
-              fontSize: 13
+              boxShadow: '0 4px 15px rgba(212,175,55,0.3)',
+              transition: 'all 0.2s'
             }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'none'}
           >
-            <Printer size={16} /> Print Reports ({selectedCompany})
+            <SpinOnHold><Printer size={16} /></SpinOnHold> Print Reports ({selectedCompany})
           </button>
         </div>
+      </div>
+
+      {/* ─── Ultra-Advanced Live Google Reports Section ─────────── */}
+      <div style={{
+        background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.7) 100%)',
+        border: '1px solid rgba(212, 175, 55, 0.2)',
+        borderRadius: 20,
+        padding: '28px',
+        boxShadow: '0 24px 50px rgba(0, 0, 0, 0.3), 0 0 40px rgba(212, 175, 55, 0.05) inset',
+        backdropFilter: 'blur(16px)',
+        position: 'relative',
+        overflow: 'hidden',
+        marginBottom: 40
+      }}>
+        {/* Animated Glow Accent Top Bar */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, height: 4,
+          background: 'linear-gradient(90deg, #3b82f6, var(--gold), #10b981, var(--gold), #3b82f6)',
+          backgroundSize: '200% 100%',
+          animation: 'shimmerSweep 8s linear infinite'
+        }} />
+
+        {/* Section Header & Filter Control Bar */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 28,
+          flexWrap: 'wrap',
+          gap: 20,
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          paddingBottom: 22
+        }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 20, fontWeight: 800, color: '#fff' }}>
+              <FileText size={24} color="var(--gold)" />
+              <span>Live Google Reports & Sheets (SRK...🧑)</span>
+              <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: 'rgba(212,175,55,0.15)', color: 'var(--gold)', border: '1px solid rgba(212,175,55,0.3)' }}>
+                {sheetLinks.length} Active Feeds
+              </span>
+            </div>
+            <p style={{ color: 'var(--text-muted)', margin: '6px 0 0 0', fontSize: 13 }}>
+              Real-time interactive web apps and spreadsheets connected directly to columns AH, AI, AK & more.
+            </p>
+          </div>
+
+          {/* Search & Category Pills */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', width: '100%', justifyContent: 'flex-end' }}>
+            <div style={{ position: 'relative', minWidth: 240, flex: '1 1 240px', maxWidth: 320 }}>
+              <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
+              <input
+                type="text"
+                placeholder="🔍 Filter reports by name..."
+                value={reportSearch}
+                onChange={e => setReportSearch(e.target.value)}
+                className="search-input-glow"
+                style={{
+                  width: '100%',
+                  background: 'rgba(15, 23, 42, 0.8)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: 10,
+                  padding: '10px 14px 10px 38px',
+                  color: '#fff',
+                  fontSize: 13,
+                  transition: 'all 0.3s ease'
+                }}
+              />
+              {reportSearch && (
+                <button onClick={() => setReportSearch("")} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 14 }}>×</button>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, background: 'rgba(15, 23, 42, 0.6)', padding: 5, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap' }}>
+              {[
+                { id: 'ALL', label: `🌟 All (${sheetLinks.length})` },
+                { id: 'ORDERS', label: '📦 Orders & Sales' },
+                { id: 'BILLS', label: '🧾 Bills & Challans' },
+                { id: 'JOB', label: '⚙️ Job & Production' }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setReportCategory(tab.id)}
+                  style={{
+                    background: reportCategory === tab.id ? 'var(--gold)' : 'transparent',
+                    color: reportCategory === tab.id ? '#0f172a' : 'var(--text-muted)',
+                    fontWeight: reportCategory === tab.id ? 700 : 600,
+                    border: 'none',
+                    padding: '7px 14px',
+                    borderRadius: 8,
+                    fontSize: 12,
+                    cursor: 'pointer',
+                    transition: 'all 0.25s ease',
+                    boxShadow: reportCategory === tab.id ? '0 2px 10px rgba(212,175,55,0.3)' : 'none'
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Report Cards Grid */}
         {sheetLinks.length === 0 ? (
-          <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg)', borderRadius: '8px', border: '1px dashed var(--border)' }}>
-            No spreadsheet report links found for {selectedCompany} in the SRK sheet.
+          <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--text-muted)', background: 'rgba(15, 23, 42, 0.5)', borderRadius: 14, border: '1px dashed rgba(255,255,255,0.15)' }}>
+            <Activity size={40} color="var(--gold)" style={{ margin: '0 auto 12px auto', opacity: 0.5 }} />
+            <h3 style={{ fontSize: 16, color: '#fff', margin: '0 0 6px 0' }}>No live report feeds found</h3>
+            <p style={{ fontSize: 13, margin: 0 }}>Spreadsheet report columns for {selectedCompany} appear to be empty or loading.</p>
+          </div>
+        ) : filteredLinks.length === 0 ? (
+          <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--text-muted)', background: 'rgba(15, 23, 42, 0.5)', borderRadius: 14, border: '1px dashed rgba(255,255,255,0.15)' }}>
+            <Filter size={40} color="var(--gold)" style={{ margin: '0 auto 12px auto', opacity: 0.5 }} />
+            <h3 style={{ fontSize: 16, color: '#fff', margin: '0 0 6px 0' }}>No matching reports</h3>
+            <p style={{ fontSize: 13, margin: '0 0 16px 0' }}>No reports match your current filter criteria "{reportSearch || reportCategory}".</p>
+            <button onClick={() => { setReportSearch(""); setReportCategory("ALL"); }} className="btn" style={{ background: 'var(--gold)', color: '#0f172a', padding: '8px 16px', borderRadius: 8, fontWeight: 700, fontSize: 12, border: 'none', cursor: 'pointer' }}>Reset Filters</button>
           </div>
         ) : (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-            gap: '12px'
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+            gap: '18px'
           }}>
-            {sheetLinks.map((linkItem, idx) => (
-              <a
-                key={idx}
-                href={linkItem.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '12px 16px',
-                  background: 'var(--bg)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '8px',
-                  color: 'var(--text)',
-                  textDecoration: 'none',
-                  fontWeight: 600,
-                  fontSize: '13px',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--gold)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(212,175,55,0.15)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--border)';
-                  e.currentTarget.style.transform = 'none';
-                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
-                }}
-              >
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ color: 'var(--gold)' }}>•</span> {linkItem.title}
-                </span>
-                <ExternalLink size={15} color="var(--gold)" style={{ flexShrink: 0 }} />
-              </a>
-            ))}
+            {filteredLinks.map((linkItem, idx) => {
+              const t = linkItem.title.toLowerCase()
+              let IconComp = Activity
+              let iconColor = "#38bdf8"
+              let iconBg = "rgba(56, 189, 248, 0.1)"
+              if (t.includes('order') || t.includes('po') || t.includes('sales') || t.includes('amazon') || t.includes('dhurrie')) {
+                IconComp = ShoppingCart
+                iconColor = "#f59e0b"
+                iconBg = "rgba(245, 158, 11, 0.1)"
+              } else if (t.includes('bill') || t.includes('challan') || t.includes('bank') || t.includes('debit') || t.includes('statement') || t.includes('calc')) {
+                IconComp = FileText
+                iconColor = "#10b981"
+                iconBg = "rgba(16, 185, 129, 0.1)"
+              } else if (t.includes('job') || t.includes('rcv') || t.includes('production') || t.includes('floor') || t.includes('salary') || t.includes('issue')) {
+                IconComp = Layers
+                iconColor = "#a855f7"
+                iconBg = "rgba(168, 85, 247, 0.1)"
+              }
+
+              return (
+                <a
+                  key={idx}
+                  href={linkItem.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="report-cyber-card"
+                  style={{ animationDelay: `${(idx % 12) * 0.04}s` }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                    <div style={{ padding: 10, borderRadius: 10, background: iconBg, color: iconColor, border: `1px solid ${iconColor}33`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <SpinOnHold><IconComp size={20} /></SpinOnHold>
+                    </div>
+                    <span className="card-badge">
+                      #{String(idx + 1).padStart(2, '0')}
+                    </span>
+                  </div>
+
+                  <div style={{ fontWeight: 700, fontSize: 15, color: '#f8fafc', margin: '4px 0 16px 0', lineHeight: 1.4, letterSpacing: '0.2px' }}>
+                    {linkItem.title}
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12, marginTop: 'auto' }}>
+                    <span style={{ fontSize: 11, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 500 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
+                      Direct Web Feed
+                    </span>
+                    <span className="action-icon" style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--gold)', fontWeight: 700, fontSize: 12 }}>
+                      Launch <ExternalLink size={14} />
+                    </span>
+                  </div>
+                </a>
+              )
+            })}
           </div>
         )}
       </div>
-
-      {/* ─── 12-Month Revenue vs Expenses ──────────────────────── */}
-      <div className="card mb-6">
-        <div className="card-header">
-          <div>
-            <div className="card-title">12-Month Revenue vs Expenses</div>
-            <div className="card-subtitle">Full year overview in USD</div>
-          </div>
-          <button
-            onClick={() => exportCSV(monthly, `${selectedCompany.replace(/\s+/g, '_')}_monthly_report.csv`)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--gold-glow)', border: '1px solid var(--border-accent)', color: 'var(--gold)', padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
-          >
-            <Download size={15} /> Export CSV
-          </button>
-        </div>
-        <ResponsiveContainer width="100%" height={280}>
-          <BarChart data={monthly} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-            <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
-            <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v/1000}k`} />
-            <Tooltip content={<ChartTooltip />} />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Bar dataKey="revenue"  name="Revenue"  fill="#f59e0b" radius={[4,4,0,0]} />
-            <Bar dataKey="expenses" name="Expenses" fill="#ef4444" radius={[4,4,0,0]} />
-          </BarChart>
-        </ResponsiveContainer>
       </div>
-
-      {/* ─── Order Trend ────────────────────────────────────────── */}
-      <div className="card mb-6">
-        <div className="card-header">
-          <div>
-            <div className="card-title">Monthly Order Volume</div>
-            <div className="card-subtitle">Number of orders placed per month</div>
-          </div>
-        </div>
-        <ResponsiveContainer width="100%" height={220}>
-          <LineChart data={monthly} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-            <defs>
-              <linearGradient id="ordGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#3b82f6" stopOpacity={0.2}/>
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
-            <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
-            <Tooltip content={<ChartTooltip />} />
-            <Line type="monotone" dataKey="orders" name="Orders" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="chart-grid">
-        {/* ─── Top Products ──────────────────────────────────────── */}
-        <div className="card">
-          <div className="card-header">
-            <div>
-              <div className="card-title">Top Products by Revenue</div>
-              <div className="card-subtitle">Best-selling rugs for {selectedCompany}</div>
-            </div>
-            <button
-              onClick={() => exportCSV(topProducts, 'top_products.csv')}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--gold-glow)', border: '1px solid var(--border-accent)', color: 'var(--gold)', padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-            >
-              <Download size={13} /> CSV
-            </button>
-          </div>
-          <div className="table-wrapper">
-            {topProducts.length === 0 ? (
-               <p style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)' }}>No products sold by this company.</p>
-            ) : (
-              <table>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Product</th>
-                    <th>SKU</th>
-                    <th>Orders</th>
-                    <th>Units</th>
-                    <th>Revenue</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topProducts.map((p, i) => (
-                    <tr key={i}>
-                      <td style={{ color: 'var(--text-muted)', fontWeight: 700 }}>{i + 1}</td>
-                      <td style={{ maxWidth: 180, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.product_name}</td>
-                      <td style={{ color: 'var(--gold)', fontFamily: 'monospace', fontSize: 12 }}>{p.sku}</td>
-                      <td>{p.order_count}</td>
-                      <td>{p.units_sold}</td>
-                      <td style={{ color: 'var(--success)', fontWeight: 700 }}>${p.total_revenue.toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-
-        {/* ─── Platform Comparison ──────────────────────────────── */}
-        <div className="card">
-          <div className="card-header">
-            <div>
-              <div className="card-title">Platform Comparison</div>
-              <div className="card-subtitle">Amazon FBA vs Etsy performance</div>
-            </div>
-          </div>
-          <div className="table-wrapper" style={{ marginBottom: 20 }}>
-            <table>
-              <thead>
-                <tr>
-                  <th>Platform</th>
-                  <th>Orders</th>
-                  <th>Revenue</th>
-                  <th>Avg Order</th>
-                  <th>Return %</th>
-                </tr>
-              </thead>
-              <tbody>
-                {platforms.map(p => (
-                  <tr key={p.platform}>
-                    <td><span className={`platform-pill ${p.platform}`}>{p.platform === 'amazon' ? '📦 Amazon' : '🛍 Etsy'}</span></td>
-                    <td>{p.total_orders}</td>
-                    <td style={{ color: 'var(--success)', fontWeight: 700 }}>${p.total_revenue.toLocaleString()}</td>
-                    <td>${p.avg_order}</td>
-                    <td style={{ color: p.return_rate > 10 ? 'var(--danger)' : 'inherit' }}>{p.return_rate}%</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <ResponsiveContainer width="100%" height={180}>
-            <PieChart>
-              <Pie data={platforms} dataKey="total_revenue" nameKey="platform" cx="50%" cy="50%" innerRadius={50} outerRadius={75} paddingAngle={4}>
-                {platforms.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} stroke="none" />)}
-              </Pie>
-              <Tooltip formatter={(v) => [`$${v.toLocaleString()}`, 'Revenue']} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+      )}
 
       {/* ─── Print Center Modal ─────────────────────────────────── */}
       {showPrintModal && (
