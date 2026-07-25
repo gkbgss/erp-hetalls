@@ -77,7 +77,6 @@ export default function Accounts() {
             )}
           </div>
         </div>
-        </div>
       </div>
 
       {/* HG Alerts Popup */}
