@@ -5,6 +5,7 @@ import {
   BarChart, Bar, AreaChart, Area, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, PieChart, Pie, Cell
+} from 'recharts'
 import { TrendingUp, DollarSign, ShoppingCart, Package, Download, Building, ArrowLeft, FileText, ExternalLink } from 'lucide-react'
 
 // ── Custom Tooltip ────────────────────────────────────────────────────
