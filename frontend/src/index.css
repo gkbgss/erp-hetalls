@@ -659,10 +659,12 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   bottom: 24px;
   right: 24px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row-reverse;
+  align-items: flex-end;
   gap: 16px;
   z-index: 1000;
-  max-height: calc(100vh - 48px);
+  max-width: calc(100vw - 48px);
+  overflow-x: auto;
 }
 
 .hg-alerts-popup {
