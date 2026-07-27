@@ -638,7 +638,7 @@ export default function Dashboard() {
       )}
 
       {/* Charts */}
-      <div className={`chart-grid ${revenueChart.length >= 7 ? 'stacked' : 'side-by-side'}`}>
+      <div className={`chart-grid ${(revenueChart?.length || 0) >= 7 ? 'stacked' : 'side-by-side'}`}>
         {/* Revenue Area Chart */}
         <div className="card">
           <div className="card-header">
@@ -648,7 +648,7 @@ export default function Dashboard() {
             </div>
           </div>
           <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={revenueChart} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+            <BarChart data={revenueChart || []} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v/1000}k`} />
@@ -670,7 +670,7 @@ export default function Dashboard() {
             </div>
           </div>
           <ResponsiveContainer width="100%" height={320}>
-            <LineChart data={revenueChart} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+            <LineChart data={revenueChart || []} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
               <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v/1000}k`} />
