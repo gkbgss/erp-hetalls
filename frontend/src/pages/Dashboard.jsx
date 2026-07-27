@@ -163,7 +163,7 @@ const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
 
   return (
     <div 
-      style={{ position: 'relative', ...style }}
+      style={{ position: 'relative', zIndex: isHovered ? 9999 : 1, ...style }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -205,22 +205,34 @@ const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
       </div>
       
       {isHovered && companiesRev && companiesRev[currentFace.key] && (
-        <div style={{
-          position: 'absolute', top: '105%', left: 0, width: '100%', zIndex: 999,
-          background: '#0f172a', border: '1px solid var(--border)', borderRadius: '12px',
-          padding: '12px', boxShadow: 'var(--shadow), var(--glass-shine)',
-          backdropFilter: 'blur(32px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(32px) saturate(200%)'
-        }}>
-          <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text)' }}>
-            Companies Revenue ({currentFace.key}):
+        <div 
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: 'absolute', top: '105%', left: 0, width: '100%', minWidth: '250px', zIndex: 9999,
+            background: '#070b16', border: '1px solid var(--border-accent)', borderRadius: '12px',
+            padding: '14px', boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8), var(--glass-shine)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--gold)' }}>
+              Companies Revenue ({currentFace.key}):
+            </span>
+            <button 
+              onClick={(e) => { e.stopPropagation(); setIsHovered(false); }}
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px 6px', fontSize: '14px', fontWeight: 'bold' }}
+              title="Close"
+            >
+              ✕
+            </button>
           </div>
-          {companiesRev[currentFace.key].map(c => (
-            <div key={c.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', fontSize: '12px' }}>
-              <span style={{ color: c.color }}>{c.name}</span>
-              <span style={{ fontWeight: 'bold', color: 'var(--text)' }}>${c.value.toLocaleString()}</span>
-            </div>
-          ))}
+          <div style={{ maxHeight: '220px', overflowY: 'auto', paddingRight: '4px' }}>
+            {companiesRev[currentFace.key].map(c => (
+              <div key={c.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', fontSize: '12px' }}>
+                <span style={{ color: c.color, fontWeight: 500 }}>{c.name}</span>
+                <span style={{ fontWeight: 'bold', color: 'var(--text)' }}>${c.value.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

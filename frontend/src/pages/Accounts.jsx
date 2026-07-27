@@ -47,26 +47,26 @@ export default function Accounts() {
             </div>
             <FileText size={20} className="text-muted" />
           </div>
-          <div className="card-body" style={{ padding: '1rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <div className="card-body company-bills-grid">
             {loading ? <div className="spinner" /> : (
               <>
                 {billsLinks?.HG && (
-                  <a href={billsLinks.HG} target="_blank" rel="noreferrer" className="btn btn-primary" style={{ flex: '1 1 calc(25% - 1rem)', textAlign: 'center' }}>
+                  <a href={billsLinks.HG} target="_blank" rel="noreferrer" className="company-bill-btn">
                     HG Bill
                   </a>
                 )}
                 {billsLinks?.MMC && (
-                  <a href={billsLinks.MMC} target="_blank" rel="noreferrer" className="btn btn-primary" style={{ flex: '1 1 calc(25% - 1rem)', textAlign: 'center' }}>
+                  <a href={billsLinks.MMC} target="_blank" rel="noreferrer" className="company-bill-btn">
                     MMC Bill
                   </a>
                 )}
                 {billsLinks?.HO && (
-                  <a href={billsLinks.HO} target="_blank" rel="noreferrer" className="btn btn-primary" style={{ flex: '1 1 calc(25% - 1rem)', textAlign: 'center' }}>
+                  <a href={billsLinks.HO} target="_blank" rel="noreferrer" className="company-bill-btn">
                     HO Bill
                   </a>
                 )}
                 {billsLinks?.MKM && (
-                  <a href={billsLinks.MKM} target="_blank" rel="noreferrer" className="btn btn-primary" style={{ flex: '1 1 calc(25% - 1rem)', textAlign: 'center' }}>
+                  <a href={billsLinks.MKM} target="_blank" rel="noreferrer" className="company-bill-btn">
                     MKM Bill
                   </a>
                 )}

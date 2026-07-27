@@ -82,11 +82,11 @@ input, select, textarea { font-family: inherit; outline: none; }
   top: 0; left: 0;
   width: var(--sidebar-width);
   height: 100vh;
-  background: rgba(30, 41, 59, 0.4) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
-  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3) !important;
+  background: #060913 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 10px 0 35px rgba(0, 0, 0, 0.7) !important;
   display: flex;
   flex-direction: column;
   z-index: 100;
@@ -163,11 +163,11 @@ input, select, textarea { font-family: inherit; outline: none; }
 /* ─── Header ────────────────────────────────────────────────────────── */
 .header {
   height: var(--header-height);
-  background: rgba(30, 41, 59, 0.4) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3) !important;
+  background: #080d1a !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.6) !important;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 32px;
   position: sticky; top: 0; z-index: 50;
@@ -261,13 +261,13 @@ input, select, textarea { font-family: inherit; outline: none; }
 
 /* ─── Cards / Panels ────────────────────────────────────────────────── */
 .card {
-  background: var(--bg-card);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: #0b1120 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 24px;
-  box-shadow: var(--shadow), var(--glass-shine);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), var(--glass-shine);
 }
 .card-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -657,34 +657,37 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
 /* ─── HG Alerts Popup ────────────────────────────────────────────────── */
 .alerts-container {
   position: fixed;
-  bottom: 24px;
+  top: 76px;
   right: 24px;
+  bottom: auto;
+  left: auto;
   display: flex;
-  flex-direction: row-reverse;
+  flex-direction: column;
   align-items: flex-end;
-  gap: 16px;
-  z-index: 1000;
+  gap: 14px;
+  z-index: 9999;
   max-width: calc(100vw - 48px);
-  overflow-x: auto;
+  max-height: calc(100vh - 90px);
+  overflow-y: auto;
 }
 
 .hg-alerts-popup {
-  width: 320px;
-  background: rgba(30, 41, 59, 0.4) !important;
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid var(--border);
+  width: 340px;
+  background: #080d1a !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--border-accent);
   border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.4), var(--glass-shine);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.8), var(--glass-shine);
   overflow: hidden;
-  animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideDownTop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
-  max-height: 400px;
+  max-height: 380px;
 }
-@keyframes slideInRight {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+@keyframes slideDownTop {
+  from { transform: translateY(-40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .hg-alerts-header {
@@ -1019,8 +1022,8 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
     padding: 16px !important;
   }
   .kpi-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
-    gap: 12px !important;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+    gap: 16px !important;
   }
   .table-wrapper, .breakdown-table-wrapper {
     width: 100%;
@@ -1053,6 +1056,20 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
     border-bottom: 1px solid var(--border) !important;
     max-height: 250px !important;
   }
+  .alerts-container {
+    top: 66px !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .hg-alerts-popup {
+    width: 100% !important;
+    max-width: 100% !important;
+    animation: slideDownTop 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
 }
 
 @media (max-width: 600px) {
@@ -1076,6 +1093,44 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
     width: 90vw !important;
     padding: 24px 20px !important;
   }
+}
+
+/* ─── Company Bills Responsive Buttons ──────────────────────────────── */
+.company-bills-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  padding: 12px 0;
+}
+@media (max-width: 800px) {
+  .company-bills-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .company-bills-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.company-bill-btn {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: #000 !important;
+  font-weight: 700;
+  padding: 14px 16px;
+  border-radius: 12px;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+.company-bill-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.5);
+  color: #000 !important;
 }
 
 
