@@ -59,6 +59,7 @@ const PortalGrowthCard = ({ revenueChart, style = {} }) => {
   const portals = useMemo(() => {
     if (!revenueChart || revenueChart.length < 2) return [];
     const latest = revenueChart[revenueChart.length - 1];
+    const prev = revenueChart[revenueChart.length - 2];
     const keySet = new Set(["AMAZON", "CASAVANI WEBSITE", "EBAY-RUGSFOREVER", "ETSY-CASAVANI", "ETSY-RUGSFOREVER", "JAYPOR", "MIRRAW", "PEPPERFRY", "WALMART"]);
     revenueChart.forEach(item => {
       if (item && typeof item === 'object') {
