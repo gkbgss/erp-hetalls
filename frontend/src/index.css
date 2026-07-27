@@ -1048,13 +1048,33 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   }
   .messages-layout {
     flex-direction: column !important;
-    height: auto !important;
+    height: calc(100vh - 85px) !important;
+    gap: 0 !important;
   }
   .messages-sidebar {
     width: 100% !important;
-    border-right: none !important;
-    border-bottom: 1px solid var(--border) !important;
-    max-height: 250px !important;
+    border: none !important;
+    max-height: none !important;
+    height: 100% !important;
+    flex: 1 !important;
+  }
+  .messages-sidebar.mobile-hide {
+    display: none !important;
+  }
+  .message-detail-pane.mobile-hide {
+    display: none !important;
+  }
+  .message-detail-pane.mobile-active {
+    display: flex !important;
+    flex: 1 !important;
+    height: 100% !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+  .mobile-back-btn {
+    display: inline-flex !important;
   }
   .alerts-container {
     top: 66px !important;
@@ -1160,6 +1180,29 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
     grid-template-columns: 1fr !important;
     gap: 14px !important;
   }
+}
+
+/* ─── Reports Items Grid Responsive ─────────────────────────────────── */
+.reports-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-auto-rows: minmax(110px, auto);
+  gap: 16px;
+}
+@media (max-width: 768px) {
+  .reports-items-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    grid-auto-rows: minmax(95px, auto) !important;
+    gap: 12px !important;
+  }
+}
+@media (max-width: 420px) {
+  .reports-items-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+.mobile-back-btn {
+  display: none;
 }
 
 

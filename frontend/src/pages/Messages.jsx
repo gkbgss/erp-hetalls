@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useMessages } from '../context/MessagesContext';
-import { Search, MessageSquare, Clock, Trash2, MoreVertical, Plus, Users, Paperclip, X, Image as ImageIcon, Send, CheckCircle , Mic, Square} from 'lucide-react';
+import { Search, MessageSquare, Clock, Trash2, MoreVertical, Plus, Users, Paperclip, X, Image as ImageIcon, Send, CheckCircle, Mic, Square, ArrowLeft } from 'lucide-react';
 import '../index.css';
 
 const API = import.meta.env.VITE_API_URL || '';
@@ -203,7 +203,7 @@ export default function Messages() {
   return (
     <div className="messages-layout">
       {/* Left Pane - Chat List */}
-      <div className="messages-sidebar card" style={{ display: 'flex', flexDirection: 'column' }}>
+      <div className={`messages-sidebar card ${selectedPartner ? 'mobile-hide' : ''}`} style={{ display: 'flex', flexDirection: 'column' }}>
         <div className="messages-header" style={{ paddingBottom: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <h2>Chats</h2>
@@ -279,18 +279,21 @@ export default function Messages() {
       </div>
 
       {/* Right Pane - Chat History */}
-      <div className="message-detail-pane card" style={{ display: 'flex', flexDirection: 'column' }}>
+      <div className={`message-detail-pane card ${!selectedPartner ? 'mobile-hide' : 'mobile-active'}`} style={{ display: 'flex', flexDirection: 'column' }}>
         {selectedPartner ? (
           <>
             {/* Chat Header */}
-            <div className="chat-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)' }}>
+            <div className="chat-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <button className="icon-btn mobile-back-btn" onClick={() => setSelectedPartner(null)} style={{ padding: 4, marginRight: 4, color: 'var(--gold)' }} title="Back to chats">
+                  <ArrowLeft size={20} />
+                </button>
                 <img src={selectedPartner.avatar} alt={selectedPartner.name} style={{ width: 40, height: 40, borderRadius: '50%' }} />
                 <div>
                   <h3 style={{ margin: 0, fontSize: 16 }}>{selectedPartner.name}</h3>
                 </div>
               </div>
-              <button className="icon-btn" onClick={() => setSelectedPartner(null)}><X size={20} /></button>
+              <button className="icon-btn" onClick={() => setSelectedPartner(null)} title="Close"><X size={20} /></button>
             </div>
 
             {/* Chat Bubbles Area */}

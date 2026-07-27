@@ -569,12 +569,7 @@ export default function Reports() {
             <button onClick={() => { setReportSearch(""); setReportCategory("ALL"); }} className="btn" style={{ background: 'var(--gold)', color: '#0f172a', padding: '8px 16px', borderRadius: 8, fontWeight: 700, fontSize: 12, border: 'none', cursor: 'pointer' }}>Reset Filters</button>
           </div>
         ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
-            gridAutoRows: '110px',
-            gap: '16px'
-          }}>
+          <div className="reports-items-grid">
             {filteredLinks.map((linkItem, idx) => {
               const t = linkItem.title.toLowerCase()
               let IconComp = Activity
