@@ -89,7 +89,7 @@ const PortalGrowthCard = ({ revenueChart, style = {} }) => {
       
       if (isNaN(growth) || !isFinite(growth)) growth = 0;
       return { name: key.replace('-', ' '), growth };
-    }).filter(Boolean).sort((a, b) => b.growth - a.growth);
+    }).filter(p => p && p.growth >= 0).sort((a, b) => b.growth - a.growth);
   }, [revenueChart]);
 
   if (!portals || portals.length === 0) return (
@@ -191,7 +191,7 @@ const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
                 <div style={{ width: '100%', height: '100%' }}>
                   <KPICard 
                     icon={f.icon} 
-                    label={f.label + " (Click)"} 
+                    label={f.label} 
                     value={f.value} 
                     sub={f.sub} 
                     colorClass={f.colorClass} 
@@ -535,7 +535,7 @@ export default function Dashboard() {
           transition: 'transform 0.4s ease-out' 
         }}
       >
-        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={AlertCircle} label="Orders Today" value={kpis?.today_orders} sub="Hold to spin or Click" colorClass="danger" /></div></div>
+        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={AlertCircle} label="Orders Today" value={kpis?.today_orders} sub="Today only" colorClass="danger" /></div></div>
         <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={TrendingUp} label="Orders This Month" value={kpis?.this_month_orders} sub="Month to date" colorClass="warning" /></div></div>
         <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={TrendingUp} label="Orders This Year" value={kpis?.this_year_orders} sub="Year to date" colorClass="success" /></div></div>
       </div>

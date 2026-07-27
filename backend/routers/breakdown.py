@@ -3,7 +3,7 @@ import urllib.request
 import urllib.parse
 import csv
 from io import StringIO
-from datetime import datetime
+from datetime import datetime, timedelta
 from auth import get_current_user
 import time
 import threading
@@ -74,6 +74,13 @@ def parse_date(date_str):
     except ValueError:
         return None
 
+def get_today_target_date(ref_date=None):
+    if ref_date is None:
+        ref_date = datetime.utcnow().date()
+    if ref_date.weekday() == 0:
+        return ref_date - timedelta(days=2)
+    return ref_date - timedelta(days=1)
+
 @router.get("/daily-sales")
 def daily_sales(date: str = Query(default="today"), current_user=Depends(get_current_user)):
     data = fetch_sheet_csv("ORDERS")
@@ -99,7 +106,7 @@ def daily_sales(date: str = Query(default="today"), current_user=Depends(get_cur
         row_date_obj = row_dt.date()
         
         if date == "today":
-            if row_date_obj != now.date(): continue
+            if row_date_obj != get_today_target_date(now.date()): continue
         elif date == "all":
             pass
         elif date.startswith("month|"):

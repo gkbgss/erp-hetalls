@@ -3,7 +3,7 @@ import urllib.request
 import urllib.parse
 import csv
 from io import StringIO
-from datetime import datetime
+from datetime import datetime, timedelta
 from auth import get_current_user
 import time
 import threading
@@ -74,6 +74,13 @@ def parse_date(date_str):
     except ValueError:
         return None
 
+def get_today_target_date(ref_date=None):
+    if ref_date is None:
+        ref_date = datetime.utcnow().date()
+    if ref_date.weekday() == 0:
+        return ref_date - timedelta(days=2)
+    return ref_date - timedelta(days=1)
+
 # Column mappings for ORDERS sheet based on screenshots:
 # E (4): Portal
 # F (5): Order No
@@ -136,7 +143,7 @@ def get_kpis(current_user=Depends(get_current_user), db: Session = Depends(get_d
             if dt.year == current_year and dt.month == current_month:
                 this_month += 1
                 this_month_rev += price
-            if dt.date() == now.date():
+            if dt.date() == get_today_target_date(now.date()):
                 today += 1
                 today_rev += price
 
@@ -186,7 +193,7 @@ def companies_revenue(current_user=Depends(get_current_user)):
                     portals["year"][portal] = portals["year"].get(portal, 0) + price
                 if dt.year == current_year and dt.month == current_month:
                     portals["month"][portal] = portals["month"].get(portal, 0) + price
-                if dt.date() == now.date():
+                if dt.date() == get_today_target_date(now.date()):
                     portals["today"][portal] = portals["today"].get(portal, 0) + price
             
     results = {"total": [], "today": [], "month": [], "year": []}
@@ -273,7 +280,7 @@ def today_orders(current_user=Depends(get_current_user)):
     orders_data = fetch_sheet_csv("ORDERS")
     valid_orders = []
     
-    today = datetime.now().date()
+    today = get_today_target_date(datetime.now().date())
     
     for i, row in enumerate(orders_data[1:]):
         if len(row) < 37: continue
