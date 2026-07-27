@@ -1205,4 +1205,60 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   display: none;
 }
 
+/* ─── HR Salary Calculator Responsive ───────────────────────────────── */
+.salary-calc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+@media (max-width: 850px) {
+  .salary-calc-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+}
+@media (max-width: 768px) {
+  .salary-top-bar {
+    padding: 14px 16px !important;
+    height: auto !important;
+    min-height: auto !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+  }
+  .salary-top-left {
+    width: 100% !important;
+    gap: 12px !important;
+  }
+  .salary-top-divider {
+    display: none !important;
+  }
+  .salary-top-right {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+  .salary-main-content {
+    padding: 16px 12px !important;
+  }
+  .salary-summary-row {
+    padding: 10px 12px !important;
+  }
+  .salary-summary-row span {
+    font-size: 13px !important;
+  }
+  .salary-table-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+  }
+  .salary-table-controls {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+  .salary-search-box {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+}
+
 

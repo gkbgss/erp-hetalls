@@ -62,7 +62,7 @@ function LiveCalculator({ API, yearMonth }) {
   ].filter(d => d.value > 0) : []
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+    <div className="salary-calc-grid">
       <div>
         <div style={{ marginBottom: 16 }}>
           <label className="form-label" style={{ fontSize: 13 }}>Gross Salary (₹)</label>
@@ -82,10 +82,10 @@ function LiveCalculator({ API, yearMonth }) {
               { label: 'Total Deductions',        value: -result.total_deductions, color: '#ef4444', bold: true, divider: true },
               { label: 'Net Pay',                 value: result.net_pay,          color: 'var(--success)', bold: true, large: true, bg: 'rgba(16,185,129,0.08)' },
             ].filter(row => row.value !== 0 || row.bold).map((row, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 14px', background: row.bg || 'var(--bg-surface)', borderRadius: 8, border: row.large ? '1px solid var(--success)' : '1px solid var(--border)', borderTop: row.divider ? '1px solid var(--border)' : undefined }}>
+              <div key={i} className="salary-summary-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 14px', background: row.bg || 'var(--bg-surface)', borderRadius: 8, border: row.large ? '1px solid var(--success)' : '1px solid var(--border)', borderTop: row.divider ? '1px solid var(--border)' : undefined, flexWrap: 'wrap', gap: 6 }}>
                 <span style={{ fontSize: row.large ? 14 : 13, fontWeight: row.bold ? 700 : 400, color: 'var(--text-secondary)' }}>{row.label}</span>
-                <span style={{ fontSize: row.large ? 20 : 14, fontWeight: row.bold ? 800 : 600, color: row.color }}>
-                  {row.value >= 0 ? '' : '−'} ₹{Math.abs(row.value).toLocaleString('en-IN')}
+                <span style={{ fontSize: row.large ? 18 : 14, fontWeight: row.bold ? 800 : 600, color: row.color, fontFamily: 'monospace' }}>
+                  {row.value >= 0 ? '' : '−'} ₹{Math.round(Math.abs(row.value)).toLocaleString('en-IN')}
                 </span>
               </div>
             ))}
@@ -93,19 +93,21 @@ function LiveCalculator({ API, yearMonth }) {
         )}
       </div>
 
-      <div>
-        <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: 'var(--text-secondary)' }}>
+      <div className="salary-calc-chart-col">
+        <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: 'var(--text-secondary)', textAlign: 'center' }}>
           {result?.month} Breakdown ({result?.total_days} Days, {result?.sundays} Sundays)
         </p>
-        <ResponsiveContainer width="100%" height={210}>
-          <PieChart>
-            <Pie data={pieData} cx="50%" cy="50%" innerRadius={52} outerRadius={84} paddingAngle={3} dataKey="value">
-              {pieData.map((e, i) => <Cell key={i} fill={e.color} stroke="none" />)}
-            </Pie>
-            <Tooltip formatter={v => `₹${Number(v).toLocaleString('en-IN')}`} />
-          </PieChart>
-        </ResponsiveContainer>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
+        <div style={{ width: '100%', height: 210, display: 'flex', justifyContent: 'center' }}>
+          <ResponsiveContainer width="100%" height={210}>
+            <PieChart>
+              <Pie data={pieData} cx="50%" cy="50%" innerRadius={52} outerRadius={84} paddingAngle={3} dataKey="value">
+                {pieData.map((e, i) => <Cell key={i} fill={e.color} stroke="none" />)}
+              </Pie>
+              <Tooltip formatter={v => `₹${Number(v).toLocaleString('en-IN')}`} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 8 }}>
           {pieData.map((d, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--text-secondary)' }}>
               <div style={{ width: 9, height: 9, borderRadius: 2, background: d.color }} />
@@ -113,10 +115,10 @@ function LiveCalculator({ API, yearMonth }) {
             </div>
           ))}
         </div>
-        <div style={{ textAlign: 'center', marginTop: 10 }}>
+        <div style={{ textAlign: 'center', marginTop: 12 }}>
           <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Take-home rate</div>
           <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--success)' }}>
-            {result ? ((result.net_pay / result.gross) * 100).toFixed(1) : 0}%
+            {result && result.gross > 0 ? Math.min(100, ((result.net_pay / result.gross) * 100)).toFixed(1) : 0}%
           </div>
         </div>
       </div>
@@ -370,15 +372,15 @@ export default function SalaryCalculator() {
   return (
     <div style={{ minHeight: '100vh' }}>
       {/* ─── Top Bar ──────────────────────────────────────────────── */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(30, 41, 59, 0.4)', backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', padding: '0 32px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      <div className="salary-top-bar" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(30, 41, 59, 0.4)', backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', padding: '0 32px', minHeight: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <div className="salary-top-left" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <button onClick={() => navigate('/hr')}
             style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-hover)', border: '1px solid var(--border)', color: 'var(--text-secondary)', padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             <ArrowLeft size={16} /> Back to HR
           </button>
-          <div style={{ width: 1, height: 24, background: 'var(--border)' }} />
+          <div className="salary-top-divider" style={{ width: 1, height: 24, background: 'var(--border)' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 9, background: 'linear-gradient(135deg, var(--gold), var(--gold-dark))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 34, height: 34, borderRadius: 9, background: 'linear-gradient(135deg, var(--gold), var(--gold-dark))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Calculator size={17} color="#000" />
             </div>
             <div>
@@ -387,7 +389,7 @@ export default function SalaryCalculator() {
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="salary-top-right" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-hover)', border: '1px solid var(--border)', padding: '4px 12px', borderRadius: 8 }}>
             <Calendar size={14} style={{ color: 'var(--gold)' }} />
             <input type="month" value={yearMonth} onChange={e => setYearMonth(e.target.value)} 
@@ -397,7 +399,7 @@ export default function SalaryCalculator() {
         </div>
       </div>
 
-      <div style={{ padding: '28px 32px' }}>
+      <div className="salary-main-content" style={{ padding: '28px 32px' }}>
         {flashMsg && (
           <div style={{ marginBottom: 16, background: flashMsg.type === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${flashMsg.type === 'success' ? 'var(--success)' : 'var(--danger)'}`, color: flashMsg.type === 'success' ? 'var(--success)' : 'var(--danger)', borderRadius: 8, padding: '10px 16px', fontSize: 13, fontWeight: 600 }}>
             {flashMsg.text}
@@ -467,15 +469,15 @@ export default function SalaryCalculator() {
 
             {/* ─── Employee Payroll Table ──────────────────────────── */}
             <div className="card">
-              <div className="card-header">
+              <div className="card-header salary-table-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14 }}>
                 <div>
                   <div className="card-title">Monthly Payroll Generation ({yearMonth})</div>
                   <div className="card-subtitle">
                     Enter deductions and additions to auto-calculate net pay. 
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ position: 'relative' }}>
+                <div className="salary-table-controls" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                  <div className="salary-search-box" style={{ position: 'relative', flex: '1 1 auto', minWidth: 160 }}>
                     <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                     <input 
                       type="text" 
@@ -485,12 +487,12 @@ export default function SalaryCalculator() {
                       style={{ 
                         background: 'var(--bg-surface)', border: '1px solid var(--border)', 
                         color: 'var(--text-primary)', padding: '6px 12px 6px 30px', 
-                        borderRadius: 6, fontSize: 13, outline: 'none', width: 200
+                        borderRadius: 6, fontSize: 13, outline: 'none', width: '100%'
                       }}
                     />
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{employees.length} employees</div>
-                  <button onClick={() => setShowModal(true)} style={{ background: 'var(--primary)', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{employees.length} emp</div>
+                  <button onClick={() => setShowModal(true)} style={{ background: 'var(--primary)', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 6, cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, whiteSpace: 'nowrap' }}>
                     <Download size={15} /> Download PDF
                   </button>
                 </div>
