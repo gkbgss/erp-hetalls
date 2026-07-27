@@ -458,6 +458,24 @@ export default function Dashboard() {
       .finally(() => setLoading(false))
   }, [API])
 
+  // Must be above ANY early return — hooks can never be called conditionally
+  const allChartPortals = useMemo(() => {
+    const portalSet = new Set(["AMAZON", "CASAVANI WEBSITE", "EBAY-RUGSFOREVER", "ETSY-CASAVANI", "ETSY-RUGSFOREVER", "JAYPOR", "MIRRAW", "PEPPERFRY", "WALMART"]);
+    if (Array.isArray(revenueChart)) {
+      revenueChart.forEach(item => {
+        if (item && typeof item === 'object') {
+          Object.keys(item).forEach(key => {
+            if (key !== "month" && key !== "total" && key !== "_dt") {
+              portalSet.add(key);
+            }
+          });
+        }
+      });
+    }
+    return Array.from(portalSet).sort();
+  }, [revenueChart]);
+
+
   if (loading) return (
     <div className="page-loading">
       <div className="big-spinner" />
@@ -500,26 +518,11 @@ export default function Dashboard() {
     <PortalGrowthCard key="portal" revenueChart={revenueChart} style={{ viewTransitionName: 'kpi-portal' }} />
   ];
 
+
   const shiftedElements = [];
   for (let i = 0; i < 5; i++) {
     shiftedElements.push(kpiElements[(i - shiftOffset + 5) % 5]);
   }
-
-  const allChartPortals = useMemo(() => {
-    const portalSet = new Set(["AMAZON", "CASAVANI WEBSITE", "EBAY-RUGSFOREVER", "ETSY-CASAVANI", "ETSY-RUGSFOREVER", "JAYPOR", "MIRRAW", "PEPPERFRY", "WALMART"]);
-    if (Array.isArray(revenueChart)) {
-      revenueChart.forEach(item => {
-        if (item && typeof item === 'object') {
-          Object.keys(item).forEach(key => {
-            if (key !== "month" && key !== "total" && key !== "_dt") {
-              portalSet.add(key);
-            }
-          });
-        }
-      });
-    }
-    return Array.from(portalSet).sort();
-  }, [revenueChart]);
 
   const portalColorsMap = {
     "AMAZON": "#f59e0b",
