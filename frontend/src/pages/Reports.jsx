@@ -180,28 +180,46 @@ export default function Reports() {
   const [printReportsList, setPrintReportsList] = useState([])
   const [loadingPrintReports, setLoadingPrintReports] = useState(false)
   const [printModalTitle, setPrintModalTitle] = useState("All Companies")
+  const [selectedPrintUrls, setSelectedPrintUrls] = useState(new Set())
 
   const [reportSearch, setReportSearch] = useState("")
   const [reportCategory, setReportCategory] = useState("ALL")
   const [deleteMode, setDeleteMode] = useState(false)
 
+  const togglePrintUrl = (url) => {
+    const next = new Set(selectedPrintUrls)
+    if (next.has(url)) next.delete(url)
+    else next.add(url)
+    setSelectedPrintUrls(next)
+  }
+
+  const toggleCompanyPrintUrls = (items) => {
+    const allSelected = items.length > 0 && items.every(r => selectedPrintUrls.has(r.url))
+    const next = new Set(selectedPrintUrls)
+    items.forEach(r => {
+      if (allSelected) next.delete(r.url)
+      else next.add(r.url)
+    })
+    setSelectedPrintUrls(next)
+  }
+
+  const toggleAllPrintUrls = () => {
+    if (printReportsList.length > 0 && selectedPrintUrls.size === printReportsList.length) {
+      setSelectedPrintUrls(new Set())
+    } else {
+      setSelectedPrintUrls(new Set(printReportsList.map(r => r.url)))
+    }
+  }
+
   const openPrintCenter = (compFilter = "all", title = "All Companies") => {
     setPrintModalTitle(title)
     setShowPrintModal(true)
     setLoadingPrintReports(true)
+    setSelectedPrintUrls(new Set())
     axios.get(`${API}/api/reports/google-sheet-links`, { params: { company: compFilter } })
       .then(res => {
         const list = res.data || []
         setPrintReportsList(list)
-        if (list.length > 0) {
-          if (window.confirm(`Found ${list.length} live reports for ${title}. Automatically open all tabs and trigger printing once loaded?`)) {
-            list.forEach((report, idx) => {
-              setTimeout(() => {
-                handleAutoPrintReport(report.url)
-              }, idx * 1000)
-            })
-          }
-        }
       })
       .catch(err => {
         console.error("Error fetching print reports:", err)
@@ -709,13 +727,34 @@ export default function Reports() {
               gap: 12,
               background: 'rgba(212,175,55,0.03)'
             }}>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                Found <strong>{printReportsList.length}</strong> reports ready for printing.
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: printReportsList.length ? 'pointer' : 'default', fontSize: 13, color: 'var(--text)', userSelect: 'none', fontWeight: 600 }}>
+                  <input 
+                    type="checkbox" 
+                    disabled={printReportsList.length === 0}
+                    checked={printReportsList.length > 0 && selectedPrintUrls.size === printReportsList.length}
+                    onChange={toggleAllPrintUrls}
+                    style={{ width: 16, height: 16, cursor: 'pointer', accentColor: 'var(--gold)' }}
+                  />
+                  Select All ({printReportsList.length})
+                </label>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                  {selectedPrintUrls.size > 0 ? (
+                    <span>Selected <strong>{selectedPrintUrls.size}</strong> to print</span>
+                  ) : (
+                    <span>Found <strong>{printReportsList.length}</strong> reports ready for printing.</span>
+                  )}
+                </div>
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
                 <button
                   disabled={printReportsList.length === 0}
-                  onClick={() => triggerPrintAll(printReportsList)}
+                  onClick={() => {
+                    const toPrint = selectedPrintUrls.size > 0 
+                      ? printReportsList.filter(r => selectedPrintUrls.has(r.url))
+                      : printReportsList;
+                    triggerPrintAll(toPrint);
+                  }}
                   className="btn"
                   style={{
                     background: 'linear-gradient(135deg, var(--gold) 0%, #b89728 100%)',
@@ -724,7 +763,7 @@ export default function Reports() {
                     borderRadius: 6, border: 'none', cursor: printReportsList.length ? 'pointer' : 'not-allowed', fontSize: 13
                   }}
                 >
-                  <Printer size={15} /> Open All to Print ({printReportsList.length})
+                  <Printer size={15} /> {selectedPrintUrls.size > 0 ? `Print Selected (${selectedPrintUrls.size})` : `Open All to Print (${printReportsList.length})`}
                 </button>
               </div>
             </div>
@@ -767,10 +806,16 @@ export default function Reports() {
                         fontSize: 14,
                         color: 'var(--text)'
                       }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none' }}>
+                          <input 
+                            type="checkbox" 
+                            checked={items.length > 0 && items.every(r => selectedPrintUrls.has(r.url))}
+                            onChange={() => toggleCompanyPrintUrls(items)}
+                            style={{ width: 16, height: 16, cursor: 'pointer', accentColor: 'var(--gold)' }}
+                          />
                           <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--gold)' }} />
                           {companyName}
-                        </span>
+                        </label>
                         <span style={{ fontSize: 12, padding: '2px 8px', background: 'rgba(212,175,55,0.1)', color: 'var(--gold)', borderRadius: 12 }}>
                           {items.length} {items.length === 1 ? 'Report' : 'Reports'}
                         </span>
@@ -785,13 +830,21 @@ export default function Reports() {
                             borderBottom: idx < items.length - 1 ? '1px solid var(--border)' : 'none',
                             gap: 16
                           }}>
-                            <div style={{ overflow: 'hidden' }}>
-                              <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)', marginBottom: 2 }}>
-                                {item.title}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, overflow: 'hidden', flex: 1 }}>
+                              <input 
+                                type="checkbox" 
+                                checked={selectedPrintUrls.has(item.url)}
+                                onChange={() => togglePrintUrl(item.url)}
+                                style={{ width: 18, height: 18, cursor: 'pointer', accentColor: 'var(--gold)', flexShrink: 0 }}
+                              />
+                              <div style={{ overflow: 'hidden' }}>
+                                <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)', marginBottom: 2 }}>
+                                  {item.title}
+                                </div>
+                                <a href={item.url} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: 'var(--text-muted)', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                                  {item.url}
+                                </a>
                               </div>
-                              <a href={item.url} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: 'var(--text-muted)', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                                {item.url}
-                              </a>
                             </div>
                             <button
                               onClick={() => handleAutoPrintReport(item.url)}
