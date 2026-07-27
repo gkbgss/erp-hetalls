@@ -36,10 +36,10 @@ const ChartTooltip = ({ active, payload, label }) => {
 }
 
 // ── KPI Card ──────────────────────────────────────────────────────────
-function KPICard({ icon: Icon, label, value, sub, colorClass, prefix = '', format = 'number', className = '', style = {} }) {
+function KPICard({ icon: Icon, label, value, sub, colorClass, prefix = '', format = 'number', className = '', style = {}, valueColor = null, trend = null }) {
   let display = value
-  if (format === 'currency') display = `$${Number(value).toLocaleString('en-US', { minimumFractionDigits: 0 })}`
-  else if (format === 'number') display = Number(value).toLocaleString()
+  if (format === 'currency') display = `$${Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+  else if (format === 'number') display = Number(value || 0).toLocaleString()
   
   return (
     <div className={`kpi-card ${className}`} style={style}>
@@ -47,8 +47,12 @@ function KPICard({ icon: Icon, label, value, sub, colorClass, prefix = '', forma
         <span className="kpi-label">{label}</span>
         <div className={`kpi-icon ${colorClass}`}><Icon size={18} /></div>
       </div>
-      <div className="kpi-value">{display}</div>
-      <div className="kpi-sub">{sub}</div>
+      <div className="kpi-value" style={valueColor ? { color: valueColor, fontWeight: 'bold', textShadow: `0 0 12px ${valueColor}40`, display: 'flex', alignItems: 'center', gap: '6px' } : { display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {trend === 'up' && <span style={{ color: '#10b981', fontSize: '16px' }}>▲</span>}
+        {trend === 'down' && <span style={{ color: '#ef4444', fontSize: '16px' }}>▼</span>}
+        {display}
+      </div>
+      <div className="kpi-sub" style={valueColor ? { color: valueColor, fontWeight: '500' } : {}}>{sub}</div>
     </div>
   )
 }
@@ -101,9 +105,16 @@ const PortalGrowthCard = ({ revenueChart, style = {} }) => {
   return (
     <div 
       className="cube-container" 
-      onClick={(e) => { if (e && e.preventDefault) e.preventDefault(); setSpinCount(c => c + 1); }}
-      style={{ cursor: 'pointer', userSelect: 'none', ...style }}
+      onClick={(e) => { 
+        if (e && e.preventDefault) e.preventDefault(); 
+        const rect = e.currentTarget.getBoundingClientRect();
+        const isRight = (e.clientX - rect.left) > rect.width / 2;
+        setSpinCount(c => isRight ? c + 1 : (c - 1 + 300) % 300); 
+      }}
+      style={{ cursor: 'pointer', userSelect: 'none', position: 'relative', ...style }}
     >
+      <div style={{ position: 'absolute', top: '50%', left: '8px', transform: 'translateY(-50%)', zIndex: 10, color: 'var(--text-muted)', fontSize: '18px', opacity: 0.5, pointerEvents: 'none' }}>‹</div>
+      <div style={{ position: 'absolute', top: '50%', right: '8px', transform: 'translateY(-50%)', zIndex: 10, color: 'var(--text-muted)', fontSize: '18px', opacity: 0.5, pointerEvents: 'none' }}>›</div>
       <div 
         className="cube" 
         style={{ 
@@ -123,6 +134,8 @@ const PortalGrowthCard = ({ revenueChart, style = {} }) => {
                   value={`${isUp ? '+' : ''}${p.growth.toFixed(1)}%`} 
                   sub="Growth vs Last Month" 
                   colorClass={isUp ? "success" : "danger"} 
+                  valueColor={isUp ? "#10b981" : "#ef4444"}
+                  trend={isUp ? "up" : "down"}
                   format="text"
                 />
               </div>
@@ -162,10 +175,14 @@ const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
         className="cube-container" 
         onClick={(e) => { 
           if (e && e.preventDefault) e.preventDefault(); 
-          setSpinCount(c => c + 1); 
+          const rect = e.currentTarget.getBoundingClientRect();
+          const isRight = (e.clientX - rect.left) > rect.width / 2;
+          setSpinCount(c => isRight ? c + 1 : (c - 1 + 300) % 300); 
         }}
-        style={{ cursor: 'pointer', userSelect: 'none' }}
+        style={{ cursor: 'pointer', userSelect: 'none', position: 'relative' }}
       >
+        <div style={{ position: 'absolute', top: '50%', left: '8px', transform: 'translateY(-50%)', zIndex: 10, color: 'var(--text-muted)', fontSize: '18px', opacity: 0.5, pointerEvents: 'none' }}>‹</div>
+        <div style={{ position: 'absolute', top: '50%', right: '8px', transform: 'translateY(-50%)', zIndex: 10, color: 'var(--text-muted)', fontSize: '18px', opacity: 0.5, pointerEvents: 'none' }}>›</div>
         <div 
           className="cube" 
           style={{ 
@@ -175,6 +192,7 @@ const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
         >
           {[0, 1, 2].map(i => {
             const f = getFace(i);
+            const isUp = f.key === 'today' ? (f.value >= ((kpis?.this_month_revenue || 0) / 30)) : f.key === 'month' ? (f.value >= ((kpis?.this_year_revenue || 0) / 12)) : true;
             return (
               <div key={i} className="cube-face">
                 <div style={{ width: '100%', height: '100%' }}>
@@ -184,6 +202,8 @@ const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
                     value={f.value} 
                     sub={f.sub} 
                     colorClass={f.colorClass} 
+                    valueColor={isUp ? "#10b981" : "#ef4444"}
+                    trend={isUp ? "up" : "down"}
                     format="currency"
                   />
                 </div>
@@ -205,9 +225,11 @@ const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
             Companies Revenue ({currentFace.key}):
           </div>
           {companiesRev[currentFace.key].map(c => (
-            <div key={c.name} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '12px' }}>
-              <span style={{ color: c.color }}>{c.name}</span>
-              <span style={{ fontWeight: 'bold', color: 'var(--text)' }}>${c.value.toLocaleString()}</span>
+            <div key={c.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', fontSize: '12px' }}>
+              <span style={{ color: c.color, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ color: '#10b981', fontSize: '10px' }}>▲</span> {c.name}
+              </span>
+              <span style={{ fontWeight: 'bold', color: '#10b981' }}>${c.value.toLocaleString()}</span>
             </div>
           ))}
         </div>
@@ -343,8 +365,10 @@ export default function Dashboard() {
       animationRef.current = null;
     }
 
-    if (heldTime < 150) {
-      angleRef.current -= 120;
+    if (heldTime < 250) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const isRight = (e.clientX - rect.left) > rect.width / 2;
+      angleRef.current += isRight ? -120 : 120;
     }
     // Snap to nearest 120 degree boundary
     angleRef.current = Math.round(angleRef.current / 120) * 120;
@@ -441,22 +465,40 @@ export default function Dashboard() {
     return groups
   }
 
+  const [lastRefreshed, setLastRefreshed] = useState(new Date());
+
   useEffect(() => {
-    Promise.all([
-      axios.get(`${API}/api/dashboard/kpis`),
-      axios.get(`${API}/api/dashboard/revenue-chart`),
-      axios.get(`${API}/api/dashboard/recent-orders`),
-      axios.get(`${API}/api/dashboard/today-orders`),
-      axios.get(`${API}/api/dashboard/companies-revenue`),
-    ]).then(([k, r, o, t, c]) => {
-      setKpis(k.data)
-      setRevenueChart(r.data)
-      setRecentOrders(o.data)
-      setTodayOrders(t.data)
-      setCompaniesRev(c.data)
-    }).catch(console.error)
-      .finally(() => setLoading(false))
-  }, [API])
+    let isMounted = true;
+    const fetchAll = (isInitial = false) => {
+      if (isInitial) setLoading(true);
+      const t = Date.now();
+      Promise.all([
+        axios.get(`${API}/api/dashboard/kpis?_t=${t}`),
+        axios.get(`${API}/api/dashboard/revenue-chart?_t=${t}`),
+        axios.get(`${API}/api/dashboard/recent-orders?_t=${t}`),
+        axios.get(`${API}/api/dashboard/today-orders?_t=${t}`),
+        axios.get(`${API}/api/dashboard/companies-revenue?_t=${t}`),
+      ]).then(([k, r, o, tData, c]) => {
+        if (!isMounted) return;
+        setKpis(k.data);
+        setRevenueChart(r.data);
+        setRecentOrders(o.data);
+        setTodayOrders(tData.data);
+        setCompaniesRev(c.data);
+        setLastRefreshed(new Date());
+      }).catch(console.error)
+        .finally(() => {
+          if (isMounted && isInitial) setLoading(false);
+        });
+    };
+
+    fetchAll(true);
+    const interval = setInterval(() => fetchAll(false), 5000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [API]);
 
   // Must be above ANY early return — hooks can never be called conditionally
   const allChartPortals = useMemo(() => {
@@ -494,8 +536,10 @@ export default function Dashboard() {
       onTouchStart={startSpin}
       onTouchEnd={stopSpin}
       onDragStart={(e) => e.preventDefault()}
-      style={{ cursor: 'pointer', userSelect: 'none', viewTransitionName: 'kpi-orders' }}
+      style={{ cursor: 'pointer', userSelect: 'none', viewTransitionName: 'kpi-orders', position: 'relative' }}
     >
+      <div style={{ position: 'absolute', top: '50%', left: '8px', transform: 'translateY(-50%)', zIndex: 10, color: 'var(--text-muted)', fontSize: '18px', opacity: 0.5, pointerEvents: 'none' }}>‹</div>
+      <div style={{ position: 'absolute', top: '50%', right: '8px', transform: 'translateY(-50%)', zIndex: 10, color: 'var(--text-muted)', fontSize: '18px', opacity: 0.5, pointerEvents: 'none' }}>›</div>
       <div 
         className="cube" 
         ref={cubeRef}
@@ -504,12 +548,12 @@ export default function Dashboard() {
           transition: 'transform 0.4s ease-out' 
         }}
       >
-        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={AlertCircle} label="Orders Today" value={kpis?.today_orders} sub="Hold to spin or Click" colorClass="danger" /></div></div>
-        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={TrendingUp} label="Orders This Month" value={kpis?.this_month_orders} sub="Month to date" colorClass="warning" /></div></div>
-        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={TrendingUp} label="Orders This Year" value={kpis?.this_year_orders} sub="Year to date" colorClass="success" /></div></div>
+        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={AlertCircle} label="Orders Today" value={kpis?.today_orders} sub="Hold to spin or Click" colorClass="danger" valueColor={((kpis?.today_orders || 0) >= ((kpis?.this_month_orders || 0) / 30)) ? "#10b981" : "#ef4444"} trend={((kpis?.today_orders || 0) >= ((kpis?.this_month_orders || 0) / 30)) ? "up" : "down"} /></div></div>
+        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={TrendingUp} label="Orders This Month" value={kpis?.this_month_orders} sub="Month to date" colorClass="warning" valueColor="#10b981" trend="up" /></div></div>
+        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={TrendingUp} label="Orders This Year" value={kpis?.this_year_orders} sub="Year to date" colorClass="success" valueColor="#10b981" trend="up" /></div></div>
       </div>
     </div>,
-    <KPICard key="emp" icon={Users} label="Active Employees" value={kpis?.total_employees ?? 0} sub="Across all departments" colorClass="green" style={{ viewTransitionName: 'kpi-emp' }} />,
+    <KPICard key="emp" icon={Users} label="Active Employees" value={kpis?.total_employees ?? 0} sub="Across all departments" colorClass="green" valueColor="#10b981" trend="up" style={{ viewTransitionName: 'kpi-emp' }} />,
 
     <div key="breakdown" onClick={openBreakdown} style={{ cursor: 'pointer', height: '100%', viewTransitionName: 'kpi-break' }}>
       <KPICard icon={Layers} label="Detailed Breakdown" value="Breakdown" sub="Daily Sale Brands & Portal" colorClass="blue" format="text" className="h-full" />
@@ -546,6 +590,16 @@ export default function Dashboard() {
 
   return (
     <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', background: 'rgba(15, 23, 42, 0.7)', border: '1px solid var(--border)', padding: '10px 18px', borderRadius: '12px', backdropFilter: 'blur(16px)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>
+          <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 12px #10b981', animation: 'pulse 2s infinite' }}></span>
+          <span>Live Google Sheet Feed Active <span style={{ color: '#10b981', fontWeight: 700 }}>• Auto-refreshing every 5s</span></span>
+        </div>
+        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+          Last updated: <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{lastRefreshed ? lastRefreshed.toLocaleTimeString() : 'Just now'}</span>
+        </div>
+      </div>
+
       {/* KPI Grid */}
       <div className="kpi-grid">
         {shiftedElements}
