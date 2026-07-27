@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+ï»¿import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useMessages } from '../context/MessagesContext';
@@ -110,7 +110,14 @@ export default function Messages() {
       removeAttachment();
       setTab('sent');
     } catch (e) {
-      setSendError('Failed to send. Please try again.');
+      const status = e?.response?.status;
+      if (status === 404) {
+        setSendError('Server is still deploying (route not ready). Wait 2-3 min and refresh.');
+      } else if (status === 401) {
+        setSendError('Session expired. Please refresh the page and log in again.');
+      } else {
+        setSendError('Failed to send: ' + (e?.response?.data?.detail || e?.message || 'Unknown error'));
+      }
     }
   };
 
@@ -293,7 +300,7 @@ export default function Messages() {
                   <h3>{tab === 'inbox' ? getSender(selectedMessage) : `To: ${selectedMessage.recipient_name || 'User'}`}</h3>
                   <span className="sender-role">
                     {tab === 'inbox'
-                      ? `${selectedMessage.sender_role || ''} • ${selectedMessage.sender_dept || ''}`
+                      ? `${selectedMessage.sender_role || ''} ï¿½ ${selectedMessage.sender_dept || ''}`
                       : `Sent ${new Date(selectedMessage.created_at).toLocaleString()}`}
                   </span>
                 </div>
@@ -366,3 +373,6 @@ export default function Messages() {
     </div>
   );
 }
+
+
+
