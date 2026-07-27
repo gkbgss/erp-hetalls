@@ -116,6 +116,7 @@ def get_kpis(current_user=Depends(get_current_user), db: Session = Depends(get_d
         fy_start = datetime(current_year - 1, 4, 1)
         fy_end = datetime(current_year, 3, 31)
 
+    orders_by_date = {}
     for row in orders_data[1:]:
         if len(row) < 37:
             continue
@@ -130,6 +131,8 @@ def get_kpis(current_user=Depends(get_current_user), db: Session = Depends(get_d
         
         dt = parse_date(row[8])
         if dt:
+            d = dt.date()
+            orders_by_date[d] = orders_by_date.get(d, 0) + 1
             if fy_start <= dt <= fy_end:
                 this_year += 1
                 this_year_rev += price
@@ -140,6 +143,9 @@ def get_kpis(current_user=Depends(get_current_user), db: Session = Depends(get_d
                 today += 1
                 today_rev += price
 
+    prev_dates = [d for d in orders_by_date.keys() if d < now.date()]
+    yesterday_orders = orders_by_date[max(prev_dates)] if prev_dates else 0
+
     return {
         "total_revenue":     round(total_revenue, 2),
         "this_year_revenue": round(this_year_rev, 2),
@@ -149,6 +155,7 @@ def get_kpis(current_user=Depends(get_current_user), db: Session = Depends(get_d
         "this_year_orders":  this_year,
         "this_month_orders": this_month,
         "today_orders":      today,
+        "yesterday_orders":  yesterday_orders,
         "total_employees":   total_employees
     }
 

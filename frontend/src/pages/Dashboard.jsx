@@ -514,6 +514,8 @@ export default function Dashboard() {
     </div>
   )
 
+  const isOrdersUp = (kpis?.today_orders ?? 0) >= (kpis?.yesterday_orders ?? 0);
+
   const kpiElements = [
     <RevenueSpinningCard key="rev" kpis={kpis} companiesRev={companiesRev} style={{ viewTransitionName: 'kpi-rev' }} />,
     <div 
@@ -535,7 +537,7 @@ export default function Dashboard() {
           transition: 'transform 0.4s ease-out' 
         }}
       >
-        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={AlertCircle} label="Orders Today" value={kpis?.today_orders} sub="Today only" colorClass="danger" /></div></div>
+        <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={isOrdersUp ? TrendingUp : TrendingDown} label="Orders Today" value={kpis?.today_orders} sub="Today only" colorClass={isOrdersUp ? "success" : "danger"} /></div></div>
         <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={TrendingUp} label="Orders This Month" value={kpis?.this_month_orders} sub="Month to date" colorClass="warning" /></div></div>
         <div className="cube-face"><div style={{ width: '100%', height: '100%' }}><KPICard icon={TrendingUp} label="Orders This Year" value={kpis?.this_year_orders} sub="Year to date" colorClass="success" /></div></div>
       </div>
