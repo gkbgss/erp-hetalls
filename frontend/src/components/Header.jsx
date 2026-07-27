@@ -7,6 +7,7 @@ const PAGE_TITLES = {
   '/inventory': { title: 'Inventory',   sub: 'Product catalog & stock management' },
   '/accounts':  { title: 'Accounts',    sub: 'Invoices, expenses & financial overview' },
   '/hr':        { title: 'HR',          sub: 'Employee management & payroll' },
+  '/hr/messages': { title: 'Messages',  sub: 'Internal team communication' },
   '/reports':   { title: 'Reports',     sub: 'Analytics & business intelligence' },
   '/settings':  { title: 'Settings',    sub: 'System configuration & user management' },
 }

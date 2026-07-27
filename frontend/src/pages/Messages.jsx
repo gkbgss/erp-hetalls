@@ -201,7 +201,7 @@ export default function Messages() {
   const currentChatMessages = selectedPartner ? combined.filter(m => m.partnerId === selectedPartner.id) : [];
 
   return (
-    <div className="messages-layout" style={{ height: 'calc(100vh - 40px)', display: 'flex', gap: 24 }}>
+    <div className="messages-layout">
       {/* Left Pane - Chat List */}
       <div className="messages-sidebar card" style={{ display: 'flex', flexDirection: 'column' }}>
         <div className="messages-header" style={{ paddingBottom: 16 }}>
