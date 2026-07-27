@@ -184,7 +184,7 @@ export default function HR() {
                       </span>
                     </td>
                     <td>{emp.role}</td>
-                    <td className="font-bold">${emp.salary.toLocaleString()}</td>
+                    <td className="font-bold">₹{emp.salary.toLocaleString('en-IN')}</td>
                     <td>{emp.join_date ? new Date(emp.join_date).toLocaleDateString() : '—'}</td>
                   </tr>
                 ))}
