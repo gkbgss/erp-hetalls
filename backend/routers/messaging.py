@@ -21,13 +21,17 @@ class MessageOut(BaseModel):
     sender_role: str
     sender_dept: str
     recipient_id: int
+    recipient_name: str = ""
     subject: str
     content: str
     attachment: Optional[str]
     is_read: bool
     created_at: datetime
+
     class Config:
         from_attributes = True
+
+# ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.post("/", response_model=MessageOut)
 def send_message(payload: MessageCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -41,15 +45,34 @@ def send_message(payload: MessageCreate, db: Session = Depends(get_db), current_
         content=payload.content, attachment=payload.attachment, is_read=False,
     )
     db.add(msg); db.commit(); db.refresh(msg)
-    return msg
+    # Attach recipient name for response
+    result = MessageOut.from_orm(msg)
+    result.recipient_name = recipient.name
+    return result
 
 @router.get("/inbox", response_model=List[MessageOut])
 def get_inbox(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return db.query(Message).filter(Message.recipient_id == current_user.id).order_by(Message.created_at.desc()).all()
+    msgs = db.query(Message).filter(Message.recipient_id == current_user.id).order_by(Message.created_at.desc()).all()
+    # Attach recipient_name (= current user, since these are received messages)
+    result = []
+    for m in msgs:
+        out = MessageOut.from_orm(m)
+        out.recipient_name = current_user.name
+        result.append(out)
+    return result
 
 @router.get("/sent", response_model=List[MessageOut])
 def get_sent(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return db.query(Message).filter(Message.sender_id == current_user.id).order_by(Message.created_at.desc()).all()
+    msgs = db.query(Message).filter(Message.sender_id == current_user.id).order_by(Message.created_at.desc()).all()
+    # Look up recipient names in one query
+    recipient_ids = list({m.recipient_id for m in msgs})
+    recipients = {u.id: u.name for u in db.query(User).filter(User.id.in_(recipient_ids)).all()}
+    result = []
+    for m in msgs:
+        out = MessageOut.from_orm(m)
+        out.recipient_name = recipients.get(m.recipient_id, "Unknown")
+        result.append(out)
+    return result
 
 @router.patch("/{message_id}/read")
 def mark_read(message_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
