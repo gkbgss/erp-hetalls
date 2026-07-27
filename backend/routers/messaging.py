@@ -1,12 +1,24 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
 from database import get_db, User, Message
 from auth import get_current_user
 from datetime import datetime
+import uuid
+import os
+import shutil
 
 router = APIRouter(prefix="/api/messages", tags=["messages"])
+
+@router.post("/upload")
+def upload_file(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
+    ext = file.filename.split('.')[-1] if '.' in file.filename else ''
+    filename = f"{uuid.uuid4().hex}.{ext}" if ext else uuid.uuid4().hex
+    filepath = os.path.join("uploads", filename)
+    with open(filepath, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    return {"url": f"/uploads/{filename}", "name": file.filename}
 
 class MessageCreate(BaseModel):
     recipient_id: int

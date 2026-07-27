@@ -109,11 +109,20 @@ export default function Messages() {
     if (!composeBody.trim() || !selectedPartner) return;
     setSendError('');
     try {
+      let attachmentUrl = null;
+      if (attachment) {
+        const formData = new FormData();
+        formData.append('file', attachment);
+        const res = await axios.post(`${API}/api/messages/upload`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        attachmentUrl = res.data.url;
+      }
       await sendMessage({
         recipient_id: selectedPartner.id,
         subject: "Chat Message",
         content: composeBody,
-        attachment: attachment ? attachment.name : null,
+        attachment: attachmentUrl,
       });
       fetchSent();
       setComposeBody('');
@@ -122,6 +131,7 @@ export default function Messages() {
       setSendError('Failed to send. Please try again.');
     }
   };
+
 
   const formatTime = (iso) => {
     const d = new Date(iso);
@@ -252,7 +262,10 @@ export default function Messages() {
                         ))}
                         {msg.attachment && (
                           <div style={{ marginTop: 8, padding: 8, background: 'rgba(0,0,0,0.1)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                            <Paperclip size={14} /> {msg.attachment}
+                            <Paperclip size={14} /> 
+                            <a href={msg.attachment.startsWith('/') ? `${API}${msg.attachment}` : '#'} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                              {msg.attachment.startsWith('/') ? 'View Attachment' : msg.attachment}
+                            </a>
                           </div>
                         )}
                       </div>
