@@ -7,7 +7,7 @@ import '../index.css';
 
 export default function Messages() {
   const { API, user } = useAuth();
-  const { messages, markAsRead, deleteMessage, resetMessages, sendMessage } = useMessages();
+  const { messages, markAsRead, deleteMessage, sendMessage } = useMessages();
   
   const [selectedId, setSelectedId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,11 +37,13 @@ export default function Messages() {
     }
   }, [API]);
 
-  const filteredMessages = messages.filter(m => 
-    m.sender.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.department.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredMessages = messages.filter(m => {
+    const sender = (m.sender_name || m.sender || '').toLowerCase();
+    const subject = (m.subject || '').toLowerCase();
+    const dept = (m.sender_dept || m.department || '').toLowerCase();
+    const q = searchQuery.toLowerCase();
+    return sender.includes(q) || subject.includes(q) || dept.includes(q);
+  });
 
   const selectedMessage = messages.find(m => m.id === selectedId);
 
@@ -82,27 +84,36 @@ export default function Messages() {
     }
   };
 
-  const handleSend = () => {
+  const [sendError, setSendError] = useState('');
+
+  const handleSend = async () => {
     if (!composeBody.trim()) return;
-    
-    // Determine the sender string (who this message is technically FROM in our mocked state)
-    // Since we are mocking sending to ourselves in the inbox, we set sender = user.name
-    const msg = {
-      sender: user?.name || 'Admin User',
-      role: user?.role || 'Admin',
-      department: user?.department || 'IT',
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'Admin'}`,
-      subject: isComposing ? (composeSubject || 'No Subject') : `Re: ${selectedMessage?.subject}`,
-      content: composeBody,
-      attachment: attachment ? attachment.name : null
-    };
-    
-    sendMessage(msg);
-    
-    setComposeBody('');
-    setComposeSubject('');
-    setIsComposing(false);
-    removeAttachment();
+    setSendError('');
+    try {
+      if (isComposing && composeTo) {
+        // Send to a specific recipient via the real API
+        await sendMessage({
+          recipient_id: composeTo.id,
+          subject: composeSubject || 'No Subject',
+          content: composeBody,
+          attachment: attachment ? attachment.name : null,
+        });
+      } else if (selectedMessage) {
+        // Reply: send back to the original sender
+        await sendMessage({
+          recipient_id: selectedMessage.sender_id,
+          subject: `Re: ${selectedMessage.subject}`,
+          content: composeBody,
+          attachment: attachment ? attachment.name : null,
+        });
+      }
+      setComposeBody('');
+      setComposeSubject('');
+      setIsComposing(false);
+      removeAttachment();
+    } catch (e) {
+      setSendError('Failed to send. Please try again.');
+    }
   };
 
   const formatTime = (isoString) => {
@@ -113,6 +124,11 @@ export default function Messages() {
     }
     return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
   };
+
+  // Helper to normalise field names between old mock format and real API format
+  const getSender = (msg) => msg.sender_name || msg.sender || 'Unknown';
+  const getAvatar = (msg) => `https://api.dicebear.com/7.x/avataaars/svg?seed=${getSender(msg)}`;
+  const isUnread = (msg) => msg.is_read === false || msg.isRead === false;
 
   return (
     <div className="messages-layout">
@@ -160,27 +176,24 @@ export default function Messages() {
             {filteredMessages.length === 0 ? (
               <div className="no-messages">
                 <p style={{marginBottom: 16}}>No messages found.</p>
-                {searchQuery === '' && messages.length === 0 && (
-                  <button onClick={resetMessages} className="btn btn-primary">Restore Dummy Messages</button>
-                )}
               </div>
             ) : (
               filteredMessages.map(msg => (
                 <div 
                   key={msg.id} 
-                  className={`message-item ${msg.id === selectedId && !isComposing ? 'selected' : ''} ${!msg.isRead ? 'unread' : ''}`}
+                  className={`message-item ${msg.id === selectedId && !isComposing ? 'selected' : ''} ${isUnread(msg) ? 'unread' : ''}`}
                   onClick={() => handleSelectMessage(msg.id)}
                 >
-                  <img src={msg.avatar} alt={msg.sender} className="message-avatar" />
+                  <img src={getAvatar(msg)} alt={getSender(msg)} className="message-avatar" />
                   <div className="message-preview">
                     <div className="message-sender-row">
-                      <span className="sender-name">{msg.sender}</span>
-                      <span className="message-time">{formatTime(msg.date)}</span>
+                      <span className="sender-name">{getSender(msg)}</span>
+                      <span className="message-time">{formatTime(msg.created_at || msg.date)}</span>
                     </div>
                     <div className="message-subject">{msg.subject}</div>
-                    <div className="message-snippet">{msg.content.substring(0, 60)}...</div>
+                    <div className="message-snippet">{(msg.content || '').substring(0, 60)}...</div>
                   </div>
-                  {!msg.isRead && <div className="unread-dot" />}
+                  {isUnread(msg) && <div className="unread-dot" />}
                 </div>
               ))
             )}
@@ -229,6 +242,7 @@ export default function Messages() {
               </div>
             )}
             
+            {sendError && <p style={{color: 'var(--danger)', fontSize: 13, marginTop: 8}}>{sendError}</p>}
             <div className="compose-actions">
               <div className="attachment-tools">
                 <input 
@@ -250,24 +264,24 @@ export default function Messages() {
         ) : selectedMessage ? (
           <div className="message-content-wrapper">
             <div className="message-detail-header">
-              <div className="detail-sender-info">
-                <img src={selectedMessage.avatar} alt={selectedMessage.sender} className="detail-avatar" />
-                <div>
-                  <h3>{selectedMessage.sender}</h3>
-                  <span className="sender-role">{selectedMessage.role} &bull; {selectedMessage.department}</span>
-                </div>
-              </div>
-              <div className="message-actions">
-                <button className="icon-btn" onClick={() => setComposeTo({name: selectedMessage.sender})}><Reply size={18} /></button>
-                <button className="icon-btn" onClick={() => { deleteMessage(selectedMessage.id); setSelectedId(null); }}><Trash2 size={18} /></button>
-                <button className="icon-btn"><MoreVertical size={18} /></button>
+            <div className="detail-sender-info">
+              <img src={getAvatar(selectedMessage)} alt={getSender(selectedMessage)} className="detail-avatar" />
+              <div>
+                <h3>{getSender(selectedMessage)}</h3>
+                <span className="sender-role">{selectedMessage.sender_role || selectedMessage.role} &bull; {selectedMessage.sender_dept || selectedMessage.department}</span>
               </div>
             </div>
-            
-            <div className="message-subject-lg">
-              <h2>{selectedMessage.subject}</h2>
-              <span className="detail-time"><Clock size={14} style={{marginRight: 4}}/> {new Date(selectedMessage.date).toLocaleString()}</span>
+            <div className="message-actions">
+              <button className="icon-btn" onClick={() => setComposeTo({id: selectedMessage.sender_id, name: getSender(selectedMessage)})}><Reply size={18} /></button>
+              <button className="icon-btn" onClick={() => { deleteMessage(selectedMessage.id); setSelectedId(null); }}><Trash2 size={18} /></button>
+              <button className="icon-btn"><MoreVertical size={18} /></button>
             </div>
+          </div>
+          
+          <div className="message-subject-lg">
+            <h2>{selectedMessage.subject}</h2>
+            <span className="detail-time"><Clock size={14} style={{marginRight: 4}}/> {new Date(selectedMessage.created_at || selectedMessage.date).toLocaleString()}</span>
+          </div>
             
             <div className="message-body">
               {selectedMessage.content.split('\n').map((line, i) => (

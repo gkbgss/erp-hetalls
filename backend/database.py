@@ -95,6 +95,21 @@ class Employee(Base):
     join_date     = Column(DateTime, default=datetime.utcnow)
     is_active     = Column(Boolean, default=True)
 
+class Message(Base):
+    __tablename__ = "messages"
+    id            = Column(Integer, primary_key=True, index=True)
+    sender_id     = Column(Integer, nullable=False)
+    sender_name   = Column(String, nullable=False)
+    sender_role   = Column(String, default="")
+    sender_dept   = Column(String, default="")
+    recipient_id  = Column(Integer, nullable=False)
+    subject       = Column(String, default="")
+    content       = Column(Text, nullable=False)
+    attachment    = Column(String, nullable=True)
+    is_read       = Column(Boolean, default=False)
+    created_at    = Column(DateTime, default=datetime.utcnow)
+
+
 import contextvars
 from sqlalchemy import event
 from sqlalchemy.orm.attributes import get_history

@@ -19,8 +19,8 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 @router.get("/", response_model=List[UserOut])
-def list_users(db: Session = Depends(get_db), current_user=Depends(require_roles("admin", "hr"))):
-    return db.query(User).all()
+def list_users(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    return db.query(User).filter(User.is_active == True).all()
 
 @router.put("/{user_id}", response_model=UserOut)
 def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db), current_user=Depends(require_roles("admin"))):
