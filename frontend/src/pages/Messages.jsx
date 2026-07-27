@@ -1,8 +1,8 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useMessages } from '../context/MessagesContext';
-import { Search, Mail, Clock, Trash2, Reply, MoreVertical, Plus, Users, Paperclip, X, Image as ImageIcon, Send, CheckCircle } from 'lucide-react';
+import { Search, MessageSquare, Clock, Trash2, MoreVertical, Plus, Users, Paperclip, X, Image as ImageIcon, Send, CheckCircle } from 'lucide-react';
 import '../index.css';
 
 const API = import.meta.env.VITE_API_URL || '';
@@ -11,27 +11,22 @@ export default function Messages() {
   const { user } = useAuth();
   const { messages, markAsRead, deleteMessage, sendMessage } = useMessages();
 
-  const [tab, setTab] = useState('inbox');           // 'inbox' | 'sent'
   const [sentMessages, setSentMessages] = useState([]);
-  const [selectedId, setSelectedId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [users, setUsers] = useState([]);
   const [showDirectory, setShowDirectory] = useState(false);
-  const [isComposing, setIsComposing] = useState(false);
-  const [composeTo, setComposeTo] = useState(null);
-  const [composeSubject, setComposeSubject] = useState('');
+  const [selectedPartner, setSelectedPartner] = useState(null);
+  
   const [composeBody, setComposeBody] = useState('');
   const [attachment, setAttachment] = useState(null);
   const [sendError, setSendError] = useState('');
-  const [sendSuccess, setSendSuccess] = useState('');
   const fileInputRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
-  // Fetch registered users for directory
   useEffect(() => {
     axios.get(`${API}/api/users/`).then(res => setUsers(res.data)).catch(() => {});
   }, []);
 
-  // Fetch sent messages
   const fetchSent = () => {
     axios.get(`${API}/api/messages/sent`).then(res => setSentMessages(res.data)).catch(() => {});
   };
@@ -41,36 +36,57 @@ export default function Messages() {
     return () => clearInterval(id);
   }, []);
 
-  const activeList = tab === 'inbox' ? messages : sentMessages;
+  const combined = [
+    ...messages.map(m => ({ ...m, type: 'received', partnerId: m.sender_id, partnerName: m.sender_name || m.sender })),
+    ...sentMessages.map(m => ({ ...m, type: 'sent', partnerId: m.recipient_id, partnerName: m.recipient_name }))
+  ].sort((a, b) => new Date(a.created_at || a.date) - new Date(b.created_at || b.date));
 
-  const filteredMessages = activeList.filter(m => {
-    const name = tab === 'inbox'
-      ? (m.sender_name || m.sender || '').toLowerCase()
-      : (m.recipient_name || '').toLowerCase();
-    const subject = (m.subject || '').toLowerCase();
-    const q = searchQuery.toLowerCase();
-    return name.includes(q) || subject.includes(q);
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [combined.length, selectedPartner]);
+
+  useEffect(() => {
+    if (selectedPartner) {
+      const unreadReceived = messages.filter(m => m.sender_id === selectedPartner.id && !m.is_read);
+      unreadReceived.forEach(m => markAsRead(m.id));
+    }
+  }, [selectedPartner, messages, markAsRead]);
+
+  const conversationsMap = new Map();
+  combined.forEach(m => {
+    const partnerId = m.partnerId;
+    if (!conversationsMap.has(partnerId)) {
+      conversationsMap.set(partnerId, {
+        id: partnerId,
+        name: m.partnerName || 'Unknown User',
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${m.partnerName || 'Unknown'}`,
+        latestMessage: m,
+        unreadCount: 0
+      });
+    } else {
+      const conv = conversationsMap.get(partnerId);
+      conv.latestMessage = m;
+    }
+  });
+  
+  messages.forEach(m => {
+    if (!m.is_read && conversationsMap.has(m.sender_id)) {
+      conversationsMap.get(m.sender_id).unreadCount += 1;
+    }
   });
 
-  const selectedMessage = activeList.find(m => m.id === selectedId);
+  const conversations = Array.from(conversationsMap.values())
+    .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a, b) => new Date(b.latestMessage.created_at || b.latestMessage.date) - new Date(a.latestMessage.created_at || a.latestMessage.date));
 
-  const handleSelectMessage = (id) => {
-    setIsComposing(false);
+  const handleSelectPartner = (partner) => {
+    setSelectedPartner(partner);
     setShowDirectory(false);
-    setSelectedId(id);
-    if (tab === 'inbox') markAsRead(id);
-  };
-
-  const startNewMessage = (targetUser) => {
-    setComposeTo(targetUser);
-    setIsComposing(true);
-    setShowDirectory(false);
-    setSelectedId(null);
-    setComposeSubject('');
     setComposeBody('');
     removeAttachment();
     setSendError('');
-    setSendSuccess('');
   };
 
   const handleAttachment = (e) => {
@@ -90,34 +106,20 @@ export default function Messages() {
   };
 
   const handleSend = async () => {
-    if (!composeBody.trim()) return;
+    if (!composeBody.trim() || !selectedPartner) return;
     setSendError('');
-    setSendSuccess('');
     try {
-      const recipientId = isComposing ? composeTo?.id : selectedMessage?.sender_id;
-      if (!recipientId) { setSendError('No recipient selected.'); return; }
       await sendMessage({
-        recipient_id: recipientId,
-        subject: isComposing ? (composeSubject || 'No Subject') : `Re: ${selectedMessage?.subject}`,
+        recipient_id: selectedPartner.id,
+        subject: "Chat Message",
         content: composeBody,
         attachment: attachment ? attachment.name : null,
       });
       fetchSent();
-      setSendSuccess(`Message sent to ${isComposing ? composeTo?.name : selectedMessage?.sender_name || 'recipient'}!`);
       setComposeBody('');
-      setComposeSubject('');
-      setIsComposing(false);
       removeAttachment();
-      setTab('sent');
     } catch (e) {
-      const status = e?.response?.status;
-      if (status === 404) {
-        setSendError('Server is still deploying (route not ready). Wait 2-3 min and refresh.');
-      } else if (status === 401) {
-        setSendError('Session expired. Please refresh the page and log in again.');
-      } else {
-        setSendError('Failed to send: ' + (e?.response?.data?.detail || e?.message || 'Unknown error'));
-      }
+      setSendError('Failed to send. Please try again.');
     }
   };
 
@@ -125,254 +127,201 @@ export default function Messages() {
     const d = new Date(iso);
     const t = new Date();
     if (d.toDateString() === t.toDateString()) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
-
-  const getSender = (msg) => msg.sender_name || msg.sender || 'Unknown';
+  
   const getAvatar = (seed) => `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
-  const isUnread = (msg) => msg.is_read === false;
+
+  const currentChatMessages = selectedPartner ? combined.filter(m => m.partnerId === selectedPartner.id) : [];
 
   return (
-    <div className="messages-layout">
-      {/* Left Pane */}
-      <div className="messages-sidebar card">
-        <div className="messages-header">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h2>Messages</h2>
+    <div className="messages-layout" style={{ height: 'calc(100vh - 40px)', display: 'flex', gap: 24 }}>
+      {/* Left Pane - Chat List */}
+      <div className="messages-sidebar card" style={{ display: 'flex', flexDirection: 'column' }}>
+        <div className="messages-header" style={{ paddingBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h2>Chats</h2>
             <button
               className={`icon-btn ${showDirectory ? 'active' : ''}`}
-              onClick={() => { setShowDirectory(!showDirectory); setIsComposing(false); }}
-              title="New Message"
+              onClick={() => setShowDirectory(!showDirectory)}
+              title="New Chat"
+              style={{ background: 'var(--gold)', color: '#000', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               <Plus size={20} />
             </button>
           </div>
 
-          {/* Inbox / Sent Tabs */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-            <button
-              onClick={() => { setTab('inbox'); setSelectedId(null); setShowDirectory(false); }}
-              style={{
-                flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                background: tab === 'inbox' ? 'rgba(255,255,255,0.12)' : 'transparent',
-                color: tab === 'inbox' ? '#fff' : 'var(--text-muted)',
-              }}
-            >
-              Inbox {messages.filter(m => !m.is_read).length > 0 && (
-                <span style={{ background: 'var(--danger)', color: '#fff', fontSize: 11, borderRadius: 10, padding: '1px 6px', marginLeft: 4 }}>
-                  {messages.filter(m => !m.is_read).length}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => { setTab('sent'); setSelectedId(null); setShowDirectory(false); }}
-              style={{
-                flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                background: tab === 'sent' ? 'rgba(255,255,255,0.12)' : 'transparent',
-                color: tab === 'sent' ? '#fff' : 'var(--text-muted)',
-              }}
-            >
-              Sent {sentMessages.length > 0 && (
-                <span style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 11, borderRadius: 10, padding: '1px 6px', marginLeft: 4 }}>
-                  {sentMessages.length}
-                </span>
-              )}
-            </button>
-          </div>
-
           <div className="search-box">
             <Search size={16} />
-            <input type="text" placeholder="Search messages..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+            <input type="text" placeholder="Search chats..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
           </div>
         </div>
 
-        {showDirectory ? (
-          <div className="user-directory">
-            <div style={{ padding: '10px 20px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-              <Users size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} /> REGISTERED USERS
-            </div>
-            {users.map(u => (
-              <div key={u.id || u.email} className="directory-item" onClick={() => startNewMessage(u)}>
-                <img src={getAvatar(u.name)} alt={u.name} className="message-avatar" />
-                <div className="directory-info">
-                  <span className="sender-name">{u.name}</span>
-                  <span className="sender-role" style={{ fontSize: '0.75rem' }}>{u.role} &bull; {u.department}</span>
-                </div>
+        <div className="message-list" style={{ flex: 1, overflowY: 'auto' }}>
+          {showDirectory ? (
+            <div className="user-directory">
+              <div style={{ padding: '10px 20px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                <Users size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} /> DIRECTORY
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="message-list">
-            {filteredMessages.length === 0 ? (
-              <div className="no-messages">
-                <p style={{ marginBottom: 16 }}>
-                  {tab === 'sent' ? 'No sent messages yet.' : 'No messages found.'}
-                </p>
-                {tab === 'sent' && (
-                  <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Click <strong>+</strong> to send your first message.</p>
-                )}
-              </div>
-            ) : (
-              filteredMessages.map(msg => (
-                <div
-                  key={msg.id}
-                  className={`message-item ${msg.id === selectedId && !isComposing ? 'selected' : ''} ${tab === 'inbox' && isUnread(msg) ? 'unread' : ''}`}
-                  onClick={() => handleSelectMessage(msg.id)}
-                >
-                  <img src={getAvatar(tab === 'inbox' ? getSender(msg) : (msg.recipient_name || 'User'))} alt="" className="message-avatar" />
-                  <div className="message-preview">
-                    <div className="message-sender-row">
-                      <span className="sender-name">
-                        {tab === 'inbox' ? getSender(msg) : `To: ${msg.recipient_name || 'User'}`}
-                      </span>
-                      <span className="message-time">{formatTime(msg.created_at || msg.date)}</span>
-                    </div>
-                    <div className="message-subject">{msg.subject}</div>
-                    <div className="message-snippet">{(msg.content || '').substring(0, 60)}...</div>
+              {users.map(u => (
+                <div key={u.id} className="directory-item" onClick={() => handleSelectPartner({ id: u.id, name: u.name, avatar: getAvatar(u.name) })}>
+                  <img src={getAvatar(u.name)} alt={u.name} className="message-avatar" />
+                  <div className="directory-info">
+                    <span className="sender-name">{u.name}</span>
+                    <span className="sender-role" style={{ fontSize: '0.75rem' }}>{u.role}</span>
                   </div>
-                  {tab === 'inbox' && isUnread(msg) && <div className="unread-dot" />}
                 </div>
-              ))
-            )}
-          </div>
-        )}
+              ))}
+            </div>
+          ) : (
+            <>
+              {conversations.length === 0 ? (
+                <div className="no-messages" style={{ textAlign: 'center', marginTop: 40, color: 'var(--text-muted)' }}>
+                  <MessageSquare size={32} style={{ opacity: 0.5, marginBottom: 12 }} />
+                  <p>No active chats.</p>
+                  <p style={{ fontSize: 13 }}>Click + to start a new conversation.</p>
+                </div>
+              ) : (
+                conversations.map(conv => (
+                  <div
+                    key={conv.id}
+                    className={`message-item ${selectedPartner?.id === conv.id ? 'selected' : ''}`}
+                    onClick={() => handleSelectPartner(conv)}
+                    style={{ position: 'relative', padding: '16px 20px' }}
+                  >
+                    <img src={conv.avatar} alt={conv.name} className="message-avatar" />
+                    <div className="message-preview" style={{ flex: 1, overflow: 'hidden' }}>
+                      <div className="message-sender-row">
+                        <span className="sender-name" style={{ color: conv.unreadCount > 0 ? '#fff' : 'inherit' }}>{conv.name}</span>
+                        <span className="message-time">{formatTime(conv.latestMessage.created_at || conv.latestMessage.date).split(' ')[0]}</span>
+                      </div>
+                      <div className="message-snippet" style={{ color: conv.unreadCount > 0 ? '#fff' : 'var(--text-muted)', fontWeight: conv.unreadCount > 0 ? 500 : 400 }}>
+                        {conv.latestMessage.type === 'sent' ? 'You: ' : ''}{(conv.latestMessage.content || '').substring(0, 40)}...
+                      </div>
+                    </div>
+                    {conv.unreadCount > 0 && (
+                      <div style={{ background: 'var(--gold)', color: '#000', fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 12, position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)' }}>
+                        {conv.unreadCount}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Right Pane */}
-      <div className="message-detail-pane card">
-        {sendSuccess && (
-          <div style={{
-            position: 'absolute', top: 24, right: 24, zIndex: 100,
-            background: 'rgba(16, 185, 129, 0.2)', border: '1px solid #10b981',
-            borderRadius: 12, padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10,
-            color: '#10b981', fontSize: 14, fontWeight: 600,
-          }}>
-            <CheckCircle size={18} /> {sendSuccess}
-          </div>
-        )}
-
-        {isComposing ? (
-          <div className="compose-wrapper">
-            <div className="compose-header">
-              <h3>New Message</h3>
-              <button className="icon-btn" onClick={() => setIsComposing(false)}><X size={20} /></button>
-            </div>
-            <div className="compose-field">
-              <label>To:</label>
-              <div className="compose-recipient">
-                <img src={getAvatar(composeTo?.name)} alt="" className="detail-avatar" style={{ width: 24, height: 24 }} />
-                <span>{composeTo?.name}</span>
-              </div>
-            </div>
-            <div className="compose-field">
-              <label>Subject:</label>
-              <input type="text" placeholder="Message Subject" value={composeSubject} onChange={e => setComposeSubject(e.target.value)} />
-            </div>
-            <div className="compose-body">
-              <textarea placeholder="Write your message..." value={composeBody} onChange={e => setComposeBody(e.target.value)} />
-            </div>
-            {attachment && (
-              <div className="attachment-preview">
-                <Paperclip size={14} />
-                <span className="attachment-name">{attachment.name}</span>
-                <span className="attachment-size">({(attachment.size / 1024 / 1024).toFixed(2)} MB)</span>
-                <button className="icon-btn" onClick={removeAttachment}><X size={14} /></button>
-              </div>
-            )}
-            {sendError && <p style={{ color: 'var(--danger)', fontSize: 13 }}>{sendError}</p>}
-            <div className="compose-actions">
-              <div className="attachment-tools">
-                <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleAttachment} />
-                <button className="icon-btn" onClick={() => fileInputRef.current?.click()} title="Attach File (< 10MB)"><Paperclip size={18} /></button>
-                <button className="icon-btn" onClick={() => fileInputRef.current?.click()} title="Attach Image (< 10MB)"><ImageIcon size={18} /></button>
-              </div>
-              <button className="btn btn-primary" onClick={handleSend} disabled={!composeBody.trim()}>
-                <Send size={15} style={{ marginRight: 6 }} /> Send Message
-              </button>
-            </div>
-          </div>
-        ) : selectedMessage ? (
-          <div className="message-content-wrapper">
-            <div className="message-detail-header">
-              <div className="detail-sender-info">
-                <img src={getAvatar(tab === 'inbox' ? getSender(selectedMessage) : (selectedMessage.recipient_name || 'User'))} alt="" className="detail-avatar" />
+      {/* Right Pane - Chat History */}
+      <div className="message-detail-pane card" style={{ display: 'flex', flexDirection: 'column' }}>
+        {selectedPartner ? (
+          <>
+            {/* Chat Header */}
+            <div className="chat-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <img src={selectedPartner.avatar} alt={selectedPartner.name} style={{ width: 40, height: 40, borderRadius: '50%' }} />
                 <div>
-                  <h3>{tab === 'inbox' ? getSender(selectedMessage) : `To: ${selectedMessage.recipient_name || 'User'}`}</h3>
-                  <span className="sender-role">
-                    {tab === 'inbox'
-                      ? `${selectedMessage.sender_role || ''} � ${selectedMessage.sender_dept || ''}`
-                      : `Sent ${new Date(selectedMessage.created_at).toLocaleString()}`}
-                  </span>
+                  <h3 style={{ margin: 0, fontSize: 16 }}>{selectedPartner.name}</h3>
                 </div>
               </div>
-              <div className="message-actions">
-                {tab === 'inbox' && (
-                  <button className="icon-btn" title="Reply" onClick={() => {
-                    setComposeTo({ id: selectedMessage.sender_id, name: getSender(selectedMessage) });
-                    setIsComposing(true);
-                    setComposeSubject(`Re: ${selectedMessage.subject}`);
-                    setComposeBody('');
-                    setSelectedId(null);
-                  }}><Reply size={18} /></button>
-                )}
-                <button className="icon-btn" onClick={() => { deleteMessage(selectedMessage.id); setSelectedId(null); }}><Trash2 size={18} /></button>
-                <button className="icon-btn"><MoreVertical size={18} /></button>
-              </div>
+              <button className="icon-btn" onClick={() => setSelectedPartner(null)}><X size={20} /></button>
             </div>
 
-            <div className="message-subject-lg">
-              <h2>{selectedMessage.subject}</h2>
-              <span className="detail-time"><Clock size={14} style={{ marginRight: 4 }} /> {new Date(selectedMessage.created_at || selectedMessage.date).toLocaleString()}</span>
+            {/* Chat Bubbles Area */}
+            <div className="chat-history" style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {currentChatMessages.length === 0 ? (
+                <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <p>No messages yet. Send a message to start the conversation!</p>
+                </div>
+              ) : (
+                currentChatMessages.map(msg => {
+                  const isSent = msg.type === 'sent';
+                  return (
+                    <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isSent ? 'flex-end' : 'flex-start', maxWidth: '100%' }}>
+                      <div style={{
+                        background: isSent ? 'var(--gold)' : 'rgba(255,255,255,0.08)',
+                        color: isSent ? '#000' : '#fff',
+                        padding: '12px 16px',
+                        borderRadius: isSent ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                        maxWidth: '75%',
+                        lineHeight: 1.5,
+                        position: 'relative'
+                      }}>
+                        {msg.content.split('\n').map((line, i) => (
+                          <span key={i}>{line}<br/></span>
+                        ))}
+                        {msg.attachment && (
+                          <div style={{ marginTop: 8, padding: 8, background: 'rgba(0,0,0,0.1)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                            <Paperclip size={14} /> {msg.attachment}
+                          </div>
+                        )}
+                      </div>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, padding: '0 4px' }}>
+                        {formatTime(msg.created_at || msg.date)}
+                      </span>
+                    </div>
+                  )
+                })
+              )}
+              <div ref={messagesEndRef} />
             </div>
 
-            <div className="message-body">
-              {selectedMessage.content.split('\n').map((line, i) => (
-                <p key={i} style={{ minHeight: '1em' }}>{line}</p>
-              ))}
-              {selectedMessage.attachment && (
-                <div className="message-attachment">
-                  <Paperclip size={16} />
-                  <span>{selectedMessage.attachment}</span>
+            {/* Compose Area */}
+            <div className="chat-compose" style={{ padding: '20px 24px', borderTop: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)' }}>
+              {attachment && (
+                <div className="attachment-preview" style={{ marginBottom: 12, background: 'rgba(255,255,255,0.05)', padding: '8px 12px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                  <Paperclip size={14} />
+                  <span className="attachment-name">{attachment.name}</span>
+                  <button className="icon-btn" onClick={removeAttachment} style={{ padding: 2 }}><X size={14} /></button>
                 </div>
               )}
-            </div>
-
-            {tab === 'inbox' && (
-              <div className="message-reply-box">
-                <textarea placeholder="Write a reply..." rows={4} value={composeBody} onChange={e => setComposeBody(e.target.value)} />
-                {attachment && (
-                  <div className="attachment-preview">
-                    <Paperclip size={14} />
-                    <span className="attachment-name">{attachment.name}</span>
-                    <span className="attachment-size">({(attachment.size / 1024 / 1024).toFixed(2)} MB)</span>
-                    <button className="icon-btn" onClick={removeAttachment}><X size={14} /></button>
-                  </div>
-                )}
-                {sendError && <p style={{ color: 'var(--danger)', fontSize: 13 }}>{sendError}</p>}
-                <div className="reply-actions" style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12 }}>
-                  <div className="attachment-tools">
-                    <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleAttachment} />
-                    <button className="icon-btn" onClick={() => fileInputRef.current?.click()} title="Attach File"><Paperclip size={18} /></button>
-                    <button className="icon-btn" onClick={() => fileInputRef.current?.click()} title="Attach Image"><ImageIcon size={18} /></button>
-                  </div>
-                  <button className="btn btn-primary" onClick={handleSend} disabled={!composeBody.trim()}>
-                    <Send size={15} style={{ marginRight: 6 }} /> Send Reply
-                  </button>
+              {sendError && <p style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 8 }}>{sendError}</p>}
+              
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, background: 'rgba(255,255,255,0.05)', padding: '12px 16px', borderRadius: 24, border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', gap: 4, paddingBottom: 4 }}>
+                  <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleAttachment} />
+                  <button className="icon-btn" onClick={() => fileInputRef.current?.click()} style={{ padding: 4 }} title="Attach File"><Paperclip size={18} /></button>
                 </div>
+                
+                <textarea 
+                  placeholder="Type a message..." 
+                  value={composeBody} 
+                  onChange={e => setComposeBody(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', resize: 'none', outline: 'none', minHeight: 24, maxHeight: 120, padding: '4px 0', fontFamily: 'inherit' }}
+                  rows={1}
+                />
+                
+                <button 
+                  onClick={handleSend} 
+                  disabled={!composeBody.trim()}
+                  style={{ 
+                    background: composeBody.trim() ? 'var(--gold)' : 'rgba(255,255,255,0.1)', 
+                    color: composeBody.trim() ? '#000' : 'rgba(255,255,255,0.4)', 
+                    border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: composeBody.trim() ? 'pointer' : 'default', transition: 'all 0.2s'
+                  }}
+                >
+                  <Send size={16} style={{ marginLeft: 2 }} />
+                </button>
               </div>
-            )}
-          </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginTop: 8 }}>
+                Press Enter to send, Shift + Enter for new line
+              </div>
+            </div>
+          </>
         ) : (
-          <div className="empty-state">
-            <Mail size={48} className="empty-icon" />
-            <h3>{tab === 'sent' ? 'No message selected' : 'Select a message'}</h3>
-            <p>Choose a message from the list to read it, or click the <Plus size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> icon to start a new chat.</p>
+          <div className="empty-state" style={{ margin: 'auto' }}>
+            <MessageSquare size={48} className="empty-icon" />
+            <h3>Your Chats</h3>
+            <p>Select a chat from the left or start a new conversation.</p>
           </div>
         )}
       </div>
     </div>
   );
 }
-
-
-
