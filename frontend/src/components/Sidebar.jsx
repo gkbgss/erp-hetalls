@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useMessages } from '../context/MessagesContext'
 import {
   LayoutDashboard, ShoppingCart, Package, DollarSign,
-  Users, BarChart2, Settings, LogOut, Layers, MessageSquare
+  Users, BarChart2, Settings, LogOut, Layers, MessageSquare, X
 } from 'lucide-react'
 
 const NAV = [
@@ -23,7 +23,7 @@ const NAV = [
   ]},
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const { user, logout } = useAuth()
   const { unreadCount } = useMessages()
   const navigate = useNavigate()
@@ -43,31 +43,48 @@ export default function Sidebar() {
     : 'U'
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-logo">
-        <div className="logo-mark">
-          <div className="logo-icon">R</div>
-          <div className="logo-text">
-            <h1>Hetalls ERP</h1>
-            <span>Management System</span>
+    <>
+      {sidebarOpen && (
+        <div 
+          className="mobile-backdrop" 
+          onClick={() => setSidebarOpen && setSidebarOpen(false)} 
+        />
+      )}
+      <aside className={`sidebar ${sidebarOpen ? 'mobile-open' : ''}`}>
+        <div className="sidebar-logo">
+          <div className="logo-mark" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div className="logo-icon">H</div>
+              <div className="logo-text">
+                <h1>Hetalls ERP</h1>
+                <span>Management System</span>
+              </div>
+            </div>
+            <button 
+              className="mobile-close-btn" 
+              onClick={() => setSidebarOpen && setSidebarOpen(false)}
+              title="Close Menu"
+            >
+              <X size={20} />
+            </button>
           </div>
         </div>
-      </div>
 
-      <nav className="sidebar-nav">
-        {NAV.map(section => {
-          const visible = section.items.filter(i => canSee(i))
-          if (!visible.length) return null
-          return (
-            <div key={section.label}>
-              <div className="nav-section-label">{section.label}</div>
-              {visible.map(item => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end
-                  className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
-                >
+        <nav className="sidebar-nav">
+          {NAV.map(section => {
+            const visible = section.items.filter(i => canSee(i))
+            if (!visible.length) return null
+            return (
+              <div key={section.label}>
+                <div className="nav-section-label">{section.label}</div>
+                {visible.map(item => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end
+                    onClick={() => setSidebarOpen && setSidebarOpen(false)}
+                    className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+                  >
                   <item.icon size={17} />
                   {item.label}
                   {item.label === 'Messages' && unreadCount > 0 && (
@@ -107,5 +124,6 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   )
 }

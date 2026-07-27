@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { MessagesProvider } from './context/MessagesContext'
@@ -20,6 +21,7 @@ import './index.css'
 // ── Protected Layout ──────────────────────────────────────────────────
 function AppLayout() {
   const { user, loading } = useAuth()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   if (loading) return (
     <div className="page-loading" style={{ height: '100vh' }}>
@@ -30,9 +32,9 @@ function AppLayout() {
 
   return (
     <div className="app-layout">
-      <Sidebar />
+      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div className="main-content">
-        <Header />
+        <Header setSidebarOpen={setSidebarOpen} />
         <div className="page-body">
           <Routes>
             <Route path="/dashboard" element={<Dashboard />} />

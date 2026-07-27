@@ -30,7 +30,7 @@ export default function Login() {
 
       <div className="login-card">
         <div className="login-logo">
-          <div className="logo-big">R</div>
+          <div className="logo-big">H</div>
           <h1>Hetalls ERP</h1>
           <p>Enterprise Resource Planning System</p>
         </div>

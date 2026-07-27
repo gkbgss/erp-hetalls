@@ -1,5 +1,6 @@
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { Menu } from 'lucide-react'
 
 const PAGE_TITLES = {
   '/dashboard': { title: 'Dashboard',   sub: 'Welcome back — here\'s your business overview' },
@@ -12,7 +13,7 @@ const PAGE_TITLES = {
   '/settings':  { title: 'Settings',    sub: 'System configuration & user management' },
 }
 
-export default function Header() {
+export default function Header({ setSidebarOpen }) {
   const { pathname } = useLocation()
   const { user } = useAuth()
   const page = PAGE_TITLES[pathname] || { title: 'ERP', sub: '' }
@@ -20,9 +21,18 @@ export default function Header() {
 
   return (
     <header className="header">
-      <div className="header-left">
-        <h2>{page.title}</h2>
-        <p>{page.sub}</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <button 
+          className="mobile-menu-btn"
+          onClick={() => setSidebarOpen && setSidebarOpen(true)}
+          title="Open Menu"
+        >
+          <Menu size={22} />
+        </button>
+        <div className="header-left">
+          <h2>{page.title}</h2>
+          <p>{page.sub}</p>
+        </div>
       </div>
       <div className="header-right">
         <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{now}</span>
