@@ -579,16 +579,6 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', background: 'rgba(15, 23, 42, 0.7)', border: '1px solid var(--border)', padding: '10px 18px', borderRadius: '12px', backdropFilter: 'blur(16px)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>
-          <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 12px #10b981', animation: 'pulse 2s infinite' }}></span>
-          <span>Live Google Sheet Feed Active <span style={{ color: '#10b981', fontWeight: 700 }}>• Auto-refreshing every 5s</span></span>
-        </div>
-        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-          Last updated: <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{lastRefreshed ? lastRefreshed.toLocaleTimeString() : 'Just now'}</span>
-        </div>
-      </div>
-
       {/* KPI Grid */}
       <div className="kpi-grid">
         {shiftedElements}
