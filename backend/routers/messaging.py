@@ -9,16 +9,39 @@ import uuid
 import os
 import shutil
 
+from utils.drive import upload_to_drive, download_from_drive, get_file_metadata
+from utils.encryption import encrypt_data, decrypt_data
+from fastapi.responses import StreamingResponse
+import io
+
 router = APIRouter(prefix="/api/messages", tags=["messages"])
 
 @router.post("/upload")
-def upload_file(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
-    ext = file.filename.split('.')[-1] if '.' in file.filename else ''
-    filename = f"{uuid.uuid4().hex}.{ext}" if ext else uuid.uuid4().hex
-    filepath = os.path.join("uploads", filename)
-    with open(filepath, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    return {"url": f"/uploads/{filename}", "name": file.filename}
+async def upload_file(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
+    file_bytes = await file.read()
+    encrypted_bytes = encrypt_data(file_bytes)
+    
+    try:
+        drive_file_id = upload_to_drive(encrypted_bytes, file.filename)
+        return {"url": f"/api/messages/download/{drive_file_id}", "name": file.filename}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/download/{file_id}")
+def download_file(file_id: str, current_user: User = Depends(get_current_user)):
+    try:
+        metadata = get_file_metadata(file_id)
+        encrypted_bytes = download_from_drive(file_id)
+        decrypted_bytes = decrypt_data(encrypted_bytes)
+        
+        return StreamingResponse(
+            io.BytesIO(decrypted_bytes), 
+            media_type=metadata.get('mimeType', 'application/octet-stream'),
+            headers={"Content-Disposition": f"inline; filename=\"{metadata.get('name', 'download')}\""}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 class MessageCreate(BaseModel):
     recipient_id: int

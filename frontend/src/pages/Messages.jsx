@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useMessages } from '../context/MessagesContext';
-import { Search, MessageSquare, Clock, Trash2, MoreVertical, Plus, Users, Paperclip, X, Image as ImageIcon, Send, CheckCircle } from 'lucide-react';
+import { Search, MessageSquare, Clock, Trash2, MoreVertical, Plus, Users, Paperclip, X, Image as ImageIcon, Send, CheckCircle , Mic, Square} from 'lucide-react';
 import '../index.css';
 
 const API = import.meta.env.VITE_API_URL || '';
@@ -21,6 +21,13 @@ export default function Messages() {
   const [attachment, setAttachment] = useState(null);
   const [sendError, setSendError] = useState('');
   const fileInputRef = useRef(null);
+
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const timerIntervalRef = useRef(null);
+
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -98,6 +105,55 @@ export default function Messages() {
       return;
     }
     setAttachment(file);
+  };
+
+  
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const file = new File([audioBlob], `voice_memo_${Date.now()}.webm`, { type: 'audio/webm' });
+        setAttachment(file);
+        stream.getTracks().forEach(track => track.stop());
+      };
+      
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+      
+      timerIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      
+    } catch (err) {
+      console.error("Error accessing microphone", err);
+      alert("Could not access microphone. Please check permissions.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      clearInterval(timerIntervalRef.current);
+    }
+  };
+
+  const formatRecordingTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
   const removeAttachment = () => {
@@ -260,14 +316,18 @@ export default function Messages() {
                         {msg.content.split('\n').map((line, i) => (
                           <span key={i}>{line}<br/></span>
                         ))}
-                        {msg.attachment && (
+                        {msg.attachment && msg.attachment.endsWith('.webm') ? (
+                          <div style={{ marginTop: 8 }}>
+                            <audio controls src={msg.attachment.startsWith('/') ? `${API}${msg.attachment}` : msg.attachment} style={{ height: 32, maxWidth: 200 }} />
+                          </div>
+                        ) : msg.attachment ? (
                           <div style={{ marginTop: 8, padding: 8, background: 'rgba(0,0,0,0.1)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
                             <Paperclip size={14} /> 
                             <a href={msg.attachment.startsWith('/') ? `${API}${msg.attachment}` : '#'} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>
                               {msg.attachment.startsWith('/') ? 'View Attachment' : msg.attachment}
                             </a>
                           </div>
-                        )}
+                        ) : null}
                       </div>
                       <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, padding: '0 4px' }}>
                         {formatTime(msg.created_at || msg.date)}
@@ -294,6 +354,16 @@ export default function Messages() {
                 <div style={{ display: 'flex', gap: 4, paddingBottom: 4 }}>
                   <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleAttachment} />
                   <button className="icon-btn" onClick={() => fileInputRef.current?.click()} style={{ padding: 4 }} title="Attach File"><Paperclip size={18} /></button>
+
+                {!isRecording ? (
+                  <button className="icon-btn" onClick={startRecording} style={{ padding: 4 }} title="Record Voice Memo"><Mic size={18} /></button>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--danger)' }}>
+                    <span style={{ fontSize: 13, fontWeight: 500, minWidth: 40 }}>{formatRecordingTime(recordingTime)}</span>
+                    <button className="icon-btn" onClick={stopRecording} style={{ padding: 4, color: 'var(--danger)' }} title="Stop Recording"><Square size={18} fill="currentColor" /></button>
+                  </div>
+                )}
+
                 </div>
                 
                 <textarea 
