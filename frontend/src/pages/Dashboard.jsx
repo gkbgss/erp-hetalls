@@ -654,25 +654,38 @@ export default function Dashboard() {
                   <table className="breakdown-table">
                     <thead>
                       <tr>
-                        <th rowSpan={2} className="sticky-col" style={{ verticalAlign: 'bottom' }}>Date</th>
-                        {getGroupedData().map((group, idx) => (
-                          <th key={idx} colSpan={group.columns.length} className="main-header">
-                            {group.header}
-                          </th>
-                        ))}
+                        <th rowSpan={2} className="date-header-col" style={{ verticalAlign: 'middle', textAlign: 'left', paddingLeft: '14px' }}>Date</th>
+                        {getGroupedData().map((group, idx) => {
+                          const isSingleEmptySub = group.columns.length === 1 && !group.columns[0].subHeader?.trim();
+                          return (
+                            <th 
+                              key={idx} 
+                              colSpan={isSingleEmptySub ? 1 : group.columns.length} 
+                              rowSpan={isSingleEmptySub ? 2 : 1}
+                              className="main-header"
+                              style={{ verticalAlign: 'middle', padding: '10px 14px' }}
+                            >
+                              {group.header || group.columns[0]?.subHeader || `Col ${idx + 1}`}
+                            </th>
+                          );
+                        })}
                       </tr>
                       <tr>
-                        {getGroupedData().flatMap(group => 
-                          group.columns.map(col => (
-                            <th key={col.colIndex}>{col.subHeader}</th>
-                          ))
-                        )}
+                        {getGroupedData().flatMap(group => {
+                          const isSingleEmptySub = group.columns.length === 1 && !group.columns[0].subHeader?.trim();
+                          if (isSingleEmptySub) return [];
+                          return group.columns.map(col => (
+                            <th key={col.colIndex} style={{ verticalAlign: 'middle', padding: '8px 12px' }}>
+                              {col.subHeader || '—'}
+                            </th>
+                          ));
+                        })}
                       </tr>
                     </thead>
                     <tbody>
                       {bdData.rows.map((row, rIdx) => (
                         <tr key={rIdx}>
-                          <td>{row[0] || `Row ${rIdx + 1}`}</td>
+                          <td style={{ whiteSpace: 'nowrap', fontWeight: 600, color: 'var(--text-primary)', paddingLeft: '14px' }}>{row[0] || `Row ${rIdx + 1}`}</td>
                           {getGroupedData().flatMap(group => 
                             group.columns.map(col => (
                               <td key={col.colIndex}>{row[col.colIndex] || '-'}</td>
