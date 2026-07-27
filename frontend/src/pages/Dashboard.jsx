@@ -600,26 +600,30 @@ export default function Dashboard() {
       {showBreakdown && (
         <div className="breakdown-overlay" onClick={() => setShowBreakdown(false)}>
           <div className="breakdown-modal" onClick={e => e.stopPropagation()}>
-            <div className="breakdown-modal-header">
+            <div className="breakdown-modal-header" style={{ position: 'relative', paddingRight: '44px' }}>
               <div>
-                <h3 style={{ fontSize: '18px', fontWeight: 700 }}>Daily Sale Brands & Portal</h3>
-                <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Daily Sale Brands & Portal</h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
                   {bdTab === 'all' && 'All Data'}
                   {bdTab.startsWith('month|') && `Month — ${bdTab.split('|')[1]}`}
                   {bdTab === 'custom' && `Custom — ${bdCustomDate} ${bdCustomEndDate ? 'to ' + bdCustomEndDate : ''}`}
                 </p>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                {!bdLoading && bdData && bdData.total_rows > 0 && (
-                  <div style={{ textAlign: 'right', background: 'rgba(245, 158, 11, 0.1)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Sales</div>
-                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#f59e0b' }}>
-                      ${calculateBdTotal().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </div>
+              <button 
+                onClick={() => setShowBreakdown(false)} 
+                style={{ position: 'absolute', top: 0, right: 0, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '6px', borderRadius: '6px' }}
+                title="Close"
+              >
+                <X size={22} />
+              </button>
+              {!bdLoading && bdData && bdData.total_rows > 0 && (
+                <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '6px 14px', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Sales</div>
+                  <div style={{ fontSize: '16px', fontWeight: 700, color: '#f59e0b' }}>
+                    ${calculateBdTotal().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
-                )}
-                <button onClick={() => setShowBreakdown(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20} /></button>
-              </div>
+                </div>
+              )}
             </div>
             <div className="breakdown-tabs">
               <button className={`breakdown-tab ${bdTab === 'all' ? 'active' : ''}`} onClick={() => handleBdTab('all')}><List size={14} /> All</button>

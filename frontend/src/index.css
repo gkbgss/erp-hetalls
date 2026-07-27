@@ -1070,6 +1070,12 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
     max-width: 100% !important;
     animation: slideDownTop 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
   }
+  .header-date {
+    display: none !important;
+  }
+  .chat-help-text {
+    display: none !important;
+  }
 }
 
 @media (max-width: 600px) {
@@ -1083,6 +1089,12 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
     padding: 3px 8px !important;
     font-size: 10px !important;
   }
+  .header-date {
+    display: none !important;
+  }
+  .chat-help-text {
+    display: none !important;
+  }
   .kpi-grid {
     grid-template-columns: 1fr !important;
   }
@@ -1092,6 +1104,10 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   .login-card {
     width: 90vw !important;
     padding: 24px 20px !important;
+  }
+  .breakdown-table th, .breakdown-table td {
+    padding: 8px 10px !important;
+    font-size: 12px !important;
   }
 }
 
@@ -1131,6 +1147,19 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(245, 158, 11, 0.5);
   color: #000 !important;
+}
+
+/* ─── Reports Company Grid Responsive ───────────────────────────────── */
+.reports-company-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+@media (max-width: 600px) {
+  .reports-company-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
 }
 
 

@@ -98,20 +98,21 @@ export default function DetailedBreakdown() {
         <div className="breakdown-overlay" onClick={() => setShowModal(false)}>
           <div className="breakdown-modal" onClick={e => e.stopPropagation()}>
             {/* Modal Header */}
-            <div className="breakdown-modal-header">
+            <div className="breakdown-modal-header" style={{ position: 'relative', paddingRight: '44px' }}>
               <div>
-                <h3 style={{ fontSize: '18px', fontWeight: 700 }}>Daily Sale Brands &amp; Portal</h3>
-                <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Daily Sale Brands &amp; Portal</h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
                   {activeTab === 'today' && `Today's Data — ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`}
                   {activeTab === 'all' && 'All Data'}
                   {activeTab === 'custom' && `Custom Date — ${customDate}`}
                 </p>
               </div>
               <button onClick={() => setShowModal(false)} style={{
+                position: 'absolute', top: 0, right: 0,
                 background: 'none', border: 'none', color: 'var(--text-muted)',
-                cursor: 'pointer', padding: '4px', borderRadius: '6px',
-              }}>
-                <X size={20} />
+                cursor: 'pointer', padding: '6px', borderRadius: '6px',
+              }} title="Close">
+                <X size={22} />
               </button>
             </div>
 

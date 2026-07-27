@@ -392,7 +392,7 @@ export default function Messages() {
                   <Send size={16} style={{ marginLeft: 2 }} />
                 </button>
               </div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginTop: 8 }}>
+              <div className="chat-help-text" style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginTop: 8 }}>
                 Press Enter to send, Shift + Enter for new line
               </div>
             </div>

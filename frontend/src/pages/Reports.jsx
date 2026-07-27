@@ -322,11 +322,7 @@ export default function Reports() {
           </button>
         </div>
         
-        <div style={{
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(4, 1fr)', 
-          gap: 20
-        }}>
+        <div className="reports-company-grid">
           {COMPANIES.map(co => (
             <div 
               key={co.name}

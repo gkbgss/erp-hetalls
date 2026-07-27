@@ -35,7 +35,7 @@ export default function Header({ setSidebarOpen }) {
         </div>
       </div>
       <div className="header-right">
-        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{now}</span>
+        <span className="header-date" style={{ fontSize: 12, color: 'var(--text-muted)' }}>{now}</span>
         <span 
           className="header-badge" 
           style={{ cursor: 'pointer' }}
