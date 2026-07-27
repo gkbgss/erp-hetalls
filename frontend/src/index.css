@@ -219,10 +219,10 @@ input, select, textarea { font-family: inherit; outline: none; }
   width: 36px; height: 36px; border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
 }
-.kpi-icon.gold    { background: rgba(245,158,11,0.15); color: var(--gold); }
-.kpi-icon.green   { background: rgba(16,185,129,0.15); color: var(--success); }
-.kpi-icon.red     { background: rgba(239,68,68,0.15);  color: var(--danger); }
-.kpi-icon.blue    { background: rgba(59,130,246,0.15); color: var(--info); }
+.kpi-icon.gold, .kpi-icon.warning { background: rgba(245,158,11,0.15); color: var(--gold); }
+.kpi-icon.green, .kpi-icon.success { background: rgba(16,185,129,0.15); color: var(--success); }
+.kpi-icon.red, .kpi-icon.danger { background: rgba(239,68,68,0.15);  color: var(--danger); }
+.kpi-icon.blue, .kpi-icon.info { background: rgba(59,130,246,0.15); color: var(--info); }
 
 .kpi-value  { font-size: 28px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
 .kpi-sub    { font-size: 12px; color: var(--text-muted); }

@@ -131,9 +131,7 @@ const PortalGrowthCard = ({ revenueChart, style = {} }) => {
                   label={p.name} 
                   value={`${isUp ? '+' : ''}${p.growth.toFixed(1)}%`} 
                   sub="Growth vs Last Month" 
-                  colorClass={isUp ? "success" : "danger"} 
-                  valueColor={isUp ? "#10b981" : "#ef4444"}
-                  trend={isUp ? "up" : "down"}
+                  colorClass={isUp ? "green" : "red"} 
                   format="text"
                 />
               </div>
