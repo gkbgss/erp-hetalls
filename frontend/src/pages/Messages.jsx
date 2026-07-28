@@ -19,8 +19,38 @@ export default function Messages() {
   
   const [composeBody, setComposeBody] = useState('');
   const [attachment, setAttachment] = useState(null);
+  const [attachmentPreviewUrl, setAttachmentPreviewUrl] = useState(null);
   const [sendError, setSendError] = useState('');
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (!attachment) {
+      setAttachmentPreviewUrl(null);
+      return;
+    }
+    if ((attachment.type && attachment.type.startsWith('image/')) || (attachment.name && attachment.name.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i))) {
+      try {
+        const url = URL.createObjectURL(attachment);
+        setAttachmentPreviewUrl(url);
+        return () => URL.revokeObjectURL(url);
+      } catch (e) {
+        setAttachmentPreviewUrl(null);
+      }
+    } else {
+      setAttachmentPreviewUrl(null);
+    }
+  }, [attachment]);
+
+  const isImageAttachment = (att) => {
+    if (!att) return false;
+    try {
+      const lower = decodeURIComponent(String(att)).toLowerCase();
+      return lower.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)($|\?|&)/) || lower.includes('image') || lower.includes('photo') || lower.includes('.jpg') || lower.includes('.png') || lower.includes('.jpeg') || lower.includes('.webp') || lower.includes('.gif');
+    } catch (e) {
+      const lower = String(att).toLowerCase();
+      return lower.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)($|\?|&)/) || lower.includes('.jpg') || lower.includes('.png') || lower.includes('.jpeg') || lower.includes('.webp') || lower.includes('.gif');
+    }
+  };
 
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -167,11 +197,12 @@ export default function Messages() {
 
   const removeAttachment = () => {
     setAttachment(null);
+    setAttachmentPreviewUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSend = async () => {
-    if (!composeBody.trim() || !selectedPartner) return;
+    if ((!composeBody.trim() && !attachment && !isRecording) || !selectedPartner) return;
     setSendError('');
     try {
       let attachmentUrl = null;
@@ -181,12 +212,15 @@ export default function Messages() {
         const res = await axios.post(`${API}/api/messages/upload`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
-        attachmentUrl = res.data.url;
+        const fileName = res.data.name || attachment.name || "file";
+        const sep = res.data.url.includes('?') ? '&' : '?';
+        attachmentUrl = `${res.data.url}${sep}filename=${encodeURIComponent(fileName)}`;
       }
+      const messageContent = composeBody.trim() || (attachment ? `Shared file: ${attachment.name}` : "Voice Memo");
       await sendMessage({
         recipient_id: selectedPartner.id,
         subject: "Chat Message",
-        content: composeBody,
+        content: messageContent,
         attachment: attachmentUrl,
       });
       fetchSent();
@@ -341,6 +375,26 @@ export default function Messages() {
                           <div style={{ marginTop: 8 }}>
                             <audio controls src={msg.attachment.startsWith('/') ? `${API}${msg.attachment}` : msg.attachment} style={{ height: 32, maxWidth: 200 }} />
                           </div>
+                        ) : isImageAttachment(msg.attachment) ? (
+                          <div style={{ marginTop: 8, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.15)', maxWidth: '100%', background: 'rgba(0,0,0,0.2)' }}>
+                            <a href={msg.attachment.startsWith('/') ? `${API}${msg.attachment}` : msg.attachment} target="_blank" rel="noopener noreferrer" style={{ display: 'block', cursor: 'pointer' }}>
+                              <img 
+                                src={msg.attachment.startsWith('/') ? `${API}${msg.attachment}` : msg.attachment} 
+                                alt="Shared attachment" 
+                                style={{ maxHeight: 260, maxWidth: '100%', objectFit: 'contain', display: 'block', margin: '0 auto', borderRadius: 6 }} 
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
+                                }}
+                              />
+                              <div style={{ display: 'none', padding: '8px 10px', alignItems: 'center', gap: 8, fontSize: 13, color: 'inherit' }}>
+                                <Paperclip size={15} style={{ flexShrink: 0 }} />
+                                <span style={{ textDecoration: 'underline', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {msg.attachment.startsWith('/') ? 'View Attachment' : msg.attachment}
+                                </span>
+                              </div>
+                            </a>
+                          </div>
                         ) : msg.attachment ? (
                           <div style={{ marginTop: 8, padding: '8px 10px', background: isSent ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.2)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, maxWidth: '100%', overflow: 'hidden' }}>
                             <Paperclip size={15} style={{ flexShrink: 0 }} /> 
@@ -373,10 +427,22 @@ export default function Messages() {
             {/* Compose Area */}
             <div className="chat-compose" style={{ padding: '20px 24px', borderTop: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)' }}>
               {attachment && (
-                <div className="attachment-preview" style={{ marginBottom: 12, background: 'rgba(255,255,255,0.05)', padding: '8px 12px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                  <Paperclip size={14} />
-                  <span className="attachment-name">{attachment.name}</span>
-                  <button className="icon-btn" onClick={removeAttachment} style={{ padding: 2 }}><X size={14} /></button>
+                <div className="attachment-preview" style={{ marginBottom: 12, background: 'rgba(255,255,255,0.08)', padding: '10px 14px', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 12, fontSize: 13, border: '1px solid var(--border)', maxWidth: 'fit-content' }}>
+                  {attachmentPreviewUrl ? (
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <img src={attachmentPreviewUrl} alt="upload preview" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', flexShrink: 0 }} />
+                      <div style={{ overflow: 'hidden' }}>
+                        <span className="attachment-name" style={{ fontWeight: 600, display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 220, color: '#fff' }}>{attachment.name}</span>
+                        <span style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 500 }}>Image Ready to Send</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Paperclip size={16} style={{ color: 'var(--gold)' }} />
+                      <span className="attachment-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 220, fontWeight: 500 }}>{attachment.name}</span>
+                    </div>
+                  )}
+                  <button className="icon-btn" onClick={removeAttachment} style={{ padding: 4, marginLeft: 8, background: 'rgba(255,255,255,0.1)', borderRadius: '50%', color: '#fff' }} title="Remove attachment"><X size={14} /></button>
                 </div>
               )}
               {sendError && <p style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 8 }}>{sendError}</p>}
