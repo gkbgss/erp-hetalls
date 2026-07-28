@@ -109,7 +109,7 @@ export default function HR() {
         </div>
 
         <div className="hr-search-row" style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <div className="hr-search-box" style={{ position: 'relative', flex: '1 1 280px', maxWidth: '100%' }}>
+          <div className="hr-search-box" style={{ position: 'relative', flex: '1 1 auto', minWidth: 280, maxWidth: '100%', height: 'auto' }}>
             <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
             <input
               type="text"

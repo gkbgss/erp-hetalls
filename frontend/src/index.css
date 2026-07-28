@@ -1280,6 +1280,9 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   .hr-search-box {
     max-width: 100% !important;
     width: 100% !important;
+    min-width: 100% !important;
+    flex: 0 0 auto !important;
+    height: auto !important;
   }
 }
 
