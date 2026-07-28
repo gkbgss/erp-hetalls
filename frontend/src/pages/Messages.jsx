@@ -313,7 +313,7 @@ export default function Messages() {
                 </div>
               ) : (
                 currentChatMessages.map(msg => {
-                  const isSent = msg.type === 'sent' || (user && (msg.sender_id === user.id || msg.sender === user.username || msg.sender === user.name || msg.sender_name === user.name || msg.is_outgoing === true));
+                  const isSent = msg.type === 'sent';
                   return (
                     <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isSent ? 'flex-end' : 'flex-start', maxWidth: '100%' }}>
                       <div style={{
