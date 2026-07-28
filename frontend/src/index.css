@@ -1286,4 +1286,47 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   }
 }
 
+/* ─── Chat UI Scrollbar Hiding & Header Consolidation ──────────────────── */
+.chat-history,
+.messages-sidebar,
+.message-detail-pane,
+.messages-layout {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.chat-history::-webkit-scrollbar,
+.messages-sidebar::-webkit-scrollbar,
+.message-detail-pane::-webkit-scrollbar,
+.messages-layout::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+@media (max-width: 768px) {
+  body.chat-active .header {
+    display: none !important;
+  }
+  body.chat-active .page-body {
+    padding: 0 !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+  }
+  body.chat-active .messages-layout {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border: none !important;
+  }
+  body.chat-active .message-detail-pane {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    border: none !important;
+  }
+}
+
 

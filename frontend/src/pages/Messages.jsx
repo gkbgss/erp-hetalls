@@ -61,6 +61,15 @@ export default function Messages() {
     }
   }, [selectedPartner, messages, markAsRead]);
 
+  useEffect(() => {
+    if (selectedPartner) {
+      document.body.classList.add('chat-active');
+    } else {
+      document.body.classList.remove('chat-active');
+    }
+    return () => document.body.classList.remove('chat-active');
+  }, [selectedPartner]);
+
   const conversationsMap = new Map();
   combined.forEach(m => {
     const partnerId = m.partnerId;
@@ -304,37 +313,56 @@ export default function Messages() {
                 </div>
               ) : (
                 currentChatMessages.map(msg => {
-                  const isSent = msg.type === 'sent';
+                  const isSent = msg.type === 'sent' || (user && (msg.sender_id === user.id || msg.sender === user.username || msg.sender === user.name || msg.sender_name === user.name || msg.is_outgoing === true));
                   return (
                     <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isSent ? 'flex-end' : 'flex-start', maxWidth: '100%' }}>
                       <div style={{
                         background: isSent ? 'var(--gold)' : 'rgba(255,255,255,0.08)',
                         color: isSent ? '#000' : '#fff',
-                        padding: '12px 16px',
+                        padding: '10px 14px 6px 14px',
                         borderRadius: isSent ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                        maxWidth: '75%',
-                        lineHeight: 1.5,
-                        position: 'relative'
+                        maxWidth: '85%',
+                        minWidth: '100px',
+                        lineHeight: 1.4,
+                        position: 'relative',
+                        wordBreak: 'break-word',
+                        overflowWrap: 'anywhere',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.15)'
                       }}>
-                        {msg.content.split('\n').map((line, i) => (
-                          <span key={i}>{line}<br/></span>
-                        ))}
+                        <div style={{ marginBottom: '4px' }}>
+                          {msg.content.split('\n').map((line, i) => (
+                            <React.Fragment key={i}>
+                              {line}
+                              {i < msg.content.split('\n').length - 1 && <br />}
+                            </React.Fragment>
+                          ))}
+                        </div>
                         {msg.attachment && msg.attachment.endsWith('.webm') ? (
                           <div style={{ marginTop: 8 }}>
                             <audio controls src={msg.attachment.startsWith('/') ? `${API}${msg.attachment}` : msg.attachment} style={{ height: 32, maxWidth: 200 }} />
                           </div>
                         ) : msg.attachment ? (
-                          <div style={{ marginTop: 8, padding: 8, background: 'rgba(0,0,0,0.1)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                            <Paperclip size={14} /> 
-                            <a href={msg.attachment.startsWith('/') ? `${API}${msg.attachment}` : '#'} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                          <div style={{ marginTop: 8, padding: '8px 10px', background: isSent ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.2)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, maxWidth: '100%', overflow: 'hidden' }}>
+                            <Paperclip size={15} style={{ flexShrink: 0 }} /> 
+                            <a href={msg.attachment.startsWith('/') ? `${API}${msg.attachment}` : '#'} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: 'calc(100% - 24px)', fontWeight: 500 }}>
                               {msg.attachment.startsWith('/') ? 'View Attachment' : msg.attachment}
                             </a>
                           </div>
                         ) : null}
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'flex-end',
+                          alignItems: 'center',
+                          marginTop: '4px',
+                          fontSize: '10px',
+                          opacity: isSent ? 0.65 : 0.5,
+                          fontWeight: 500,
+                          letterSpacing: '0.2px'
+                        }}>
+                          {formatTime(msg.created_at || msg.date)}
+                          {isSent && <CheckCircle size={11} style={{ marginLeft: '4px', opacity: 0.8 }} />}
+                        </div>
                       </div>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, padding: '0 4px' }}>
-                        {formatTime(msg.created_at || msg.date)}
-                      </span>
                     </div>
                   )
                 })
