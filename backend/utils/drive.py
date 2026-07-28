@@ -55,7 +55,7 @@ def upload_to_drive(file_data: bytes, filename: str) -> str:
             mime_type = 'application/octet-stream'
         files = {'fileToUpload': (filename, file_data, mime_type)}
         data = {'reqtype': 'fileupload'}
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+        headers = {'User-Agent': 'curl/7.88.1'}
         res = requests.post('https://catbox.moe/user/api.php', data=data, files=files, headers=headers, timeout=45)
         if res.status_code == 200 and res.text.startswith('http'):
             print(f"Successfully uploaded to Catbox Cloud CDN: {res.text.strip()}")
@@ -67,7 +67,7 @@ def upload_to_drive(file_data: bytes, filename: str) -> str:
     try:
         import requests
         files = {'file': (filename, file_data)}
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+        headers = {'User-Agent': 'curl/7.88.1'}
         res = requests.post('https://0x0.st', files=files, headers=headers, timeout=45)
         if res.status_code == 200 and res.text.startswith('http'):
             print(f"Successfully uploaded to 0x0.st Cloud CDN: {res.text.strip()}")
