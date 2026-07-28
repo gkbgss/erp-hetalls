@@ -19,11 +19,22 @@ router = APIRouter(prefix="/api/messages", tags=["messages"])
 @router.post("/upload")
 async def upload_file(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
     file_bytes = await file.read()
-    encrypted_bytes = encrypt_data(file_bytes)
     
     try:
-        drive_file_id = upload_to_drive(encrypted_bytes, file.filename)
-        return {"url": f"/api/messages/download/{drive_file_id}", "name": file.filename}
+        # Pass raw unencrypted bytes so unlimited cloud CDN (Catbox/0x0) can host clean playable MP4 videos and images!
+        file_url_or_id = upload_to_drive(file_bytes, file.filename)
+        if str(file_url_or_id).startswith("http://") or str(file_url_or_id).startswith("https://"):
+            return {"url": file_url_or_id, "name": file.filename}
+            
+        # For local disk fallback or Google Drive, encrypt bytes before saving to disk
+        encrypted_bytes = encrypt_data(file_bytes)
+        if str(file_url_or_id).startswith("local_"):
+            import os
+            from utils.drive import LOCAL_UPLOAD_DIR
+            with open(os.path.join(LOCAL_UPLOAD_DIR, f"{file_url_or_id}.dat"), "wb") as f:
+                f.write(encrypted_bytes)
+                
+        return {"url": f"/api/messages/download/{file_url_or_id}", "name": file.filename}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -31,8 +42,11 @@ async def upload_file(file: UploadFile = File(...), current_user: User = Depends
 def download_file(file_id: str):
     try:
         metadata = get_file_metadata(file_id)
-        encrypted_bytes = download_from_drive(file_id)
-        decrypted_bytes = decrypt_data(encrypted_bytes)
+        raw_bytes = download_from_drive(file_id)
+        try:
+            decrypted_bytes = decrypt_data(raw_bytes)
+        except Exception:
+            decrypted_bytes = raw_bytes
         
         return StreamingResponse(
             io.BytesIO(decrypted_bytes), 

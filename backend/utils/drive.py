@@ -28,7 +28,36 @@ def get_drive_service():
         return None
 
 def upload_to_drive(file_data: bytes, filename: str) -> str:
-    """Uploads file bytes to Google Drive and returns the file ID. Falls back to local storage if Drive is unavailable."""
+    """Uploads file bytes to free unlimited cloud CDNs (Catbox / 0x0) or Google Drive, returning direct public URL or ID."""
+    # Tier 1: Try Catbox.moe Unlimited Free Cloud CDN (up to 200MB per file, unlimited permanent storage)
+    try:
+        import requests
+        mime_type, _ = mimetypes.guess_type(filename)
+        if not mime_type:
+            mime_type = 'application/octet-stream'
+        files = {'fileToUpload': (filename, file_data, mime_type)}
+        data = {'reqtype': 'fileupload'}
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+        res = requests.post('https://catbox.moe/user/api.php', data=data, files=files, headers=headers, timeout=45)
+        if res.status_code == 200 and res.text.startswith('http'):
+            print(f"Successfully uploaded to Catbox Cloud CDN: {res.text.strip()}")
+            return res.text.strip()
+    except Exception as e:
+        print(f"Catbox cloud upload failed, trying backup CDN: {e}")
+
+    # Tier 2: Try 0x0.st Unlimited Free Cloud CDN (up to 512MB per file)
+    try:
+        import requests
+        files = {'file': (filename, file_data)}
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+        res = requests.post('https://0x0.st', files=files, headers=headers, timeout=45)
+        if res.status_code == 200 and res.text.startswith('http'):
+            print(f"Successfully uploaded to 0x0.st Cloud CDN: {res.text.strip()}")
+            return res.text.strip()
+    except Exception as e:
+        print(f"0x0.st cloud upload failed, trying Google Drive: {e}")
+
+    # Tier 3: Try Google Drive API
     service = get_drive_service()
     if service:
         try:
@@ -42,7 +71,7 @@ def upload_to_drive(file_data: bytes, filename: str) -> str:
         except Exception as e:
             print(f"Drive upload failed, falling back to local disk: {e}")
 
-    # Local disk fallback
+    # Tier 4: Local disk fallback
     file_id = f"local_{uuid.uuid4().hex}"
     file_path = os.path.join(LOCAL_UPLOAD_DIR, f"{file_id}.dat")
     meta_path = os.path.join(LOCAL_UPLOAD_DIR, f"{file_id}.meta")

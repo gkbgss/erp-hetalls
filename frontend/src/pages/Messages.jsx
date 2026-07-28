@@ -56,7 +56,7 @@ export default function Messages() {
       setAttachmentPreviewUrl(null);
       return;
     }
-    if ((attachment.type && attachment.type.startsWith('image/')) || (attachment.name && attachment.name.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i))) {
+    if ((attachment.type && (attachment.type.startsWith('image/') || attachment.type.startsWith('video/'))) || (attachment.name && attachment.name.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg|mp4|mov|avi|mkv|webm)$/i))) {
       try {
         const url = URL.createObjectURL(attachment);
         setAttachmentPreviewUrl(url);
@@ -77,6 +77,28 @@ export default function Messages() {
     } catch (e) {
       const lower = String(att).toLowerCase();
       return lower.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)($|\?|&)/) || lower.includes('.jpg') || lower.includes('.png') || lower.includes('.jpeg') || lower.includes('.webp') || lower.includes('.gif');
+    }
+  };
+
+  const isAudioAttachment = (att) => {
+    if (!att) return false;
+    try {
+      const lower = decodeURIComponent(String(att)).toLowerCase();
+      return lower.match(/\.(webm|mp3|wav|ogg|m4a|aac)($|\?|&)/) || lower.includes('voice_memo');
+    } catch (e) {
+      const lower = String(att).toLowerCase();
+      return lower.match(/\.(webm|mp3|wav|ogg|m4a|aac)($|\?|&)/) || lower.includes('voice_memo');
+    }
+  };
+
+  const isVideoAttachment = (att) => {
+    if (!att) return false;
+    try {
+      const lower = decodeURIComponent(String(att)).toLowerCase();
+      return lower.match(/\.(mp4|mov|avi|mkv|m4v)($|\?|&)/) && !isAudioAttachment(att);
+    } catch (e) {
+      const lower = String(att).toLowerCase();
+      return lower.match(/\.(mp4|mov|avi|mkv|m4v)($|\?|&)/) && !isAudioAttachment(att);
     }
   };
 
@@ -408,9 +430,13 @@ export default function Messages() {
                             </React.Fragment>
                           ))}
                         </div>
-                        {msg.attachment && msg.attachment.endsWith('.webm') ? (
+                        {isAudioAttachment(msg.attachment) ? (
                           <div style={{ marginTop: 8 }}>
-                            <audio controls src={msg.attachment.startsWith('/') ? `${API}${msg.attachment}` : msg.attachment} style={{ height: 32, maxWidth: 200 }} />
+                            <audio controls src={msg.attachment.startsWith('/') ? `${API}${msg.attachment}` : msg.attachment} style={{ height: 32, maxWidth: 220 }} />
+                          </div>
+                        ) : isVideoAttachment(msg.attachment) ? (
+                          <div style={{ marginTop: 8, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.15)', maxWidth: '100%', background: '#000' }}>
+                            <video controls src={msg.attachment.startsWith('/') ? `${API}${msg.attachment}` : msg.attachment} style={{ maxHeight: 300, maxWidth: '100%', display: 'block', margin: '0 auto', borderRadius: 6 }} />
                           </div>
                         ) : isImageAttachment(msg.attachment) ? (
                           <div style={{ marginTop: 8, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.15)', maxWidth: '100%', background: 'rgba(0,0,0,0.2)' }}>
@@ -435,7 +461,7 @@ export default function Messages() {
                         ) : msg.attachment ? (
                           <div style={{ marginTop: 8, padding: '8px 10px', background: isSent ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.2)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, maxWidth: '100%', overflow: 'hidden' }}>
                             <Paperclip size={15} style={{ flexShrink: 0 }} /> 
-                            <a href={msg.attachment.startsWith('/') ? `${API}${msg.attachment}` : '#'} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: 'calc(100% - 24px)', fontWeight: 500 }}>
+                            <a href={msg.attachment.startsWith('/') ? `${API}${msg.attachment}` : msg.attachment} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: 'calc(100% - 24px)', fontWeight: 500 }}>
                               {msg.attachment.startsWith('/') ? 'View Attachment' : msg.attachment}
                             </a>
                           </div>
@@ -467,10 +493,14 @@ export default function Messages() {
                 <div className="attachment-preview" style={{ marginBottom: 12, background: 'rgba(255,255,255,0.08)', padding: '10px 14px', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 12, fontSize: 13, border: '1px solid var(--border)', maxWidth: 'fit-content' }}>
                   {attachmentPreviewUrl ? (
                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <img src={attachmentPreviewUrl} alt="upload preview" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', flexShrink: 0 }} />
+                      {isVideoAttachment(attachment.name) ? (
+                        <video src={attachmentPreviewUrl} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', flexShrink: 0, background: '#000' }} />
+                      ) : (
+                        <img src={attachmentPreviewUrl} alt="upload preview" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', flexShrink: 0 }} />
+                      )}
                       <div style={{ overflow: 'hidden' }}>
                         <span className="attachment-name" style={{ fontWeight: 600, display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 220, color: '#fff' }}>{attachment.name}</span>
-                        <span style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 500 }}>Image Ready to Send</span>
+                        <span style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 500 }}>{isVideoAttachment(attachment.name) ? 'Video Ready to Send' : 'Image Ready to Send'}</span>
                       </div>
                     </div>
                   ) : (
