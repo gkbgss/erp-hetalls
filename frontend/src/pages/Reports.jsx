@@ -253,7 +253,7 @@ export default function Reports() {
     }
   }
 
-  const COMPANIES = [
+  const DEFAULT_COMPANIES = [
     { name: "Hetalls Global",  color: "#3b82f6" },
     { name: "MKM",             color: "#f59e0b" },
     { name: "Hetalls",         color: "#ef4444" },
@@ -263,6 +263,46 @@ export default function Reports() {
     { name: "MMCO",            color: "#ec4899" },
     { name: "HOMESPUN",        color: "#f97316" }
   ]
+
+  const [companiesList, setCompaniesList] = useState(() => {
+    const saved = localStorage.getItem('hetalls_reports_companies')
+    if (saved) {
+      try { return JSON.parse(saved) } catch (e) {}
+    }
+    return DEFAULT_COMPANIES
+  })
+
+  const [showRemoveMode, setShowRemoveMode] = useState(false)
+  const [tapCountRef] = useState({ count: 0, timer: null })
+
+  const handleSelectCompanyTap = () => {
+    tapCountRef.count += 1
+    if (tapCountRef.timer) clearTimeout(tapCountRef.timer)
+    if (tapCountRef.count >= 3) {
+      tapCountRef.count = 0
+      setShowRemoveMode(prev => !prev)
+    } else {
+      tapCountRef.timer = setTimeout(() => {
+        tapCountRef.count = 0
+      }, 500)
+    }
+  }
+
+  const handleRemoveCompany = (companyName, e) => {
+    if (e) e.stopPropagation()
+    const confirmMsg = `Remove "${companyName}" from this dashboard view?\n\nNote: This only hides the company card from your ERP interface. It will NOT physically delete your actual Google Sheet from your Google account or Drive.`
+    if (window.confirm(confirmMsg)) {
+      const nextList = companiesList.filter(c => c.name !== companyName)
+      setCompaniesList(nextList)
+      localStorage.setItem('hetalls_reports_companies', JSON.stringify(nextList))
+    }
+  }
+
+  const handleRestoreCompanies = () => {
+    setCompaniesList(DEFAULT_COMPANIES)
+    localStorage.removeItem('hetalls_reports_companies')
+    setShowRemoveMode(false)
+  }
 
   useEffect(() => {
     if (!selectedCompany) return
@@ -294,9 +334,25 @@ export default function Reports() {
       {!selectedCompany ? (
         <div style={{ maxWidth: 1150, margin: '40px auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30, flexWrap: 'wrap', gap: 16 }}>
-          <div>
-            <h2 style={{ fontSize: 24, marginBottom: 6, color: 'var(--text)' }}>Select Company</h2>
-            <p style={{ color: 'var(--text-muted)', margin: 0 }}>Choose a company to view its detailed reports and analytics.</p>
+          <div 
+            onClick={handleSelectCompanyTap} 
+            style={{ cursor: 'pointer', userSelect: 'none', padding: '4px 8px', margin: '-4px -8px', borderRadius: 8, transition: 'background 0.2s' }}
+            title="Tap 3 times to manage / remove companies"
+          >
+            <h2 style={{ fontSize: 24, marginBottom: 6, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              Select Company
+              {showRemoveMode && (
+                <span style={{ fontSize: 12, background: 'var(--danger)', color: '#fff', padding: '3px 10px', borderRadius: 12, fontWeight: 700, letterSpacing: '0.5px' }}>
+                  REMOVE MODE
+                </span>
+              )}
+            </h2>
+            <p style={{ color: 'var(--text-muted)', margin: 0, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              Choose a company to view its detailed reports and analytics.
+              <span style={{ fontSize: 11, background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: 4, opacity: 0.8 }}>
+                (Tap header 3x to remove company)
+              </span>
+            </p>
           </div>
           <button
             onClick={() => openPrintCenter("all", "All Companies")}
@@ -322,44 +378,170 @@ export default function Reports() {
           </button>
         </div>
         
-        <div className="reports-company-grid">
-          {COMPANIES.map(co => (
-            <div 
-              key={co.name}
-              onClick={() => { setSelectedCompany(co.name); setDeleteMode(false); }}
-              className="card"
-              style={{
-                cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                padding: '40px 20px',
-                transition: 'all 0.2s',
-                borderTop: `4px solid ${co.color}`
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)'
-                e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.1)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'none'
-                e.currentTarget.style.boxShadow = 'var(--shadow-sm)'
-              }}
-            >
-              <div style={{
-                background: `${co.color}20`,
-                color: co.color,
-                padding: 16,
-                borderRadius: '50%',
-                marginBottom: 16
-              }}>
-                <SpinOnHold><Building size={32} /></SpinOnHold>
+        {showRemoveMode && (
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.12)',
+            border: '1px solid var(--danger)',
+            borderRadius: 12,
+            padding: '16px 20px',
+            marginBottom: 24,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 12,
+            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Trash2 size={24} color="var(--danger)" style={{ flexShrink: 0 }} />
+              <div>
+                <strong style={{ color: 'var(--danger)', display: 'block', fontSize: 15 }}>Remove Company Option Active</strong>
+                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                  Click the <strong>trash icon</strong> on any card below to remove it from this dashboard. <strong>Your actual physical Google Sheets will NOT be deleted from your Google account or Drive.</strong>
+                </span>
               </div>
-              <h3 style={{ fontSize: 18, margin: 0 }}>{co.name}</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 8 }}>View Reports &rarr;</p>
             </div>
-          ))}
-        </div>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              {companiesList.length < DEFAULT_COMPANIES.length && (
+                <button
+                  onClick={handleRestoreCompanies}
+                  style={{
+                    background: 'rgba(255,255,255,0.1)',
+                    color: '#fff',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    padding: '8px 14px',
+                    borderRadius: 6,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                >
+                  Restore All ({DEFAULT_COMPANIES.length})
+                </button>
+              )}
+              <button
+                onClick={() => setShowRemoveMode(false)}
+                style={{
+                  background: 'var(--danger)',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: 6,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >
+                Done / Exit
+              </button>
+            </div>
+          </div>
+        )}
+
+        {companiesList.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--bg-surface)', borderRadius: 12, border: '1px dashed var(--border)', margin: '20px 0' }}>
+            <Building size={48} color="var(--text-muted)" style={{ marginBottom: 16, opacity: 0.5 }} />
+            <h3 style={{ fontSize: 18, marginBottom: 8, color: 'var(--text)' }}>All Companies Removed</h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: 20 }}>You have removed all companies from this view. (No physical Google Sheets were touched or deleted).</p>
+            <button
+              onClick={handleRestoreCompanies}
+              style={{ background: 'var(--gold)', color: '#000', fontWeight: 700, padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(212,175,55,0.2)' }}
+            >
+              Restore All Companies ({DEFAULT_COMPANIES.length})
+            </button>
+          </div>
+        ) : (
+          <div className="reports-company-grid">
+            {companiesList.map(co => (
+              <div 
+                key={co.name}
+                onClick={(e) => {
+                  if (showRemoveMode) {
+                    handleRemoveCompany(co.name, e)
+                  } else {
+                    setSelectedCompany(co.name)
+                    setDeleteMode(false)
+                  }
+                }}
+                className="card"
+                style={{
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  padding: '40px 20px',
+                  transition: 'all 0.2s',
+                  borderTop: `4px solid ${co.color}`,
+                  position: 'relative',
+                  border: showRemoveMode ? '1px dashed var(--danger)' : undefined
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)'
+                  e.currentTarget.style.boxShadow = showRemoveMode ? '0 12px 24px rgba(239, 68, 68, 0.2)' : '0 12px 24px rgba(0,0,0,0.1)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'none'
+                  e.currentTarget.style.boxShadow = 'var(--shadow-sm)'
+                }}
+              >
+                {showRemoveMode && (
+                  <button
+                    onClick={(e) => handleRemoveCompany(co.name, e)}
+                    style={{
+                      position: 'absolute',
+                      top: 12,
+                      right: 12,
+                      background: 'rgba(239, 68, 68, 0.2)',
+                      color: '#ef4444',
+                      border: '1px solid #ef4444',
+                      borderRadius: '50%',
+                      width: 34,
+                      height: 34,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      zIndex: 10
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#ef4444'
+                      e.currentTarget.style.color = '#fff'
+                      e.currentTarget.style.transform = 'scale(1.1)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'
+                      e.currentTarget.style.color = '#ef4444'
+                      e.currentTarget.style.transform = 'scale(1)'
+                    }}
+                    title="Remove company from view (does not delete physical Google Sheet)"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+                <div style={{
+                  background: `${co.color}20`,
+                  color: co.color,
+                  padding: 16,
+                  borderRadius: '50%',
+                  marginBottom: 16
+                }}>
+                  <SpinOnHold><Building size={32} /></SpinOnHold>
+                </div>
+                <h3 style={{ fontSize: 18, margin: 0, color: showRemoveMode ? 'var(--danger)' : undefined }}>{co.name}</h3>
+                <p style={{ color: showRemoveMode ? '#ef4444' : 'var(--text-muted)', fontSize: 13, marginTop: 8, fontWeight: showRemoveMode ? 600 : undefined }}>
+                  {showRemoveMode ? 'Click to Remove ✕' : 'View Reports →'}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       ) : (
         /* ── View 2: Company Reports Dashboard ── */
