@@ -23,6 +23,34 @@ export default function Messages() {
   const [sendError, setSendError] = useState('');
   const fileInputRef = useRef(null);
 
+  const [activeMenuMsg, setActiveMenuMsg] = useState(null);
+  const [deletedForMeIds, setDeletedForMeIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`hetalls_deleted_for_me_${user?.id || 'default'}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) { return []; }
+  });
+
+  const handleDeleteForMe = (msg) => {
+    const nextIds = [...deletedForMeIds, msg.id];
+    setDeletedForMeIds(nextIds);
+    try {
+      localStorage.setItem(`hetalls_deleted_for_me_${user?.id || 'default'}`, JSON.stringify(nextIds));
+    } catch (e) {}
+    setActiveMenuMsg(null);
+  };
+
+  const handleDeleteForEveryone = async (msg) => {
+    try {
+      await axios.delete(`${API}/api/messages/${msg.id}`);
+      if (deleteMessage) deleteMessage(msg.id);
+      setSentMessages(prev => prev.filter(m => m.id !== msg.id));
+      setActiveMenuMsg(null);
+    } catch (e) {
+      alert("Could not delete message from server.");
+    }
+  };
+
   useEffect(() => {
     if (!attachment) {
       setAttachmentPreviewUrl(null);
@@ -76,7 +104,7 @@ export default function Messages() {
   const combined = [
     ...messages.map(m => ({ ...m, type: 'received', partnerId: m.sender_id, partnerName: m.sender_name || m.sender })),
     ...sentMessages.map(m => ({ ...m, type: 'sent', partnerId: m.recipient_id, partnerName: m.recipient_name }))
-  ].sort((a, b) => new Date(a.created_at || a.date) - new Date(b.created_at || b.date));
+  ].filter(m => !deletedForMeIds.includes(m.id)).sort((a, b) => new Date(a.created_at || a.date) - new Date(b.created_at || b.date));
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -350,19 +378,28 @@ export default function Messages() {
                   const isSent = msg.type === 'sent';
                   return (
                     <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isSent ? 'flex-end' : 'flex-start', maxWidth: '100%' }}>
-                      <div style={{
-                        background: isSent ? 'var(--gold)' : 'rgba(255,255,255,0.08)',
-                        color: isSent ? '#000' : '#fff',
-                        padding: '10px 14px 6px 14px',
-                        borderRadius: isSent ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                        maxWidth: '85%',
-                        minWidth: '100px',
-                        lineHeight: 1.4,
-                        position: 'relative',
-                        wordBreak: 'break-word',
-                        overflowWrap: 'anywhere',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.15)'
-                      }}>
+                      <div 
+                        onDoubleClick={() => setActiveMenuMsg(msg)}
+                        onContextMenu={(e) => { e.preventDefault(); setActiveMenuMsg(msg); }}
+                        title="Double-click or right-click for options (Delete/Unsend)"
+                        style={{
+                          background: isSent ? 'var(--gold)' : 'rgba(255,255,255,0.08)',
+                          color: isSent ? '#000' : '#fff',
+                          padding: '10px 14px 6px 14px',
+                          borderRadius: isSent ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                          maxWidth: '85%',
+                          minWidth: '100px',
+                          lineHeight: 1.4,
+                          position: 'relative',
+                          wordBreak: 'break-word',
+                          overflowWrap: 'anywhere',
+                          boxShadow: '0 2px 5px rgba(0,0,0,0.15)',
+                          cursor: 'pointer',
+                          transition: 'transform 0.1s, box-shadow 0.1s'
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.15)'; }}
+                      >
                         <div style={{ marginBottom: '4px' }}>
                           {msg.content.split('\n').map((line, i) => (
                             <React.Fragment key={i}>
@@ -502,6 +539,119 @@ export default function Messages() {
           </div>
         )}
       </div>
+
+      {/* ── Double-Click Message Action Modal (Unsend / Delete) ── */}
+      {activeMenuMsg && (
+        <div 
+          onClick={() => setActiveMenuMsg(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: 20
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="card"
+            style={{
+              background: '#1e2330',
+              border: '1px solid var(--border)',
+              borderRadius: 16,
+              padding: '20px 24px',
+              maxWidth: 380,
+              width: '100%',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12
+            }}
+          >
+            <div style={{ textAlign: 'center', marginBottom: 6 }}>
+              <h3 style={{ fontSize: 18, color: '#fff', marginBottom: 4 }}>Message Options</h3>
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', background: 'rgba(255,255,255,0.05)', padding: '6px 10px', borderRadius: 6, fontStyle: 'italic' }}>
+                "{activeMenuMsg.content || (activeMenuMsg.attachment ? 'Attachment / Media' : 'Message')}"
+              </p>
+            </div>
+
+            <button
+              onClick={() => handleDeleteForEveryone(activeMenuMsg)}
+              style={{
+                background: 'rgba(239, 68, 68, 0.15)',
+                color: '#ef4444',
+                border: '1px solid #ef4444',
+                padding: '12px 16px',
+                borderRadius: 10,
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 10,
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.color = '#fff'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)'; e.currentTarget.style.color = '#ef4444'; }}
+            >
+              <Trash2 size={18} />
+              Delete for Everyone (Unsend)
+            </button>
+
+            <button
+              onClick={() => handleDeleteForMe(activeMenuMsg)}
+              style={{
+                background: 'rgba(255, 255, 255, 0.06)',
+                color: 'var(--text)',
+                border: '1px solid var(--border)',
+                padding: '12px 16px',
+                borderRadius: 10,
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 10,
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'; }}
+            >
+              <Trash2 size={18} style={{ opacity: 0.7 }} />
+              Delete for Me
+            </button>
+
+            <button
+              onClick={() => setActiveMenuMsg(null)}
+              style={{
+                background: 'transparent',
+                color: 'var(--text-muted)',
+                border: 'none',
+                padding: '10px 16px',
+                borderRadius: 10,
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: 'pointer',
+                marginTop: 4,
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
