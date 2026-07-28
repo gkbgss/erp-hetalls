@@ -28,7 +28,7 @@ async def upload_file(file: UploadFile = File(...), current_user: User = Depends
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/download/{file_id}")
-def download_file(file_id: str, current_user: User = Depends(get_current_user)):
+def download_file(file_id: str):
     try:
         metadata = get_file_metadata(file_id)
         encrypted_bytes = download_from_drive(file_id)
