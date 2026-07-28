@@ -272,6 +272,8 @@ input, select, textarea { font-family: inherit; outline: none; }
 .card-header {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 .card-title { font-size: 15px; font-weight: 700; }
 .card-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
@@ -1252,6 +1254,32 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   .salary-search-box {
     width: 100% !important;
     min-width: 100% !important;
+  }
+  .hr-directory-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+  .hr-directory-actions {
+    width: 100% !important;
+    display: flex !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+  }
+  .hr-directory-actions button {
+    flex: 1 !important;
+    justify-content: center !important;
+    min-width: 130px !important;
+    padding: 10px 14px !important;
+  }
+  .hr-search-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .hr-search-box {
+    max-width: 100% !important;
+    width: 100% !important;
   }
 }
 

@@ -67,12 +67,12 @@ export default function HR() {
   return (
     <div>
       <div className="card">
-        <div className="card-header">
+        <div className="card-header hr-directory-header">
           <div>
             <div className="card-title">Employee Directory</div>
             <div className="card-subtitle">{employees.length} active team members</div>
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="hr-directory-actions" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             <input 
               type="file" 
               accept=".csv" 
@@ -108,8 +108,8 @@ export default function HR() {
           </div>
         </div>
 
-        <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ position: 'relative', flex: 1, maxWidth: 450 }}>
+        <div className="hr-search-row" style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div className="hr-search-box" style={{ position: 'relative', flex: '1 1 280px', maxWidth: '100%' }}>
             <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
             <input
               type="text"
