@@ -239,6 +239,13 @@ input, select, textarea { font-family: inherit; outline: none; }
   min-height: 140px;
   overflow: hidden;
   border-radius: 12px;
+  box-shadow: var(--shadow), var(--glass-shine);
+  transition: all var(--transition);
+}
+.cube-container:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-gold);
+  border-color: var(--border-accent);
 }
 .cube {
   width: 100%;
