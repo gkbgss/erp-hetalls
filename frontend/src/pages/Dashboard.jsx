@@ -35,6 +35,47 @@ const ChartTooltip = ({ active, payload, label }) => {
   )
 }
 
+const ProgressChartTooltip = ({ active, payload, label, data }) => {
+  if (!active || !payload?.length) return null
+  const currentDataIndex = data?.findIndex(d => d.month === label) ?? -1
+  const previousData = currentDataIndex > 0 ? data[currentDataIndex - 1] : null
+  const total = payload.reduce((sum, p) => sum + (Number(p.value) || 0), 0)
+  return (
+    <div style={{
+      background: '#0f172a', border: '1px solid var(--border)',
+      borderRadius: '12px', padding: '12px 14px', fontSize: 13,
+      boxShadow: 'var(--shadow), var(--glass-shine)',
+      backdropFilter: 'blur(32px) saturate(200%)',
+      WebkitBackdropFilter: 'blur(32px) saturate(200%)'
+    }}>
+      <p style={{ color: 'var(--text-muted)', marginBottom: 6 }}>{label}</p>
+      {[...payload].sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0)).map((p, i) => {
+        let percentageStr = ""
+        if (previousData) {
+          const prevVal = Number(previousData[p.dataKey]) || 0
+          const currVal = Number(p.value) || 0
+          if (prevVal > 0) {
+            const pct = ((currVal - prevVal) / prevVal) * 100
+            const sign = pct > 0 ? "+" : ""
+            const color = pct >= 0 ? "var(--success)" : "var(--danger)"
+            percentageStr = ` <span style="color:${color}; font-size:11px; margin-left:4px">(${sign}${pct.toFixed(1)}%)</span>`
+          } else if (currVal > 0 && prevVal === 0) {
+            percentageStr = ` <span style="color:var(--success); font-size:11px; margin-left:4px">(+100.0%)</span>`
+          }
+        }
+        return (
+          <p key={i} style={{ color: p.color, fontWeight: 600 }} dangerouslySetInnerHTML={{
+            __html: `${p.name}: $${Number(p.value || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}${percentageStr}`
+          }} />
+        )
+      })}
+      <div style={{ marginTop: 6, paddingTop: 6, borderTop: '1px solid var(--border)', color: 'var(--text-primary)', fontWeight: 700 }}>
+        Total: ${total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+      </div>
+    </div>
+  )
+}
+
 // ── KPI Card ──────────────────────────────────────────────────────────
 function KPICard({ icon: Icon, label, value, sub, colorClass, prefix = '', format = 'number', className = '', style = {}, valueColor = null, trend = null }) {
   let display = value
@@ -713,7 +754,7 @@ export default function Dashboard() {
             </div>
           </div>
           <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={revenueChart || []} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+            <BarChart data={revenueChart || []} margin={{ top: 5, right: 10, left: 0, bottom: 0 }} maxBarSize={45}>
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v/1000}k`} />
@@ -739,7 +780,7 @@ export default function Dashboard() {
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
               <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v/1000}k`} />
-              <Tooltip content={<ChartTooltip />} itemSorter={(item) => -Number(item.value || 0)} />
+              <Tooltip content={<ProgressChartTooltip data={revenueChart} />} itemSorter={(item) => -Number(item.value || 0)} />
               <Legend align="center" wrapperStyle={{ fontSize: 12 }} />
               
               {allChartPortals.map((portal, idx) => (
