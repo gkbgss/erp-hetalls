@@ -130,7 +130,7 @@ const PortalGrowthCard = ({ revenueChart, style = {} }) => {
       
       if (isNaN(growth) || !isFinite(growth)) growth = 0;
       return { name: key.replace('-', ' '), growth };
-    }).filter(p => p && p.growth >= 0).sort((a, b) => b.growth - a.growth);
+    }).filter(p => p !== null).sort((a, b) => b.growth - a.growth);
   }, [revenueChart]);
 
   if (!portals || portals.length === 0) return (
