@@ -758,7 +758,7 @@ export default function Dashboard() {
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v/1000}k`} />
-              <Tooltip content={<ChartTooltip />} itemSorter={(item) => -Number(item.value || 0)} />
+              <Tooltip content={<ChartTooltip />} itemSorter={(item) => -Number(item.value || 0)} cursor={{ fill: 'transparent' }} />
               <Legend align="center" wrapperStyle={{ fontSize: 12 }} />
               
               {allChartPortals.map((portal, idx) => (
