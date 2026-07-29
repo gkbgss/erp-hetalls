@@ -45,7 +45,34 @@ def upload_to_drive(file_data: bytes, filename: str) -> str:
             print(f"Successfully uploaded to Google Drive Folder {FOLDER_ID}: File ID {file.get('id')}")
             return file.get('id')
         except Exception as e:
-            print(f"Google Drive upload failed, falling back to direct server storage: {e}")
+            print(f"Google Drive upload failed, falling back to ImgBB / local server storage: {e}")
+
+    # Tier 1.5: ImgBB API for images
+    try:
+        import base64
+        import requests
+        mime_type, _ = mimetypes.guess_type(filename)
+        if mime_type and mime_type.startswith('image/'):
+            print(f"Attempting ImgBB upload for {filename}...")
+            b64_img = base64.b64encode(file_data).decode('utf-8')
+            res = requests.post(
+                "https://api.imgbb.com/1/upload", 
+                data={
+                    "key": "a9cf5875d0b2077f31f3d70f7e43f59e",
+                    "image": b64_img,
+                    "name": filename.split('.')[0] if '.' in filename else filename
+                },
+                timeout=15
+            )
+            if res.status_code == 200:
+                data = res.json()
+                img_url = data.get("data", {}).get("url")
+                if img_url:
+                    print(f"Successfully uploaded to ImgBB: {img_url}")
+                    return img_url
+            print(f"ImgBB upload failed: {res.status_code} {res.text}")
+    except Exception as e:
+        print(f"ImgBB upload exception: {e}")
 
     # Tier 2: Direct server storage fallback
     file_id = f"local_{uuid.uuid4().hex}"
