@@ -791,6 +791,49 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <div className="chart-grid side-by-side" style={{ marginTop: '24px' }}>
+        {/* Today's Sales Pie Chart */}
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <div className="card-title">Today's Sales Distribution</div>
+              <div className="card-subtitle">Revenue breakdown by portal for today</div>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={320}>
+            {companiesRev?.today && companiesRev.today.length > 0 ? (
+              <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                <Pie
+                  data={companiesRev.today}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={110}
+                  paddingAngle={5}
+                  stroke="none"
+                >
+                  {companiesRev.today.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ background: '#0f172a', border: '1px solid var(--border)', borderRadius: '12px', color: 'var(--text-primary)', boxShadow: 'var(--shadow)' }} 
+                  itemStyle={{ color: 'var(--text-primary)', fontSize: '13px', fontWeight: '500' }} 
+                  formatter={(value) => `$${Number(value).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`} 
+                />
+                <Legend align="center" wrapperStyle={{ fontSize: 12, paddingTop: '10px' }} />
+              </PieChart>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>
+                No sales data for today yet.
+              </div>
+            )}
+          </ResponsiveContainer>
+        </div>
+      </div>
+
 
     </div>
   )
