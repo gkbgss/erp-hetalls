@@ -20,6 +20,20 @@ def get_employees(db: Session = Depends(get_db), current_user=Depends(get_curren
     employees = query.order_by(Employee.name).all()
     return employees
 
+@router.post("/trigger-sync")
+def trigger_user_sync():
+    try:
+        import sys
+        import os
+        # Ensure we can import sync_users
+        if '.' not in sys.path:
+            sys.path.append('.')
+        import sync_users
+        sync_users.sync_users()
+        return {"status": "success", "message": "Users synced on production DB!"}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
 class SalaryUpdate(BaseModel):
     salary: float
 
