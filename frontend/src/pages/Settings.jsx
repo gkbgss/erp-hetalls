@@ -280,27 +280,27 @@ export default function Settings() {
               <tbody>
                 {users.map(u => (
                   <tr key={u.id}>
-                    <td>
+                    <td onDoubleClick={() => isAdmin && handleEdit(u)} style={{ cursor: isAdmin && editId !== u.id ? 'pointer' : 'default' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div className="user-avatar" style={{ width: 28, height: 28, fontSize: 11 }}>
                           {u.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                         </div>
                         {editId === u.id ? (
-                          <input className="form-input" value={editForm.name || ''} onChange={e => setEditForm({...editForm, name: e.target.value})} style={{width: 140, padding: '4px 8px'}} />
+                          <input className="form-input" value={editForm.name || ''} onChange={e => setEditForm({...editForm, name: e.target.value})} style={{width: 140, padding: '4px 8px'}} onClick={e => e.stopPropagation()} />
                         ) : (
-                          <span style={{ fontWeight: 600, cursor: isAdmin ? 'pointer' : 'default' }} onDoubleClick={() => isAdmin && handleEdit(u)} title="Double click to edit">{u.name}</span>
+                          <span style={{ fontWeight: 600 }} title="Double click to edit">{u.name}</span>
                         )}
                         {u.id === me?.id && <span style={{ fontSize: 10, color: 'var(--gold)', background: 'var(--gold-glow)', padding: '1px 6px', borderRadius: 10 }}>YOU</span>}
                       </div>
                     </td>
-                    <td style={{ fontSize: 13 }}>
+                    <td style={{ fontSize: 13, cursor: isAdmin && editId !== u.id ? 'pointer' : 'default' }} onDoubleClick={() => isAdmin && handleEdit(u)}>
                       {editId === u.id ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <input className="form-input" value={editForm.email || ''} onChange={e => setEditForm({...editForm, email: e.target.value})} style={{width: 160, padding: '4px 8px'}} />
-                          <input className="form-input" type="password" placeholder="New Password..." value={editForm.password || ''} onChange={e => setEditForm({...editForm, password: e.target.value})} style={{width: 160, padding: '4px 8px'}} title="Leave blank to keep current password" />
+                          <input className="form-input" value={editForm.email || ''} onChange={e => setEditForm({...editForm, email: e.target.value})} style={{width: 160, padding: '4px 8px'}} onClick={e => e.stopPropagation()} />
+                          <input className="form-input" type="password" placeholder="New Password..." value={editForm.password || ''} onChange={e => setEditForm({...editForm, password: e.target.value})} style={{width: 160, padding: '4px 8px'}} title="Leave blank to keep current password" onClick={e => e.stopPropagation()} />
                         </div>
                       ) : (
-                        <span style={{ cursor: isAdmin ? 'pointer' : 'default' }} onDoubleClick={() => isAdmin && handleEdit(u)} title="Double click to edit">{u.email}</span>
+                        <span title="Double click to edit">{u.email}</span>
                       )}
                     </td>
                     <td>
