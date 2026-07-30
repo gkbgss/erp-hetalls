@@ -12,7 +12,7 @@ const NAV = [
   ]},
   { label: 'Finance & People', items: [
     { to: '/accounts',   icon: DollarSign,      label: 'Accounts',    permission: 'accounts' },
-    { to: '/hr',         icon: Users,           label: 'Employee Directory' },
+    { to: '/hr',         icon: Users,           label: 'HR' },
     { to: '/hr/messages', icon: MessageSquare,   label: 'Messages' },
   ]},
   { label: 'Intelligence', items: [
