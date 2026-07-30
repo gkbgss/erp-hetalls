@@ -800,8 +800,8 @@ export default function Dashboard() {
               <div className="card-subtitle">Revenue breakdown by portal for today</div>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={320}>
-            {companiesRev?.today && companiesRev.today.length > 0 ? (
+          {companiesRev?.today && companiesRev.today.length > 0 ? (
+            <ResponsiveContainer width="100%" height={320}>
               <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                 <Pie
                   data={companiesRev.today}
@@ -825,12 +825,12 @@ export default function Dashboard() {
                 />
                 <Legend align="center" wrapperStyle={{ fontSize: 12, paddingTop: '10px' }} />
               </PieChart>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>
-                No sales data for today yet.
-              </div>
-            )}
-          </ResponsiveContainer>
+            </ResponsiveContainer>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '320px', width: '100%', color: 'var(--text-muted)' }}>
+              No sales data for today yet.
+            </div>
+          )}
         </div>
       </div>
 
