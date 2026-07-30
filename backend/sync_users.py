@@ -11,6 +11,12 @@ Base.metadata.create_all(bind=engine)
 
 def sync_users():
     db = SessionLocal()
+    
+    # First, fix any legacy @example.com emails in the Employee table
+    for emp in db.query(Employee).filter(Employee.email.like('%@example.com')).all():
+        emp.email = emp.email.replace('@example.com', '@company.com')
+    db.commit()
+
     employees = db.query(Employee).all()
     
     print(f"Found {len(employees)} employees. Syncing...")

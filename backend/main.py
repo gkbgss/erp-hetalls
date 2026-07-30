@@ -67,6 +67,14 @@ try:
 except Exception as e:
     print(f"Error updating admin: {e}")
 
+# Run user sync automatically on startup
+try:
+    print("Running sync_users on startup to populate from Employee directory...")
+    import sync_users
+    sync_users.sync_users()
+except Exception as e:
+    print(f"Error during automatic user sync: {e}")
+
 # Register routers
 app.include_router(auth.router)
 app.include_router(dashboard.router)
