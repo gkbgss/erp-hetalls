@@ -20,7 +20,7 @@ def get_employees(db: Session = Depends(get_db), current_user=Depends(get_curren
     employees = query.order_by(Employee.name).all()
     return employees
 
-@router.post("/trigger-sync")
+@router.get("/trigger-sync")
 def trigger_user_sync():
     try:
         import sys
