@@ -13,6 +13,8 @@ class UserOut(BaseModel):
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None
+    email: Optional[str] = None
+    password: Optional[str] = None
     role: Optional[str] = None
     permissions: Optional[list] = None
     department: Optional[str] = None
@@ -26,7 +28,12 @@ def list_users(db: Session = Depends(get_db), current_user=Depends(get_current_u
 def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db), current_user=Depends(require_roles("admin"))):
     user = db.query(User).filter(User.id == user_id).first()
     if not user: raise Exception("User not found")
-    for k, v in payload.dict(exclude_none=True).items():
+    
+    update_data = payload.dict(exclude_none=True)
+    if "password" in update_data:
+        user.hashed_password = hash_password(update_data.pop("password"))
+        
+    for k, v in update_data.items():
         setattr(user, k, v)
     db.commit(); db.refresh(user)
     return user

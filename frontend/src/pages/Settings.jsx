@@ -81,7 +81,7 @@ export default function Settings() {
     }
   }
 
-  const handleEdit = (u) => { setEditId(u.id); setEditForm({ role: u.role, department: u.department, permissions: u.permissions || [] }) }
+  const handleEdit = (u) => { setEditId(u.id); setEditForm({ name: u.name, email: u.email, role: u.role, department: u.department, permissions: u.permissions || [] }) }
 
   const handleSaveEdit = async (id) => {
     try {
@@ -285,11 +285,24 @@ export default function Settings() {
                         <div className="user-avatar" style={{ width: 28, height: 28, fontSize: 11 }}>
                           {u.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                         </div>
-                        <span style={{ fontWeight: 600 }}>{u.name}</span>
+                        {editId === u.id ? (
+                          <input className="form-input" value={editForm.name || ''} onChange={e => setEditForm({...editForm, name: e.target.value})} style={{width: 140, padding: '4px 8px'}} />
+                        ) : (
+                          <span style={{ fontWeight: 600, cursor: isAdmin ? 'pointer' : 'default' }} onDoubleClick={() => isAdmin && handleEdit(u)} title="Double click to edit">{u.name}</span>
+                        )}
                         {u.id === me?.id && <span style={{ fontSize: 10, color: 'var(--gold)', background: 'var(--gold-glow)', padding: '1px 6px', borderRadius: 10 }}>YOU</span>}
                       </div>
                     </td>
-                    <td style={{ fontSize: 13 }}>{u.email}</td>
+                    <td style={{ fontSize: 13 }}>
+                      {editId === u.id ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          <input className="form-input" value={editForm.email || ''} onChange={e => setEditForm({...editForm, email: e.target.value})} style={{width: 160, padding: '4px 8px'}} />
+                          <input className="form-input" type="password" placeholder="New Password..." value={editForm.password || ''} onChange={e => setEditForm({...editForm, password: e.target.value})} style={{width: 160, padding: '4px 8px'}} title="Leave blank to keep current password" />
+                        </div>
+                      ) : (
+                        <span style={{ cursor: isAdmin ? 'pointer' : 'default' }} onDoubleClick={() => isAdmin && handleEdit(u)} title="Double click to edit">{u.email}</span>
+                      )}
+                    </td>
                     <td>
                       {editId === u.id ? (
                         <select className="form-input" style={{ padding: '4px 8px', fontSize: 12 }}
