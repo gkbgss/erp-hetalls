@@ -175,7 +175,14 @@ export default function Messages() {
 
   const conversations = Array.from(conversationsMap.values())
     .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    .sort((a, b) => new Date(b.latestMessage.created_at || b.latestMessage.date) - new Date(a.latestMessage.created_at || a.latestMessage.date));
+    .sort((a, b) => {
+      const aUnread = a.unreadCount > 0 ? 1 : 0;
+      const bUnread = b.unreadCount > 0 ? 1 : 0;
+      if (aUnread !== bUnread) return bUnread - aUnread;
+      const dA = new Date((a.latestMessage.created_at || a.latestMessage.date || '').replace(' ', 'T'));
+      const dB = new Date((b.latestMessage.created_at || b.latestMessage.date || '').replace(' ', 'T'));
+      return dB - dA;
+    });
 
   const handleSelectPartner = (partner) => {
     setSelectedPartner(partner);
@@ -322,7 +329,7 @@ export default function Messages() {
               <div style={{ padding: '10px 20px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
                 <Users size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} /> DIRECTORY
               </div>
-              {users.map(u => (
+              {users.filter(u => u.name.toLowerCase().includes(searchQuery.toLowerCase())).map(u => (
                 <div key={u.id} className="directory-item" onClick={() => handleSelectPartner({ id: u.id, name: u.name, avatar: getAvatar(u.name) })}>
                   <img src={getAvatar(u.name)} alt={u.name} className="message-avatar" />
                   <div className="directory-info">
@@ -348,8 +355,13 @@ export default function Messages() {
                     onClick={() => handleSelectPartner(conv)}
                     style={{ position: 'relative', padding: '16px 20px' }}
                   >
-                    <img src={conv.avatar} alt={conv.name} className="message-avatar" />
-                    <div className="message-preview" style={{ flex: 1, overflow: 'hidden' }}>
+                    <div style={{ position: 'relative' }}>
+                      <img src={conv.avatar} alt={conv.name} className="message-avatar" />
+                      {conv.unreadCount > 0 && (
+                        <div style={{ position: 'absolute', top: 0, right: 0, width: 12, height: 12, background: 'var(--danger)', borderRadius: '50%', border: '2px solid var(--bg-surface)' }} />
+                      )}
+                    </div>
+                    <div className="message-preview" style={{ flex: 1, overflow: 'hidden', marginLeft: 12 }}>
                       <div className="message-sender-row">
                         <span className="sender-name" style={{ color: conv.unreadCount > 0 ? '#fff' : 'inherit' }}>{conv.name}</span>
                         <span className="message-time">{formatTime(conv.latestMessage.created_at || conv.latestMessage.date).split(' ')[0]}</span>
@@ -358,11 +370,6 @@ export default function Messages() {
                         {conv.latestMessage.type === 'sent' ? 'You: ' : ''}{(conv.latestMessage.content || '').substring(0, 40)}...
                       </div>
                     </div>
-                    {conv.unreadCount > 0 && (
-                      <div style={{ background: 'var(--gold)', color: '#000', fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 12, position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)' }}>
-                        {conv.unreadCount}
-                      </div>
-                    )}
                   </div>
                 ))
               )}
