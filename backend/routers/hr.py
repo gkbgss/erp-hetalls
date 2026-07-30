@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from database import get_db, Employee
-from auth import require_roles
+from auth import require_roles, get_current_user
 import csv
 from io import StringIO
 from datetime import datetime
@@ -10,8 +10,14 @@ from datetime import datetime
 router = APIRouter(prefix="/api/hr", tags=["hr"])
 
 @router.get("/employees")
-def get_employees(db: Session = Depends(get_db), current_user=Depends(require_roles("admin", "hr", "analyst"))):
-    employees = db.query(Employee).order_by(Employee.name).all()
+def get_employees(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    query = db.query(Employee)
+    
+    # Admins see everyone; others only see their own department
+    if (current_user.role or "").lower() != "admin":
+        query = query.filter(Employee.department == current_user.department)
+        
+    employees = query.order_by(Employee.name).all()
     return employees
 
 class SalaryUpdate(BaseModel):
