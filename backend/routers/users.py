@@ -29,12 +29,25 @@ def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db)
     user = db.query(User).filter(User.id == user_id).first()
     if not user: raise Exception("User not found")
     
+    # Try to find corresponding Employee by current email or name before updating User
+    from database import Employee
+    employee = db.query(Employee).filter((Employee.email == user.email) | (Employee.name == user.name)).first()
+    
     update_data = payload.dict(exclude_none=True)
     if "password" in update_data:
         user.hashed_password = hash_password(update_data.pop("password"))
         
     for k, v in update_data.items():
         setattr(user, k, v)
+        
+    if employee:
+        if "name" in update_data:
+            employee.name = update_data["name"]
+        if "email" in update_data:
+            employee.email = update_data["email"]
+        if "department" in update_data:
+            employee.department = update_data["department"]
+            
     db.commit(); db.refresh(user)
     return user
 
