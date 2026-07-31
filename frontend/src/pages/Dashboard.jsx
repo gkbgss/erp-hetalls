@@ -76,6 +76,20 @@ const ProgressChartTooltip = ({ active, payload, label, data }) => {
   )
 }
 
+const CustomPieTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div style={{ background: '#0f172a', border: '1px solid var(--border)', borderRadius: '12px', padding: '10px', color: 'white', boxShadow: 'var(--shadow)' }}>
+        <div style={{ fontWeight: 600, marginBottom: '4px' }}>{data.name}</div>
+        <div style={{ fontSize: '13px', marginBottom: '2px' }}>Revenue: <span style={{ fontWeight: 500 }}>${Number(data.value).toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>
+        {data.order_count !== undefined && <div style={{ fontSize: '13px' }}>Orders Today: <span style={{ fontWeight: 500 }}>{data.order_count}</span></div>}
+      </div>
+    );
+  }
+  return null;
+};
+
 // ── KPI Card ──────────────────────────────────────────────────────────
 function KPICard({ icon: Icon, label, value, sub, colorClass, prefix = '', format = 'number', className = '', style = {}, valueColor = null, trend = null }) {
   let display = value
@@ -772,11 +786,7 @@ export default function Dashboard() {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip 
-                  contentStyle={{ background: '#0f172a', border: '1px solid var(--border)', borderRadius: '12px', color: 'var(--text-primary)', boxShadow: 'var(--shadow)' }} 
-                  itemStyle={{ color: 'var(--text-primary)', fontSize: '13px', fontWeight: '500' }} 
-                  formatter={(value) => `$${Number(value).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`} 
-                />
+                <Tooltip content={<CustomPieTooltip />} />
                 <Legend align="center" wrapperStyle={{ fontSize: 12, paddingTop: '10px' }} />
               </PieChart>
             </ResponsiveContainer>
@@ -807,7 +817,7 @@ export default function Dashboard() {
               {allChartPortals.map((portal, idx) => (
                 <Bar yAxisId="left" key={portal} dataKey={portal} name={formatPortalName(portal)} fill={getPortalColor(portal, idx)} stackId="a" />
               ))}
-              <Line yAxisId="right" type="linear" dataKey="order_count" name="Sales Count" stroke="#b91c1c" strokeWidth={1} label={{ position: 'top', fill: '#b91c1c', fontSize: 12, fontWeight: 500 }} dot={{ r: 4, fill: '#b91c1c', stroke: '#fff', strokeWidth: 1.5 }} activeDot={{ r: 6, fill: '#b91c1c', stroke: '#fff' }} />
+              <Line yAxisId="right" type="linear" dataKey="order_count" name="Sales Count" stroke="#3b82f6" strokeWidth={1} label={{ position: 'top', offset: 12, fill: '#3b82f6', fontSize: 12, fontWeight: 500 }} dot={{ r: 4, fill: '#3b82f6', stroke: '#fff', strokeWidth: 1.5 }} activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff' }} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>

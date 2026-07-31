@@ -1127,6 +1127,7 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   }
   .kpi-card {
     padding: 12px !important;
+    height: 100% !important;
   }
   .kpi-value {
     font-size: 20px !important;
