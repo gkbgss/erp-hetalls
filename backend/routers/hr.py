@@ -117,7 +117,7 @@ def upload_employees(
         emp = Employee(
             name=name,
             company=company,
-            email=email or f"{name.lower().replace(' ', '')}@company.com",
+            email=email or f"{name.lower().replace(' ', '')}@hetalls.com",
             department=norm_row.get(dept_key, 'General') if dept_key else 'General',
             role=norm_row.get(role_key, 'Employee') if role_key else 'Employee',
             salary=salary_val,

@@ -75,6 +75,19 @@ def register(payload: UserCreate, db: Session = Depends(get_db), current_user: U
         department=payload.department,
     )
     db.add(user)
+    
+    # Also create a matching Employee record if it doesn't exist
+    from database import Employee
+    emp = db.query(Employee).filter(Employee.email == payload.email).first()
+    if not emp:
+        emp = Employee(
+            name=payload.name,
+            email=payload.email,
+            department=payload.department,
+            role="Employee"
+        )
+        db.add(emp)
+        
     db.commit()
     db.refresh(user)
     return user
