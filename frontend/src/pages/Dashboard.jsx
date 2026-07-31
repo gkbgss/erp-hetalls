@@ -6,7 +6,7 @@ import {
   TrendingUp, TrendingDown, Users, FileText, AlertCircle, Layers, X, Calendar, Clock, List
 } from 'lucide-react'
 import {
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
+  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, ComposedChart,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts'
 
@@ -796,7 +796,7 @@ export default function Dashboard() {
             </div>
           </div>
           <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={revenueChart || []} margin={{ top: 5, right: 10, left: 0, bottom: 0 }} maxBarSize={45}>
+            <ComposedChart data={revenueChart || []} margin={{ top: 5, right: 10, left: 0, bottom: 0 }} maxBarSize={45}>
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v/1000}k`} />
@@ -806,7 +806,8 @@ export default function Dashboard() {
               {allChartPortals.map((portal, idx) => (
                 <Bar key={portal} dataKey={portal} name={formatPortalName(portal)} fill={getPortalColor(portal, idx)} stackId="a" />
               ))}
-            </BarChart>
+              <Line type="monotone" dataKey="total" name="Total Revenue" stroke="var(--gold)" strokeWidth={1} dot={{ r: 3, fill: 'var(--bg-card)', strokeWidth: 1 }} activeDot={{ r: 5, stroke: 'var(--gold)', strokeWidth: 2 }} />
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       </div>
