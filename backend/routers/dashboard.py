@@ -225,8 +225,9 @@ def revenue_chart(current_user=Depends(get_current_user)):
         if dt and price > 0:
             month_label = dt.strftime("%b %Y")
             if month_label not in monthly_data:
-                monthly_data[month_label] = {"month": month_label, "_dt": dt.replace(day=1)}
+                monthly_data[month_label] = {"month": month_label, "_dt": dt.replace(day=1), "order_count": 0}
             monthly_data[month_label][portal] = monthly_data[month_label].get(portal, 0) + price
+            monthly_data[month_label]["order_count"] += 1
             
     # Sort by date
     sorted_months = sorted(monthly_data.values(), key=lambda x: x["_dt"])
@@ -236,7 +237,7 @@ def revenue_chart(current_user=Depends(get_current_user)):
     for m in sorted_months:
         del m["_dt"]
         for k in m:
-            if k != "month":
+            if k != "month" and k != "order_count":
                 m[k] = round(m[k], 2)
         results.append(m)
         
