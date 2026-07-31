@@ -1120,9 +1120,39 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   }
   .kpi-grid {
     grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
   }
   .kpi-grid > *:first-child {
     grid-column: 1 / -1;
+  }
+  .kpi-card {
+    padding: 12px !important;
+  }
+  .kpi-value {
+    font-size: 20px !important;
+  }
+  .kpi-label {
+    font-size: 11px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .kpi-sub {
+    font-size: 10px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .kpi-icon {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  .kpi-icon svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+  .cube-container {
+    min-height: 110px !important;
   }
   .chart-grid {
     grid-template-columns: 1fr !important;
