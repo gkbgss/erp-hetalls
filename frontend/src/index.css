@@ -1120,29 +1120,46 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   }
   .kpi-grid {
     grid-template-columns: repeat(2, 1fr) !important;
+    grid-auto-rows: 1fr !important;
     gap: 12px !important;
+    align-items: stretch !important;
   }
   .kpi-grid > *:first-child {
     grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  .kpi-grid > * {
+    height: 100% !important;
+    width: 100% !important;
+    display: flex;
+    flex-direction: column;
   }
   .kpi-card {
     padding: 12px !important;
     height: 100% !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
   }
   .kpi-value {
     font-size: 20px !important;
+    margin-bottom: 4px !important;
   }
   .kpi-label {
     font-size: 11px !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-bottom: 8px !important;
   }
   .kpi-sub {
     font-size: 10px !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-top: auto !important;
   }
   .kpi-icon {
     width: 28px !important;
@@ -1151,6 +1168,10 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   .kpi-icon svg {
     width: 14px !important;
     height: 14px !important;
+  }
+  .cube-container, .cube, .cube-face {
+    height: 100% !important;
+    width: 100% !important;
   }
   .cube-container {
     min-height: 110px !important;
