@@ -85,7 +85,7 @@ const ProgressChartTooltip = ({ active, payload, label, data }) => {
           percentageStr = getPercentageStr(Number(previousData[salesCountItem.dataKey]) || 0, Number(salesCountItem.value) || 0)
         }
         return (
-          <div style={{ marginTop: 6, paddingTop: 6, borderTop: '1px dashed var(--border)', color: '#38bdf8', fontWeight: 700, display: 'flex', justifyContent: 'space-between', gap: '16px' }} dangerouslySetInnerHTML={{
+          <div style={{ marginTop: 6, paddingTop: 6, borderTop: '1px dashed var(--border)', color: '#ef4444', fontWeight: 700, display: 'flex', justifyContent: 'space-between', gap: '16px' }} dangerouslySetInnerHTML={{
             __html: `<span>Sales Count:</span> <span>${salesCountItem.value}${percentageStr}</span>`
           }} />
         )
@@ -828,14 +828,14 @@ export default function Dashboard() {
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis yAxisId="left" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v/1000}k`} />
-              <YAxis yAxisId="right" orientation="right" tick={{ fill: '#b91c1c', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fill: '#ef4444', fontSize: 11 }} axisLine={false} tickLine={false} label={{ value: 'Sales Count', position: 'top', fill: '#ef4444', fontSize: 11, offset: 15, fontWeight: 600 }} />
               <Tooltip content={<ProgressChartTooltip data={revenueChart} />} itemSorter={(item) => -Number(item.value || 0)} cursor={false} />
               <Legend align="center" wrapperStyle={{ fontSize: 12 }} />
               
               {allChartPortals.map((portal, idx) => (
                 <Bar yAxisId="left" key={portal} dataKey={portal} name={formatPortalName(portal)} fill={getPortalColor(portal, idx)} stackId="a" />
               ))}
-              <Line yAxisId="right" type="linear" dataKey="order_count" name="Sales Count" stroke="#3b82f6" strokeWidth={1} label={{ position: 'top', offset: 12, fill: '#3b82f6', fontSize: 12, fontWeight: 500 }} dot={{ r: 4, fill: '#3b82f6', stroke: '#fff', strokeWidth: 1.5 }} activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff' }} />
+              <Line yAxisId="right" type="linear" dataKey="order_count" name="Sales Count" legendType="none" stroke="#ef4444" strokeWidth={1} label={{ position: 'top', offset: 12, fill: '#ef4444', fontSize: 12, fontWeight: 500 }} dot={{ r: 4, fill: '#ef4444', stroke: '#fff', strokeWidth: 1.5 }} activeDot={{ r: 6, fill: '#ef4444', stroke: '#fff' }} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
