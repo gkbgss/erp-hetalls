@@ -104,7 +104,7 @@ def payroll_summary(year_month: str = "", db: Session = Depends(get_db), current
 
 @router.get("/employees")
 def payroll_employees(year_month: str = "", db: Session = Depends(get_db), current_user=Depends(require_roles("admin", "hr", "analyst"))):
-    employees = db.query(Employee).filter(Employee.is_active == True).order_by(Employee.salary.desc()).all()
+    employees = db.query(Employee).filter(Employee.is_active == True).order_by(func.lower(Employee.name).asc()).all()
     result = []
     for e in employees:
         # Defaulting absent to 0 for initial load, frontend will allow modifying per employee locally for calculations
