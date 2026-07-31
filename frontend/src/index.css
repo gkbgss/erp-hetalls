@@ -1119,7 +1119,10 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
     display: none !important;
   }
   .kpi-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .kpi-grid > *:first-child {
+    grid-column: 1 / -1;
   }
   .chart-grid {
     grid-template-columns: 1fr !important;

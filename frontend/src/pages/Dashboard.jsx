@@ -745,53 +745,7 @@ export default function Dashboard() {
 
       {/* Charts */}
       <div className={`chart-grid ${(revenueChart?.length || 0) >= 7 ? 'stacked' : 'side-by-side'}`}>
-        {/* Revenue Area Chart */}
-        <div className="card">
-          <div className="card-header">
-            <div>
-              <div className="card-title">Monthly Revenue Trend</div>
-              <div className="card-subtitle">All Companies — Monthly Brands</div>
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={revenueChart || []} margin={{ top: 5, right: 10, left: 0, bottom: 0 }} maxBarSize={45}>
-              <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v/1000}k`} />
-              <Tooltip content={<ChartTooltip />} itemSorter={(item) => -Number(item.value || 0)} cursor={{ fill: 'transparent' }} />
-              <Legend align="center" wrapperStyle={{ fontSize: 12 }} />
-              
-              {allChartPortals.map((portal, idx) => (
-                <Bar key={portal} dataKey={portal} name={formatPortalName(portal)} fill={getPortalColor(portal, idx)} stackId="a" />
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        {/* Portal Progress Line Chart */}
-        <div className="card" style={{ marginTop: '0px' }}>
-          <div className="card-header">
-            <div>
-              <div className="card-title">Portal Growth Progress</div>
-              <div className="card-subtitle">Monthly revenue progression per portal</div>
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={320}>
-            <LineChart data={revenueChart || []} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-              <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
-              <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v/1000}k`} />
-              <Tooltip content={<ProgressChartTooltip data={revenueChart} />} itemSorter={(item) => -Number(item.value || 0)} />
-              <Legend align="center" wrapperStyle={{ fontSize: 12 }} />
-              
-              {allChartPortals.map((portal, idx) => (
-                <Line key={portal} type="monotone" dataKey={portal} name={formatPortalName(portal)} stroke={getPortalColor(portal, idx)} strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div className="chart-grid side-by-side" style={{ marginTop: '24px' }}>
+        
         {/* Today's Sales Pie Chart */}
         <div className="card">
           <div className="card-header">
@@ -831,6 +785,29 @@ export default function Dashboard() {
               No sales data for today yet.
             </div>
           )}
+        </div>
+
+        {/* Revenue Area Chart */}
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <div className="card-title">Monthly Revenue Trend</div>
+              <div className="card-subtitle">All Companies — Monthly Brands</div>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={revenueChart || []} margin={{ top: 5, right: 10, left: 0, bottom: 0 }} maxBarSize={45}>
+              <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v/1000}k`} />
+              <Tooltip content={<ProgressChartTooltip data={revenueChart} />} itemSorter={(item) => -Number(item.value || 0)} cursor={{ fill: 'transparent' }} />
+              <Legend align="center" wrapperStyle={{ fontSize: 12 }} />
+              
+              {allChartPortals.map((portal, idx) => (
+                <Bar key={portal} dataKey={portal} name={formatPortalName(portal)} fill={getPortalColor(portal, idx)} stackId="a" />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
