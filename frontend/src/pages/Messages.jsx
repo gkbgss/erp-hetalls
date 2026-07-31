@@ -522,16 +522,16 @@ export default function Messages() {
               {sendError && <p style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 8 }}>{sendError}</p>}
               
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, background: 'rgba(255,255,255,0.05)', padding: '12px 16px', borderRadius: 24, border: '1px solid var(--border)' }}>
-                <div style={{ display: 'flex', gap: 4, paddingBottom: 4 }}>
+                <div style={{ display: 'flex', gap: 4, alignItems: 'center', height: 36 }}>
                   <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleAttachment} />
-                  <button className="icon-btn" onClick={() => fileInputRef.current?.click()} style={{ padding: 4 }} title="Attach File"><Paperclip size={18} /></button>
+                  <button className="icon-btn" onClick={() => fileInputRef.current?.click()} style={{ padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Attach File"><Paperclip size={18} /></button>
 
                 {!isRecording ? (
-                  <button className="icon-btn" onClick={startRecording} style={{ padding: 4 }} title="Record Voice Memo"><Mic size={18} /></button>
+                  <button className="icon-btn" onClick={startRecording} style={{ padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Record Voice Memo"><Mic size={18} /></button>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--danger)' }}>
                     <span style={{ fontSize: 13, fontWeight: 500, minWidth: 40 }}>{formatRecordingTime(recordingTime)}</span>
-                    <button className="icon-btn" onClick={stopRecording} style={{ padding: 4, color: 'var(--danger)' }} title="Stop Recording"><Square size={18} fill="currentColor" /></button>
+                    <button className="icon-btn" onClick={stopRecording} style={{ padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--danger)' }} title="Stop Recording"><Square size={18} fill="currentColor" /></button>
                   </div>
                 )}
 
@@ -547,7 +547,7 @@ export default function Messages() {
                       handleSend();
                     }
                   }}
-                  style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', resize: 'none', outline: 'none', minHeight: 24, maxHeight: 120, padding: '4px 0', fontFamily: 'inherit' }}
+                  style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', resize: 'none', outline: 'none', minHeight: 36, maxHeight: 120, padding: '8px 0', fontFamily: 'inherit', lineHeight: '20px' }}
                   rows={1}
                 />
                 
