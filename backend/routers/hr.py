@@ -12,7 +12,7 @@ router = APIRouter(prefix="/api/hr", tags=["hr"])
 @router.get("/employees")
 def get_employees(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     from sqlalchemy import func
-    query = db.query(Employee)
+    query = db.query(Employee).filter(Employee.salary > 0)
     
     # Admins see everyone; others only see their own department
     if (current_user.role or "").lower() != "admin":

@@ -81,7 +81,7 @@ def calc_inr_deductions(gross: float, year_month: str, absent: float = 0,
 
 @router.get("/summary")
 def payroll_summary(year_month: str = "", db: Session = Depends(get_db), current_user=Depends(require_roles("admin", "hr", "analyst"))):
-    employees = db.query(Employee).filter(Employee.is_active == True).all()
+    employees = db.query(Employee).filter(Employee.is_active == True, Employee.salary > 0).all()
     total_gross = 0
     total_net = 0
     total_deductions = 0
@@ -104,7 +104,7 @@ def payroll_summary(year_month: str = "", db: Session = Depends(get_db), current
 
 @router.get("/employees")
 def payroll_employees(year_month: str = "", db: Session = Depends(get_db), current_user=Depends(require_roles("admin", "hr", "analyst"))):
-    employees = db.query(Employee).filter(Employee.is_active == True).order_by(func.lower(Employee.name).asc()).all()
+    employees = db.query(Employee).filter(Employee.is_active == True, Employee.salary > 0).order_by(func.lower(Employee.name).asc()).all()
     result = []
     for e in employees:
         # Defaulting absent to 0 for initial load, frontend will allow modifying per employee locally for calculations
