@@ -39,7 +39,23 @@ const ProgressChartTooltip = ({ active, payload, label, data }) => {
   if (!active || !payload?.length) return null
   const currentDataIndex = data?.findIndex(d => d.month === label) ?? -1
   const previousData = currentDataIndex > 0 ? data[currentDataIndex - 1] : null
-  const total = payload.reduce((sum, p) => sum + (Number(p.value) || 0), 0)
+  
+  const portalItems = payload.filter(p => p.name !== 'Sales Count')
+  const salesCountItem = payload.find(p => p.name === 'Sales Count')
+  const total = portalItems.reduce((sum, p) => sum + (Number(p.value) || 0), 0)
+
+  const getPercentageStr = (prev, curr) => {
+    if (prev > 0) {
+      const pct = ((curr - prev) / prev) * 100
+      const sign = pct > 0 ? "+" : ""
+      const color = pct >= 0 ? "var(--success)" : "var(--danger)"
+      return ` <span style="color:${color}; font-size:11px; margin-left:4px">(${sign}${pct.toFixed(1)}%)</span>`
+    } else if (curr > 0 && prev === 0) {
+      return ` <span style="color:var(--success); font-size:11px; margin-left:4px">(+100.0%)</span>`
+    }
+    return ""
+  }
+
   return (
     <div style={{
       background: '#0f172a', border: '1px solid var(--border)',
@@ -49,29 +65,31 @@ const ProgressChartTooltip = ({ active, payload, label, data }) => {
       WebkitBackdropFilter: 'blur(32px) saturate(200%)'
     }}>
       <p style={{ color: 'var(--text-muted)', marginBottom: 6 }}>{label}</p>
-      {[...payload].sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0)).map((p, i) => {
+      {[...portalItems].sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0)).map((p, i) => {
         let percentageStr = ""
         if (previousData) {
-          const prevVal = Number(previousData[p.dataKey]) || 0
-          const currVal = Number(p.value) || 0
-          if (prevVal > 0) {
-            const pct = ((currVal - prevVal) / prevVal) * 100
-            const sign = pct > 0 ? "+" : ""
-            const color = pct >= 0 ? "var(--success)" : "var(--danger)"
-            percentageStr = ` <span style="color:${color}; font-size:11px; margin-left:4px">(${sign}${pct.toFixed(1)}%)</span>`
-          } else if (currVal > 0 && prevVal === 0) {
-            percentageStr = ` <span style="color:var(--success); font-size:11px; margin-left:4px">(+100.0%)</span>`
-          }
+          percentageStr = getPercentageStr(Number(previousData[p.dataKey]) || 0, Number(p.value) || 0)
         }
         return (
-          <p key={i} style={{ color: p.color, fontWeight: 600 }} dangerouslySetInnerHTML={{
-            __html: `${p.name}: $${Number(p.value || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}${percentageStr}`
+          <div key={i} style={{ color: p.color, fontWeight: 600, display: 'flex', justifyContent: 'space-between', gap: '16px', marginBottom: '4px' }} dangerouslySetInnerHTML={{
+            __html: `<span>${p.name}:</span> <span>$${Number(p.value || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}${percentageStr}</span>`
           }} />
         )
       })}
-      <div style={{ marginTop: 6, paddingTop: 6, borderTop: '1px solid var(--border)', color: 'var(--text-primary)', fontWeight: 700 }}>
-        Total: ${total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+      <div style={{ marginTop: 6, paddingTop: 6, borderTop: '1px solid var(--border)', color: 'var(--text-primary)', fontWeight: 700, display: 'flex', justifyContent: 'space-between', gap: '16px' }}>
+        <span>Total:</span> <span>${total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
       </div>
+      {salesCountItem && (() => {
+        let percentageStr = ""
+        if (previousData) {
+          percentageStr = getPercentageStr(Number(previousData[salesCountItem.dataKey]) || 0, Number(salesCountItem.value) || 0)
+        }
+        return (
+          <div style={{ marginTop: 6, paddingTop: 6, borderTop: '1px dashed var(--border)', color: '#38bdf8', fontWeight: 700, display: 'flex', justifyContent: 'space-between', gap: '16px' }} dangerouslySetInnerHTML={{
+            __html: `<span>Sales Count:</span> <span>${salesCountItem.value}${percentageStr}</span>`
+          }} />
+        )
+      })()}
     </div>
   )
 }
@@ -628,12 +646,12 @@ export default function Dashboard() {
     "AMAZON": "#f59e0b",
     "CASAVANI WEBSITE": "#10b981",
     "EBAY-RUGSFOREVER": "#8b5cf6",
-    "ETSY-CASAVANI": "#f87171",
-    "ETSY-RUGSFOREVER": "#fb923c",
-    "JAYPOR": "#ec4899",
+    "ETSY-CASAVANI": "#f43f5e",
+    "ETSY-RUGSFOREVER": "#3b82f6",
+    "JAYPOR": "#d946ef",
     "MIRRAW": "#06b6d4",
     "PEPPERFRY": "#ef4444",
-    "WALMART": "#3b82f6"
+    "WALMART": "#14b8a6"
   };
   const fallbackColors = ["#6366f1", "#14b8a6", "#f43f5e", "#84cc16", "#d946ef", "#eab308", "#0ea5e9", "#f97316", "#a855f7"];
   const getPortalColor = (portal, index) => {
@@ -783,7 +801,7 @@ export default function Dashboard() {
                   stroke="none"
                 >
                   {companiesRev.today.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                    <Cell key={`cell-${index}`} fill={getPortalColor(entry.name, index)} />
                   ))}
                 </Pie>
                 <Tooltip content={<CustomPieTooltip />} />
