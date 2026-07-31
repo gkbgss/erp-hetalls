@@ -650,7 +650,7 @@ export default function Dashboard() {
     "ETSY-RUGSFOREVER": "#3b82f6",
     "JAYPOR": "#d946ef",
     "MIRRAW": "#06b6d4",
-    "PEPPERFRY": "#ef4444",
+    "PEPPERFRY": "#84cc16",
     "WALMART": "#14b8a6"
   };
   const fallbackColors = ["#6366f1", "#14b8a6", "#f43f5e", "#84cc16", "#d946ef", "#eab308", "#0ea5e9", "#f97316", "#a855f7"];
@@ -824,11 +824,11 @@ export default function Dashboard() {
             </div>
           </div>
           <ResponsiveContainer width="100%" height={320}>
-            <ComposedChart data={revenueChart || []} margin={{ top: 15, right: 10, left: 0, bottom: 0 }} maxBarSize={45}>
+            <ComposedChart data={revenueChart || []} margin={{ top: 15, right: 45, left: 0, bottom: 0 }} maxBarSize={45}>
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis yAxisId="left" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v/1000}k`} />
-              <YAxis yAxisId="right" orientation="right" tick={{ fill: '#ef4444', fontSize: 11 }} axisLine={false} tickLine={false} label={{ value: 'Sales Count', position: 'top', fill: '#ef4444', fontSize: 11, offset: 15, fontWeight: 600 }} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fill: '#ef4444', fontSize: 11 }} axisLine={false} tickLine={false} label={{ value: 'Sales Count', angle: -90, position: 'right', fill: '#ef4444', fontSize: 12, fontWeight: 600, offset: 10 }} />
               <Tooltip content={<ProgressChartTooltip data={revenueChart} />} itemSorter={(item) => -Number(item.value || 0)} cursor={false} />
               <Legend align="center" wrapperStyle={{ fontSize: 12 }} />
               
