@@ -36,11 +36,18 @@ def sync_users():
         db.rollback()
         print(f"Error during legacy email fix: {e}")
 
-    # Remove employees with salary == 0
+    # Remove duplicate employees with salary == 0
+    from collections import defaultdict
+    name_map = defaultdict(list)
     for emp in db.query(Employee).all():
-        if getattr(emp, 'salary', 0) == 0 or getattr(emp, 'salary', 0) == None:
-            db.delete(emp)
-            print(f"Deleted zero-salary employee: {emp.name} ({emp.email})")
+        name_map[emp.name.lower().strip()].append(emp)
+        
+    for name, emps in name_map.items():
+        if len(emps) > 1:
+            for emp in emps:
+                if getattr(emp, 'salary', 0) == 0:
+                    db.delete(emp)
+                    print(f"Deleted duplicate zero-salary employee: {emp.name} ({emp.email})")
     db.commit()
 
     employees = db.query(Employee).all()

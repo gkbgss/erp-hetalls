@@ -11,13 +11,14 @@ router = APIRouter(prefix="/api/hr", tags=["hr"])
 
 @router.get("/employees")
 def get_employees(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    query = db.query(Employee)
+    from sqlalchemy import func
+    query = db.query(Employee).filter(Employee.salary > 0)
     
     # Admins see everyone; others only see their own department
     if (current_user.role or "").lower() != "admin":
         query = query.filter(Employee.department == current_user.department)
         
-    employees = query.order_by(Employee.name).all()
+    employees = query.order_by(func.lower(Employee.name).asc()).all()
     return employees
 
 @router.get("/trigger-sync")
