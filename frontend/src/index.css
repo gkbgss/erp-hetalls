@@ -1120,7 +1120,6 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   }
   .kpi-grid {
     grid-template-columns: repeat(2, 1fr) !important;
-    grid-auto-rows: 1fr !important;
     gap: 12px !important;
     align-items: stretch !important;
   }
@@ -1129,14 +1128,18 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
     grid-row: auto;
   }
   .kpi-grid > * {
-    height: 100% !important;
+    height: 115px !important;
+    min-height: 115px !important;
+    max-height: 115px !important;
     width: 100% !important;
     display: flex;
     flex-direction: column;
   }
   .kpi-card {
     padding: 12px !important;
-    height: 100% !important;
+    height: 115px !important;
+    min-height: 115px !important;
+    max-height: 115px !important;
     width: 100% !important;
     display: flex !important;
     flex-direction: column !important;
@@ -1170,11 +1173,24 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
     height: 14px !important;
   }
   .cube-container, .cube, .cube-face {
-    height: 100% !important;
+    height: 115px !important;
+    min-height: 115px !important;
+    max-height: 115px !important;
     width: 100% !important;
   }
   .cube-container {
-    min-height: 110px !important;
+    perspective: none !important;
+  }
+  .cube {
+    transform: none !important;
+    transform-style: flat !important;
+  }
+  .cube-face {
+    position: relative !important;
+    transform: none !important;
+  }
+  .cube-face:not(:first-child) {
+    display: none !important;
   }
   .chart-grid {
     grid-template-columns: 1fr !important;
