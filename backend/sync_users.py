@@ -15,14 +15,26 @@ def sync_users():
     # 1. Fix legacy emails in Employee table
     for emp in db.query(Employee).all():
         if emp.email and ('@example.com' in emp.email or '@company.com' in emp.email):
-            emp.email = emp.email.replace('@example.com', '@hetalls.com').replace('@company.com', '@hetalls.com')
+            new_email = emp.email.replace('@example.com', '@hetalls.com').replace('@company.com', '@hetalls.com')
+            if not db.query(Employee).filter(Employee.email == new_email).first():
+                emp.email = new_email
+            else:
+                db.delete(emp)
             
     # Fix legacy emails in User table
     for user in db.query(User).all():
         if user.email and ('@example.com' in user.email or '@company.com' in user.email):
-            user.email = user.email.replace('@example.com', '@hetalls.com').replace('@company.com', '@hetalls.com')
-            
-    db.commit()
+            new_email = user.email.replace('@example.com', '@hetalls.com').replace('@company.com', '@hetalls.com')
+            if not db.query(User).filter(User.email == new_email).first():
+                user.email = new_email
+            else:
+                db.delete(user)
+                
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"Error during legacy email fix: {e}")
 
     employees = db.query(Employee).all()
     print(f"Found {len(employees)} employees. Syncing to Users...")
