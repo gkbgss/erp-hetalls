@@ -132,6 +132,7 @@ function KPICard({ icon: Icon, label, value, sub, colorClass, prefix = '', forma
 
 const PortalGrowthCard = ({ revenueChart, style = {} }) => {
   const [spinCount, setSpinCount] = useState(0);
+  const touchStartX = useRef(0);
   
   const portals = useMemo(() => {
     if (!revenueChart || revenueChart.length < 2) return [];
@@ -225,7 +226,7 @@ const PortalGrowthCard = ({ revenueChart, style = {} }) => {
 
 const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
   const [spinCount, setSpinCount] = useState(0);
-  const touchStartX = React.useRef(0);
+  const touchStartX = useRef(0);
   const [isHovered, setIsHovered] = useState(false);
   
   const faces = [
