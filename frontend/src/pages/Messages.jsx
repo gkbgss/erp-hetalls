@@ -128,11 +128,15 @@ export default function Messages() {
     ...sentMessages.map(m => ({ ...m, type: 'sent', partnerId: m.recipient_id, partnerName: m.recipient_name }))
   ].filter(m => !deletedForMeIds.includes(m.id)).sort((a, b) => new Date(a.created_at || a.date) - new Date(b.created_at || b.date));
 
+  const currentChatMessages = combined.filter(m => m.partnerId === selectedPartner?.id);
+
   useEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 50);
     }
-  }, [combined.length, selectedPartner]);
+  }, [currentChatMessages.length, selectedPartner]);
 
   useEffect(() => {
     if (selectedPartner) {
@@ -388,9 +392,13 @@ export default function Messages() {
                 <button className="icon-btn mobile-back-btn" onClick={() => setSelectedPartner(null)} style={{ padding: 4, marginRight: 4, color: 'var(--gold)' }} title="Back to chats">
                   <ArrowLeft size={20} />
                 </button>
-                <img src={selectedPartner.avatar} alt={selectedPartner.name} style={{ width: 40, height: 40, borderRadius: '50%' }} />
-                <div>
+                <div style={{ position: 'relative' }}>
+                  <img src={selectedPartner.avatar} alt={selectedPartner.name} style={{ width: 40, height: 40, borderRadius: '50%' }} />
+                  <div style={{ position: 'absolute', bottom: 0, right: 0, width: 12, height: 12, background: 'var(--success, #10b981)', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)' }}></div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <h3 style={{ margin: 0, fontSize: 16 }}>{selectedPartner.name}</h3>
+                  <span style={{ fontSize: 12, color: 'var(--success, #10b981)', fontWeight: 600 }}>Active now</span>
                 </div>
               </div>
               <button className="icon-btn" onClick={() => setSelectedPartner(null)} title="Close"><X size={20} /></button>
