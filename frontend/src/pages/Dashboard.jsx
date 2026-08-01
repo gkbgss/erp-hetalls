@@ -184,6 +184,13 @@ const PortalGrowthCard = ({ revenueChart, style = {} }) => {
         const isRight = (e.clientX - rect.left) > rect.width / 2;
         setSpinCount(c => isRight ? c + 1 : (c - 1 + 300) % 300); 
       }}
+      onTouchStart={(e) => touchStartX.current = e.touches[0].clientX}
+      onTouchEnd={(e) => {
+        const diff = e.changedTouches[0].clientX - touchStartX.current;
+        if (Math.abs(diff) > 30) {
+          setSpinCount(c => diff > 0 ? (c - 1 + 300) % 300 : c + 1);
+        }
+      }}
       style={{ cursor: 'pointer', userSelect: 'none', ...style }}
     >
       <div 
@@ -218,6 +225,7 @@ const PortalGrowthCard = ({ revenueChart, style = {} }) => {
 
 const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
   const [spinCount, setSpinCount] = useState(0);
+  const touchStartX = React.useRef(0);
   const [isHovered, setIsHovered] = useState(false);
   
   const faces = [
@@ -252,6 +260,13 @@ const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
           const isRight = (clientX - rect.left) > rect.width / 2;
           setSpinCount(c => isRight ? c + 1 : (c - 1 + 300) % 300); 
           setIsHovered(true);
+        }}
+        onTouchStart={(e) => touchStartX.current = e.touches[0].clientX}
+        onTouchEnd={(e) => {
+          const diff = e.changedTouches[0].clientX - touchStartX.current;
+          if (Math.abs(diff) > 30) {
+            setSpinCount(c => diff > 0 ? (c - 1 + 300) % 300 : c + 1);
+          }
         }}
         style={{ cursor: 'pointer', userSelect: 'none' }}
       >
