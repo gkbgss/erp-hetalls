@@ -234,40 +234,25 @@ const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
 
   const currentFace = faces[spinCount % 3];
 
-  const [pointerDownPos, setPointerDownPos] = useState(null);
-
-  const handlePointerDown = (e) => {
-    setPointerDownPos({ x: e.clientX, y: e.clientY });
-  };
-
-  const handlePointerUp = (e) => {
-    if (!pointerDownPos) return;
-    const dx = e.clientX - pointerDownPos.x;
-    const dy = e.clientY - pointerDownPos.y;
-    
-    // Only spin if it was a tap (not a long scroll/drag)
-    if (Math.abs(dx) < 15 && Math.abs(dy) < 15) {
-      e.preventDefault();
-      const rect = e.currentTarget.getBoundingClientRect();
-      const isRight = (e.clientX - rect.left) > rect.width / 2;
-      setSpinCount(c => isRight ? c + 1 : (c - 1 + 300) % 300);
-      
-      // Also show tooltip on mobile tap
-      setIsHovered(true);
-    }
-    setPointerDownPos(null);
-  };
-
   return (
     <div 
       style={{ position: 'relative', zIndex: isHovered ? 9999 : 1, ...style }}
-      onPointerEnter={(e) => { if (e.pointerType === 'mouse') setIsHovered(true); }}
-      onPointerLeave={(e) => { if (e.pointerType === 'mouse') setIsHovered(false); }}
+      onMouseEnter={() => { if (window.matchMedia('(hover: hover)').matches) setIsHovered(true); }}
+      onMouseLeave={() => { if (window.matchMedia('(hover: hover)').matches) setIsHovered(false); }}
     >
       <div 
         className="cube-container" 
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
+        onClick={(e) => { 
+          if (e && e.preventDefault) e.preventDefault(); 
+          const rect = e.currentTarget.getBoundingClientRect();
+          let clientX = e.clientX;
+          if ((clientX === undefined || clientX === 0) && e.nativeEvent?.changedTouches?.length > 0) {
+            clientX = e.nativeEvent.changedTouches[0].clientX;
+          }
+          const isRight = (clientX - rect.left) > rect.width / 2;
+          setSpinCount(c => isRight ? c + 1 : (c - 1 + 300) % 300); 
+          setIsHovered(true);
+        }}
         style={{ cursor: 'pointer', userSelect: 'none' }}
       >
         <div 
