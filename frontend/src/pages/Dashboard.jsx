@@ -234,54 +234,40 @@ const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
 
   const currentFace = faces[spinCount % 3];
 
-  const [touchStartPos, setTouchStartPos] = useState(null);
+  const [pointerDownPos, setPointerDownPos] = useState(null);
 
-  const handleTouchStart = (e) => {
-    setTouchStartPos({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+  const handlePointerDown = (e) => {
+    setPointerDownPos({ x: e.clientX, y: e.clientY });
   };
 
-  const handleTouchEnd = (e) => {
-    if (!touchStartPos) return;
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-    const dx = endX - touchStartPos.x;
-    const dy = endY - touchStartPos.y;
+  const handlePointerUp = (e) => {
+    if (!pointerDownPos) return;
+    const dx = e.clientX - pointerDownPos.x;
+    const dy = e.clientY - pointerDownPos.y;
     
-    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
-      // It's a tap
-      e.preventDefault(); // Prevent onClick from firing again
-      const rect = e.currentTarget.getBoundingClientRect();
-      const isRight = (endX - rect.left) > rect.width / 2;
-      setSpinCount(c => isRight ? c + 1 : (c - 1 + 300) % 300);
-      setIsHovered(true);
-    } else if (Math.abs(dx) > 30 && Math.abs(dy) < 40) {
-      // It's a horizontal swipe
+    // Only spin if it was a tap (not a long scroll/drag)
+    if (Math.abs(dx) < 15 && Math.abs(dy) < 15) {
       e.preventDefault();
-      setSpinCount(c => dx < 0 ? c + 1 : (c - 1 + 300) % 300);
+      const rect = e.currentTarget.getBoundingClientRect();
+      const isRight = (e.clientX - rect.left) > rect.width / 2;
+      setSpinCount(c => isRight ? c + 1 : (c - 1 + 300) % 300);
+      
+      // Also show tooltip on mobile tap
+      setIsHovered(true);
     }
-    setTouchStartPos(null);
+    setPointerDownPos(null);
   };
 
   return (
     <div 
       style={{ position: 'relative', zIndex: isHovered ? 9999 : 1, ...style }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onPointerEnter={(e) => { if (e.pointerType === 'mouse') setIsHovered(true); }}
+      onPointerLeave={(e) => { if (e.pointerType === 'mouse') setIsHovered(false); }}
     >
       <div 
         className="cube-container" 
-        onClick={(e) => { 
-          if (e && e.preventDefault) e.preventDefault(); 
-          const rect = e.currentTarget.getBoundingClientRect();
-          let clientX = e.clientX;
-          if (clientX === 0 && e.nativeEvent?.changedTouches?.length > 0) {
-            clientX = e.nativeEvent.changedTouches[0].clientX;
-          }
-          const isRight = (clientX - rect.left) > rect.width / 2;
-          setSpinCount(c => isRight ? c + 1 : (c - 1 + 300) % 300); 
-        }}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
         style={{ cursor: 'pointer', userSelect: 'none' }}
       >
         <div 
