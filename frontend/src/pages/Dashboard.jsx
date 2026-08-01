@@ -234,6 +234,34 @@ const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
 
   const currentFace = faces[spinCount % 3];
 
+  const [touchStartPos, setTouchStartPos] = useState(null);
+
+  const handleTouchStart = (e) => {
+    setTouchStartPos({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!touchStartPos) return;
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const dx = endX - touchStartPos.x;
+    const dy = endY - touchStartPos.y;
+    
+    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+      // It's a tap
+      e.preventDefault(); // Prevent onClick from firing again
+      const rect = e.currentTarget.getBoundingClientRect();
+      const isRight = (endX - rect.left) > rect.width / 2;
+      setSpinCount(c => isRight ? c + 1 : (c - 1 + 300) % 300);
+      setIsHovered(true);
+    } else if (Math.abs(dx) > 30 && Math.abs(dy) < 40) {
+      // It's a horizontal swipe
+      e.preventDefault();
+      setSpinCount(c => dx < 0 ? c + 1 : (c - 1 + 300) % 300);
+    }
+    setTouchStartPos(null);
+  };
+
   return (
     <div 
       style={{ position: 'relative', zIndex: isHovered ? 9999 : 1, ...style }}
@@ -245,9 +273,15 @@ const RevenueSpinningCard = ({ kpis, companiesRev, style = {} }) => {
         onClick={(e) => { 
           if (e && e.preventDefault) e.preventDefault(); 
           const rect = e.currentTarget.getBoundingClientRect();
-          const isRight = (e.clientX - rect.left) > rect.width / 2;
+          let clientX = e.clientX;
+          if (clientX === 0 && e.nativeEvent?.changedTouches?.length > 0) {
+            clientX = e.nativeEvent.changedTouches[0].clientX;
+          }
+          const isRight = (clientX - rect.left) > rect.width / 2;
           setSpinCount(c => isRight ? c + 1 : (c - 1 + 300) % 300); 
         }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         style={{ cursor: 'pointer', userSelect: 'none' }}
       >
         <div 

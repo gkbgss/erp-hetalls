@@ -302,7 +302,7 @@ export default function Messages() {
   
   const getAvatar = (seed) => `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
 
-  const currentChatMessages = selectedPartner ? combined.filter(m => m.partnerId === selectedPartner.id) : [];
+
 
   return (
     <div className="messages-layout">
