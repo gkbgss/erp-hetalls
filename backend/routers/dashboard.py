@@ -101,7 +101,7 @@ def get_kpis(current_user=Depends(get_current_user), db: Session = Depends(get_d
     today = 0
     
     try:
-        total_employees = db.query(Employee).filter(Employee.is_active == True).count()
+        total_employees = db.query(Employee).filter(Employee.is_active == True, Employee.salary > 0).count()
     except Exception:
         total_employees = 0
     
