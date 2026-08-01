@@ -1178,20 +1178,7 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
     max-height: 115px !important;
     width: 100% !important;
   }
-  .cube-container {
-    perspective: none !important;
-  }
-  .cube {
-    transform: none !important;
-    transform-style: flat !important;
-  }
-  .cube-face {
-    position: relative !important;
-    transform: none !important;
-  }
-  .cube-face:not(:first-child) {
-    display: none !important;
-  }
+
   .chart-grid {
     grid-template-columns: 1fr !important;
   }
