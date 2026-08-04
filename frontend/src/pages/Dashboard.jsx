@@ -564,6 +564,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     let isMounted = true;
+    let isServerDown = false;
     const fetchAll = (isInitial = false) => {
       if (isInitial) setLoading(true);
       const t = Date.now();
@@ -575,13 +576,20 @@ export default function Dashboard() {
         axios.get(`${API}/api/dashboard/companies-revenue?_t=${t}`),
       ]).then(([k, r, o, tData, c]) => {
         if (!isMounted) return;
+        if (isServerDown) {
+          window.location.reload();
+          return;
+        }
         setKpis(k.data);
         setRevenueChart(r.data);
         setRecentOrders(o.data);
         setTodayOrders(tData.data);
         setCompaniesRev(c.data);
         setLastRefreshed(new Date());
-      }).catch(console.error)
+      }).catch((err) => {
+        console.error(err);
+        isServerDown = true;
+      })
         .finally(() => {
           if (isMounted && isInitial) setLoading(false);
         });
