@@ -22,7 +22,14 @@ class UserUpdate(BaseModel):
 
 @router.get("/", response_model=List[UserOut])
 def list_users(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    return db.query(User).filter(User.is_active == True).all()
+    from database import Employee
+    zero_salary_emails = [e.email for e in db.query(Employee).filter(Employee.salary <= 0).all() if e.email]
+    
+    query = db.query(User).filter(User.is_active == True)
+    if zero_salary_emails:
+        query = query.filter(~User.email.in_(zero_salary_emails))
+        
+    return query.all()
 
 @router.put("/{user_id}", response_model=UserOut)
 def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db), current_user=Depends(require_roles("admin"))):
