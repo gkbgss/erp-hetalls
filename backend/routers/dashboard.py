@@ -15,7 +15,7 @@ SHEET_URL_TEMPLATE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTkTIObrXy
 
 _CACHE = {}
 _CACHE_LOCK = threading.Lock()
-_FETCHING = set()
+_FETCH_EVENTS = {}
 CACHE_TTL = 10 # 10 seconds for near-live data
 
 def _fetch_from_google(sheet_name):
@@ -23,42 +23,50 @@ def _fetch_from_google(sheet_name):
         url = SHEET_URL_TEMPLATE.format(urllib.parse.quote(sheet_name))
     else:
         url = SHEET_URL_TEMPLATE
+    
+    # Add a cache buster to bypass Google CDN and local proxies
+    url += f"&_cb={int(time.time())}"
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req) as response:
             content = response.read().decode('utf-8')
             data = list(csv.reader(StringIO(content)))
-            with _CACHE_LOCK:
-                _CACHE[sheet_name] = (time.time(), data)
             return data
     except Exception as e:
         print(f"Error fetching sheet {sheet_name}: {e}")
         return None
-    finally:
-        with _CACHE_LOCK:
-            if sheet_name in _FETCHING:
-                _FETCHING.remove(sheet_name)
-
-def _bg_fetch(sheet_name):
-    with _CACHE_LOCK:
-        if sheet_name in _FETCHING:
-            return
-        _FETCHING.add(sheet_name)
-    _fetch_from_google(sheet_name)
 
 def fetch_sheet_csv(sheet_name):
     now = time.time()
     with _CACHE_LOCK:
         if sheet_name in _CACHE:
             cached_time, data = _CACHE[sheet_name]
-            if now - cached_time > CACHE_TTL:
-                threading.Thread(target=_bg_fetch, args=(sheet_name,)).start()
-            return data
+            if now - cached_time <= CACHE_TTL:
+                return data
+                
+        if sheet_name in _FETCH_EVENTS:
+            event = _FETCH_EVENTS[sheet_name]
+            needs_fetch = False
+        else:
+            event = threading.Event()
+            _FETCH_EVENTS[sheet_name] = event
+            needs_fetch = True
 
-    with _CACHE_LOCK:
-        _FETCHING.add(sheet_name)
-    data = _fetch_from_google(sheet_name)
-    return data or []
+    if needs_fetch:
+        data = _fetch_from_google(sheet_name)
+        with _CACHE_LOCK:
+            if data is not None:
+                _CACHE[sheet_name] = (time.time(), data)
+            if sheet_name in _FETCH_EVENTS:
+                del _FETCH_EVENTS[sheet_name]
+        event.set()
+        return data or []
+    else:
+        event.wait()
+        with _CACHE_LOCK:
+            if sheet_name in _CACHE:
+                return _CACHE[sheet_name][1]
+            return []
 
 def parse_price(val_str):
     try:
