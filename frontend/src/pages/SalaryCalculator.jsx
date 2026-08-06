@@ -153,6 +153,47 @@ export default function SalaryCalculator() {
   
   // Download Modal State
   const [showModal, setShowModal] = useState(false)
+  const fileInputRef = useRef(null)
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const text = evt.target.result;
+      const lines = text.split('\n');
+      const newInputs = { ...inputs };
+      let updated = false;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        const parts = line.split(',');
+        if (parts.length >= 2) {
+          const empName = parts[0].trim().toLowerCase();
+          const absentVal = parseFloat(parts[1].trim());
+          if (!isNaN(absentVal)) {
+            const emp = employees.find(e => e.name.toLowerCase() === empName);
+            if (emp) {
+              if (!newInputs[emp.id]) {
+                newInputs[emp.id] = { absent: 0, extraPresent: 0, extraHour: 0, lessHour: 0, adv1: 0, adv2: 0 };
+              }
+              newInputs[emp.id].absent = absentVal;
+              updated = true;
+            }
+          }
+        }
+      }
+      if (updated) {
+        setInputs(newInputs);
+        showFlash('success', 'Absence data loaded from CSV');
+      } else {
+        showFlash('error', 'No matching employees found in CSV');
+      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+    reader.readAsText(file);
+  };
   const [selectedEmps, setSelectedEmps] = useState(new Set())
   const [isGenerating, setIsGenerating] = useState(false)
 
@@ -222,7 +263,10 @@ export default function SalaryCalculator() {
     
     let addedPaidLeave = 0;
     const excludedDepts = ['guard', 'store', 'helper', 'field', 'feild', 'carpet production', 'packing', 'production'];
-    if (!excludedDepts.includes(emp.department.toLowerCase())) {
+    const autoCancelPaidLeave = absent > 5;
+    const manualCancelPaidLeave = input.cancelPaidLeave === true;
+    
+    if (!excludedDepts.includes(emp.department.toLowerCase()) && !autoCancelPaidLeave && !manualCancelPaidLeave) {
       addedPaidLeave = dailyWage;
     }
     let addedExtraPresent = extraPresent * dailyWage;
@@ -477,6 +521,10 @@ export default function SalaryCalculator() {
                   </div>
                 </div>
                 <div className="salary-table-controls" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                  <input type="file" accept=".csv" ref={fileInputRef} onChange={handleFileUpload} style={{ display: 'none' }} id="csv-upload" />
+                  <label htmlFor="csv-upload" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                    Upload CSV
+                  </label>
                   <div className="salary-search-box" style={{ position: 'relative', flex: '1 1 auto', minWidth: 160 }}>
                     <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                     <input 
@@ -504,6 +552,7 @@ export default function SalaryCalculator() {
                     <tr style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
                       <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: 12 }}>Name & Dept</th>
                       <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: 12 }}>CTC Salary</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: 12, width: 80 }}>Paid Leave</th>
                       <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: 12, width: 80 }}>Absent</th>
                       <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: 12, width: 80 }}>Extra Present</th>
                       <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: 12, width: 80 }}>Extra Hr</th>
@@ -538,11 +587,22 @@ export default function SalaryCalculator() {
                                 <input type="number" min="0" className="form-input" style={{ width: 90, padding: '5px 8px', fontSize: 14 }}
                                   value={editSalary} onChange={e => setEditSalary(e.target.value)} autoFocus onClick={e => e.stopPropagation()} />
                               ) : (
-                                <span style={{ fontWeight: 600, fontFamily: 'monospace', fontSize: 14 }}>₹{emp.salary.toLocaleString('en-IN')}</span>
+                                <div style={{ fontWeight: 600, fontSize: 14 }}>₹{emp.salary ? Number(emp.salary).toLocaleString('en-IN') : '0'}</div>
                               )}
                             </td>
                             <td style={tdStyle} onClick={e => e.stopPropagation()}>
-                              <input type="number" min="0" max={31} style={inputStyle} value={input.absent || ''} onChange={e => handleInputChange(emp.id, 'absent', e.target.value)} />
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'var(--bg-card)', padding: '6px', borderRadius: 4, border: '1px solid var(--border)' }}>
+                                <input 
+                                  type="checkbox" 
+                                  checked={input.cancelPaidLeave || false}
+                                  onChange={e => handleInputChange(emp.id, 'cancelPaidLeave', e.target.checked)}
+                                  style={{ cursor: 'pointer', width: 14, height: 14 }}
+                                />
+                                <span style={{ fontSize: 11, color: input.cancelPaidLeave ? 'var(--danger)' : 'var(--text-muted)', fontWeight: input.cancelPaidLeave ? 600 : 400 }}>Cancel</span>
+                              </div>
+                            </td>
+                            <td style={tdStyle} onClick={e => e.stopPropagation()}>
+                              <input type="number" min="0" max="31" value={input.absent === 0 ? '' : input.absent} onChange={e => handleInputChange(emp.id, 'absent', e.target.value)} style={inputStyle} placeholder="0" />
                             </td>
                             <td style={tdStyle} onClick={e => e.stopPropagation()}>
                               <input type="number" min="0" max={31} style={inputStyle} value={input.extraPresent || ''} onChange={e => handleInputChange(emp.id, 'extraPresent', e.target.value)} />
@@ -588,7 +648,7 @@ export default function SalaryCalculator() {
                           {/* Expanded breakdown row */}
                           {expandedId === emp.id && (
                             <tr key={`${emp.id}-detail`} style={{ background: 'var(--bg-hover)' }}>
-                              <td colSpan={isAdmin ? 11 : 10} style={{ padding: '0 24px 20px', borderBottom: '1px solid var(--border)' }}>
+                              <td colSpan={isAdmin ? 12 : 11} style={{ padding: '0 24px 20px', borderBottom: '1px solid var(--border)' }}>
                                 <div style={{ background: 'var(--bg-card)', padding: '16px', borderRadius: 8, border: '1px solid var(--border)', maxWidth: 500, marginTop: 12 }}>
                                   <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '8px', marginBottom: '12px', fontSize: 13, fontWeight: 700 }}>Detailed Breakdown</div>
                                   
