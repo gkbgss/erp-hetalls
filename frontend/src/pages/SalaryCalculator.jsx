@@ -172,6 +172,17 @@ export default function SalaryCalculator() {
         if (parts.length >= 2) {
           const empName = parts[0].trim().toLowerCase();
           const absentVal = parseFloat(parts[1].trim());
+          
+          let extraPresentVal = 0;
+          if (parts.length >= 3 && parts[2].trim() !== '') {
+            extraPresentVal = parseFloat(parts[2].trim());
+          }
+          
+          let adv1Val = 0;
+          if (parts.length >= 4 && parts[3].trim() !== '') {
+            adv1Val = parseFloat(parts[3].trim());
+          }
+          
           if (!isNaN(absentVal)) {
             const emp = employees.find(e => e.name.toLowerCase() === empName);
             if (emp) {
@@ -179,6 +190,8 @@ export default function SalaryCalculator() {
                 newInputs[emp.id] = { absent: 0, extraPresent: 0, extraHour: 0, lessHour: 0, adv1: 0, adv2: 0 };
               }
               newInputs[emp.id].absent = absentVal;
+              if (!isNaN(extraPresentVal)) newInputs[emp.id].extraPresent = extraPresentVal;
+              if (!isNaN(adv1Val)) newInputs[emp.id].adv1 = adv1Val;
               updated = true;
             }
           }
@@ -263,7 +276,7 @@ export default function SalaryCalculator() {
     
     let addedPaidLeave = 0;
     const excludedDepts = ['guard', 'store', 'helper', 'field', 'feild', 'carpet production', 'packing', 'production'];
-    const autoCancelPaidLeave = absent > 5;
+    const autoCancelPaidLeave = absent > 4;
     const manualCancelPaidLeave = input.cancelPaidLeave === true;
     
     if (!excludedDepts.includes(emp.department.toLowerCase()) && !autoCancelPaidLeave && !manualCancelPaidLeave) {
