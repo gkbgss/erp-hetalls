@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useMessages } from '../context/MessagesContext'
@@ -28,7 +29,34 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const { unreadCount } = useMessages()
   const navigate = useNavigate()
 
+  const [clickCount, setClickCount] = useState(0)
+  const [showHR, setShowHR] = useState(() => {
+    return localStorage.getItem('hetalls_show_hr') === 'true'
+  })
+
+  useEffect(() => {
+    if (clickCount > 0) {
+      const timer = setTimeout(() => setClickCount(0), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [clickCount])
+
+  const handleLogoClick = () => {
+    setClickCount(prev => {
+      const next = prev + 1
+      if (next >= 3) {
+        const newVal = !showHR
+        setShowHR(newVal)
+        localStorage.setItem('hetalls_show_hr', String(newVal))
+        return 0
+      }
+      return next
+    })
+  }
+
   const canSee = (item) => {
+    if (item.to.startsWith('/hr') && !showHR) return false
+    
     if (!item.role && !item.permission) return true
     const uRole = (user?.role || '').toLowerCase()
     const uPerms = (user?.permissions || []).map(p => p.toLowerCase())
@@ -53,7 +81,10 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
       <aside className={`sidebar ${sidebarOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-logo">
           <div className="logo-mark" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div 
+              style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none' }}
+              onClick={handleLogoClick}
+            >
               <div className="logo-icon">H</div>
               <div className="logo-text">
                 <h1>Hetalls ERP</h1>
