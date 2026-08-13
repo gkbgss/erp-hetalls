@@ -19,6 +19,7 @@ const ROLE_COLORS = {
 export default function Settings() {
   const { API, user: me } = useAuth()
   const [users, setUsers] = useState([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   
@@ -117,6 +118,12 @@ export default function Settings() {
   }
 
   const isAdmin = me?.role === 'admin'
+  const filteredUsers = users.filter(u => 
+    (u.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (u.email || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (u.role || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (u.department || '').toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   return (
     <div>
@@ -230,7 +237,15 @@ export default function Settings() {
             <div className="card-subtitle">{users.length} registered users — manage roles and departments</div>
           </div>
           {isAdmin && (
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <input
+                type="text"
+                placeholder="Search users..."
+                className="form-input"
+                style={{ width: '200px', padding: '8px 12px', fontSize: '13px' }}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
               <button
                 onClick={handleSync}
                 style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)', padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
@@ -297,7 +312,7 @@ export default function Settings() {
                 </tr>
               </thead>
               <tbody>
-                {users.map(u => (
+                {filteredUsers.map(u => (
                   <tr key={u.id}>
                     <td onDoubleClick={() => isAdmin && handleEdit(u)} style={{ cursor: isAdmin && editId !== u.id ? 'pointer' : 'default' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
