@@ -12,6 +12,7 @@ router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
 # NOTE: The sheet MUST be "Anyone with the link can view" for this to work!
 SHEET_URL_TEMPLATE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTkTIObrXy88vQVg2_bAI2T8vPa1tXT5IWZw8tdvF9BW7aYj9qqTA6WeZjpJHlBlw4dpTj_o7dYhtzW/pub?gid=978055065&single=true&output=csv"
+MKM_SHEET_URL = "https://docs.google.com/spreadsheets/d/1NZo52WV0ynaYe-G2WrZ5ItRwPmNKjdwhr_GOyztAz8U/export?format=csv&gid=663408233"
 
 _CACHE = {}
 _CACHE_LOCK = threading.Lock()
@@ -54,6 +55,48 @@ def fetch_sheet_csv(sheet_name):
 
     if needs_fetch:
         data = _fetch_from_google(sheet_name)
+        with _CACHE_LOCK:
+            if data is not None:
+                _CACHE[sheet_name] = (time.time(), data)
+            if sheet_name in _FETCH_EVENTS:
+                del _FETCH_EVENTS[sheet_name]
+        event.set()
+        return data or []
+    else:
+        event.wait()
+        with _CACHE_LOCK:
+            if sheet_name in _CACHE:
+                return _CACHE[sheet_name][1]
+            return []
+
+def fetch_mkm_sheet_csv():
+    now = time.time()
+    sheet_name = "MKM_DAILY"
+    with _CACHE_LOCK:
+        if sheet_name in _CACHE:
+            cached_time, data = _CACHE[sheet_name]
+            if now - cached_time <= CACHE_TTL:
+                return data
+                
+        if sheet_name in _FETCH_EVENTS:
+            event = _FETCH_EVENTS[sheet_name]
+            needs_fetch = False
+        else:
+            event = threading.Event()
+            _FETCH_EVENTS[sheet_name] = event
+            needs_fetch = True
+
+    if needs_fetch:
+        url = MKM_SHEET_URL + f"&_cb={int(time.time())}"
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req) as response:
+                content = response.read().decode('utf-8')
+                data = list(csv.reader(StringIO(content)))
+        except Exception as e:
+            print(f"Error fetching MKM sheet: {e}")
+            data = None
+            
         with _CACHE_LOCK:
             if data is not None:
                 _CACHE[sheet_name] = (time.time(), data)
@@ -154,6 +197,23 @@ def get_kpis(current_user=Depends(get_current_user), db: Session = Depends(get_d
     prev_dates = [d for d in orders_by_date.keys() if d < now.date()]
     yesterday_orders = orders_by_date[max(prev_dates)] if prev_dates else 0
 
+    # Add MKM aggregate sales
+    mkm_data = fetch_mkm_sheet_csv()
+    if len(mkm_data) >= 3:
+        for row in mkm_data[2:]:
+            if not row or not row[0].strip(): continue
+            dt = parse_date(row[0])
+            if not dt: continue
+            
+            daily_mkm_rev = sum(parse_price(val) for val in row[1:])
+            total_revenue += daily_mkm_rev
+            if fy_start <= dt <= fy_end:
+                this_year_rev += daily_mkm_rev
+            if dt.year == current_year and dt.month == current_month:
+                this_month_rev += daily_mkm_rev
+            if dt.date() == now.date():
+                today_rev += daily_mkm_rev
+
     return {
         "total_revenue":     round(total_revenue, 2),
         "this_year_revenue": round(this_year_rev, 2),
@@ -211,6 +271,32 @@ def companies_revenue(current_user=Depends(get_current_user)):
                     portals["today"][portal] = portals["today"].get(portal, 0) + price
                     counts["today"][portal] = counts["today"].get(portal, 0) + 1
                     
+    # Add MKM aggregate sales
+    mkm_data = fetch_mkm_sheet_csv()
+    if len(mkm_data) >= 3:
+        headers = [h.strip().upper() for h in mkm_data[0]]
+        for row in mkm_data[2:]:
+            if not row or not row[0].strip(): continue
+            dt = parse_date(row[0])
+            if not dt: continue
+            
+            for i, val in enumerate(row[1:], start=1):
+                if i < len(headers) and headers[i]:
+                    portal = headers[i]
+                    if portal == "ETSY -MKM HO": portal = "ETSY-MKM"
+                    elif portal == "EBAY-MKM HO": portal = "EBAY-MKM"
+                    elif portal == "CRAFT": portal = "CRAFT-MKM"
+                    
+                    price = parse_price(val)
+                    if price > 0:
+                        portals["total"][portal] = portals["total"].get(portal, 0) + price
+                        if fy_start <= dt <= fy_end:
+                            portals["year"][portal] = portals["year"].get(portal, 0) + price
+                        if dt.year == current_year and dt.month == current_month:
+                            portals["month"][portal] = portals["month"].get(portal, 0) + price
+                        if dt.date() == today:
+                            portals["today"][portal] = portals["today"].get(portal, 0) + price
+                    
     results = {"total": [], "today": [], "month": [], "year": []}
     for key in portals:
         for i, (portal, total) in enumerate(portals[key].items()):
@@ -247,6 +333,30 @@ def revenue_chart(current_user=Depends(get_current_user)):
                 monthly_data[month_label] = {"month": month_label, "_dt": dt.replace(day=1), "order_count": 0}
             monthly_data[month_label][portal] = monthly_data[month_label].get(portal, 0) + price
             monthly_data[month_label]["order_count"] += 1
+            
+    # Add MKM aggregate sales
+    mkm_data = fetch_mkm_sheet_csv()
+    if len(mkm_data) >= 3:
+        headers = [h.strip().upper() for h in mkm_data[0]]
+        for row in mkm_data[2:]:
+            if not row or not row[0].strip(): continue
+            dt = parse_date(row[0])
+            if not dt: continue
+            
+            month_label = dt.strftime("%b %Y")
+            if month_label not in monthly_data:
+                monthly_data[month_label] = {"month": month_label, "_dt": dt.replace(day=1), "order_count": 0}
+                
+            for i, val in enumerate(row[1:], start=1):
+                if i < len(headers) and headers[i]:
+                    portal = headers[i]
+                    if portal == "ETSY -MKM HO": portal = "ETSY-MKM"
+                    elif portal == "EBAY-MKM HO": portal = "EBAY-MKM"
+                    elif portal == "CRAFT": portal = "CRAFT-MKM"
+                    
+                    price = parse_price(val)
+                    if price > 0:
+                        monthly_data[month_label][portal] = monthly_data[month_label].get(portal, 0) + price
             
     # Sort by date
     sorted_months = sorted(monthly_data.values(), key=lambda x: x["_dt"])
