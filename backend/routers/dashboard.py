@@ -200,12 +200,17 @@ def get_kpis(current_user=Depends(get_current_user), db: Session = Depends(get_d
     # Add MKM aggregate sales
     mkm_data = fetch_mkm_sheet_csv()
     if len(mkm_data) >= 3:
+        headers = [h.strip().upper() for h in mkm_data[0]]
         for row in mkm_data[2:]:
             if not row or not row[0].strip(): continue
             dt = parse_date(row[0])
             if not dt: continue
             
-            daily_mkm_rev = sum(parse_price(val) for val in row[1:])
+            daily_mkm_rev = 0.0
+            for i, val in enumerate(row[1:], start=1):
+                if i < len(headers) and headers[i]:
+                    daily_mkm_rev += parse_price(val)
+                    
             total_revenue += daily_mkm_rev
             if fy_start <= dt <= fy_end:
                 this_year_rev += daily_mkm_rev
@@ -283,9 +288,9 @@ def companies_revenue(current_user=Depends(get_current_user)):
             for i, val in enumerate(row[1:], start=1):
                 if i < len(headers) and headers[i]:
                     portal = headers[i]
-                    if portal == "ETSY -MKM HO": portal = "ETSY-MKM"
-                    elif portal == "EBAY-MKM HO": portal = "EBAY-MKM"
-                    elif portal == "CRAFT": portal = "CRAFT-MKM"
+                    if "ETSY -MKM" in portal: portal = "ETSY-MKM"
+                    elif "EBAY-MKM" in portal: portal = "EBAY-MKM"
+                    elif "CRAFT" in portal: portal = "CRAFT-MKM"
                     
                     price = parse_price(val)
                     if price > 0:
@@ -350,9 +355,9 @@ def revenue_chart(current_user=Depends(get_current_user)):
             for i, val in enumerate(row[1:], start=1):
                 if i < len(headers) and headers[i]:
                     portal = headers[i]
-                    if portal == "ETSY -MKM HO": portal = "ETSY-MKM"
-                    elif portal == "EBAY-MKM HO": portal = "EBAY-MKM"
-                    elif portal == "CRAFT": portal = "CRAFT-MKM"
+                    if "ETSY -MKM" in portal: portal = "ETSY-MKM"
+                    elif "EBAY-MKM" in portal: portal = "EBAY-MKM"
+                    elif "CRAFT" in portal: portal = "CRAFT-MKM"
                     
                     price = parse_price(val)
                     if price > 0:
