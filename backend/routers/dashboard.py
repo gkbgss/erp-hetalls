@@ -206,12 +206,10 @@ def get_kpis(current_user=Depends(get_current_user), db: Session = Depends(get_d
             dt = parse_date(row[0])
             if not dt: continue
             
-            daily_mkm_rev = 0.0
-            for i, val in enumerate(row[1:], start=1):
-                if i < len(headers) and headers[i]:
-                    daily_mkm_rev += parse_price(val)
-                    
-            total_revenue += daily_mkm_rev
+            if len(row) > 1:
+                daily_mkm_rev = parse_price(row[1])
+                
+                total_revenue += daily_mkm_rev
             if fy_start <= dt <= fy_end:
                 this_year_rev += daily_mkm_rev
             if dt.year == current_year and dt.month == current_month:
@@ -285,22 +283,18 @@ def companies_revenue(current_user=Depends(get_current_user)):
             dt = parse_date(row[0])
             if not dt: continue
             
-            for i, val in enumerate(row[1:], start=1):
-                if i < len(headers) and headers[i]:
-                    portal = headers[i]
-                    if "ETSY -MKM" in portal: portal = "ETSY-MKM"
-                    elif "EBAY-MKM" in portal: portal = "EBAY-MKM"
-                    elif "CRAFT" in portal: portal = "CRAFT-MKM"
-                    
-                    price = parse_price(val)
-                    if price > 0:
-                        portals["total"][portal] = portals["total"].get(portal, 0) + price
-                        if fy_start <= dt <= fy_end:
-                            portals["year"][portal] = portals["year"].get(portal, 0) + price
-                        if dt.year == current_year and dt.month == current_month:
-                            portals["month"][portal] = portals["month"].get(portal, 0) + price
-                        if dt.date() == today:
-                            portals["today"][portal] = portals["today"].get(portal, 0) + price
+            if len(row) > 1:
+                portal = "ETSY-MKM"
+                price = parse_price(row[1])
+                
+                if price > 0:
+                    portals["total"][portal] = portals["total"].get(portal, 0) + price
+                    if fy_start <= dt <= fy_end:
+                        portals["year"][portal] = portals["year"].get(portal, 0) + price
+                    if dt.year == current_year and dt.month == current_month:
+                        portals["month"][portal] = portals["month"].get(portal, 0) + price
+                    if dt.date() == today:
+                        portals["today"][portal] = portals["today"].get(portal, 0) + price
                     
     results = {"total": [], "today": [], "month": [], "year": []}
     for key in portals:
@@ -352,16 +346,11 @@ def revenue_chart(current_user=Depends(get_current_user)):
             if month_label not in monthly_data:
                 monthly_data[month_label] = {"month": month_label, "_dt": dt.replace(day=1), "order_count": 0}
                 
-            for i, val in enumerate(row[1:], start=1):
-                if i < len(headers) and headers[i]:
-                    portal = headers[i]
-                    if "ETSY -MKM" in portal: portal = "ETSY-MKM"
-                    elif "EBAY-MKM" in portal: portal = "EBAY-MKM"
-                    elif "CRAFT" in portal: portal = "CRAFT-MKM"
-                    
-                    price = parse_price(val)
-                    if price > 0:
-                        monthly_data[month_label][portal] = monthly_data[month_label].get(portal, 0) + price
+            if len(row) > 1:
+                portal = "ETSY-MKM"
+                price = parse_price(row[1])
+                if price > 0:
+                    monthly_data[month_label][portal] = monthly_data[month_label].get(portal, 0) + price
             
     # Sort by date
     sorted_months = sorted(monthly_data.values(), key=lambda x: x["_dt"])
