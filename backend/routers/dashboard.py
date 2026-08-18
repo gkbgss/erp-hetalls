@@ -318,6 +318,15 @@ def companies_revenue(current_user=Depends(get_current_user)):
 
 @router.get("/revenue-chart")
 def revenue_chart(current_user=Depends(get_current_user)):
+    now = datetime.now()
+    current_year = now.year
+    current_month = now.month
+    
+    if current_month >= 4:
+        fy_start = datetime(current_year, 4, 1)
+    else:
+        fy_start = datetime(current_year - 1, 4, 1)
+
     orders_data = fetch_sheet_csv("ORDERS")
     monthly_data = {}
     
@@ -362,14 +371,16 @@ def revenue_chart(current_user=Depends(get_current_user)):
     # Remove _dt and format
     results = []
     for m in sorted_months:
+        if m["_dt"] < fy_start:
+            continue
+            
         del m["_dt"]
         for k in m:
             if k != "month" and k != "order_count":
                 m[k] = round(m[k], 2)
         results.append(m)
         
-    # Return last 6 months
-    return results[-6:]
+    return results
 
 @router.get("/recent-orders")
 def recent_orders(current_user=Depends(get_current_user)):
