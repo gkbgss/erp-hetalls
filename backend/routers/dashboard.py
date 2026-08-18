@@ -121,7 +121,11 @@ def parse_price(val_str):
 def parse_date(date_str):
     try:
         if not date_str: return None
-        return datetime.strptime(date_str.strip(), "%d-%b-%Y")
+        date_str = date_str.strip()
+        try:
+            return datetime.strptime(date_str, "%d-%b-%Y")
+        except ValueError:
+            return datetime.strptime(date_str, "%d-%B-%Y")
     except ValueError:
         return None
 
