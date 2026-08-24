@@ -35,7 +35,7 @@ def _fetch_from_google(sheet_name):
         return data
     except Exception as e:
         print(f"Error fetching sheet {sheet_name}: {e}")
-        return None
+        return []
 
 def fetch_sheet_csv(sheet_name):
     now = time.time()
@@ -95,7 +95,7 @@ def fetch_mkm_sheet_csv():
             data = list(csv.reader(StringIO(content)))
         except Exception as e:
             print(f"Error fetching MKM sheet: {e}")
-            data = None
+            data = []
             
         with _CACHE_LOCK:
             if data is not None:
