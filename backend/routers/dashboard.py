@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-import urllib.request
+import requests
 import urllib.parse
 import csv
 from io import StringIO
@@ -28,11 +28,11 @@ def _fetch_from_google(sheet_name):
     # Add a cache buster to bypass Google CDN and local proxies
     url += f"&_cb={int(time.time())}"
     try:
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req) as response:
-            content = response.read().decode('utf-8')
-            data = list(csv.reader(StringIO(content)))
-            return data
+        response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
+        response.raise_for_status()
+        content = response.text
+        data = list(csv.reader(StringIO(content)))
+        return data
     except Exception as e:
         print(f"Error fetching sheet {sheet_name}: {e}")
         return None
@@ -89,10 +89,10 @@ def fetch_mkm_sheet_csv():
     if needs_fetch:
         url = MKM_SHEET_URL + f"&_cb={int(time.time())}"
         try:
-            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-            with urllib.request.urlopen(req) as response:
-                content = response.read().decode('utf-8')
-                data = list(csv.reader(StringIO(content)))
+            response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
+            response.raise_for_status()
+            content = response.text
+            data = list(csv.reader(StringIO(content)))
         except Exception as e:
             print(f"Error fetching MKM sheet: {e}")
             data = None
